@@ -188,3 +188,7 @@ Before changing code, read [`docs/rebuild-contract.md`](docs/rebuild-contract.md
   - the Windows offline installer for `kh-helper`;
   - half of the kernel tag vocabulary (151 of 299 tags are seeded).
 - Not covered by tests: sync with a second KH instance, Keycloak account provisioning, and event delivery to a sidecar. These need live services.
+
+## License
+
+[MIT](LICENSE)
