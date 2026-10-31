@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Knowledge Hub</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --ink:#1d2330; --muted:#667085; --line:#e3e6eb; --accent:#2f5bd3; --bad:#b42318; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#13161c; --card:#1c2029; --ink:#e7e9ee; --muted:#98a1b3; --line:#2b313d; --accent:#7ea2ff; --bad:#ff8a80; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; font:14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; background:var(--bg); color:var(--ink); }
+  header { display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--line); background:var(--card); flex-wrap:wrap; }
+  header h1 { font-size:16px; margin:0; }
+  header .who { margin-left:auto; color:var(--muted); }
+  nav { display:flex; gap:4px; padding:8px 16px; flex-wrap:wrap; }
+  nav button, .sub button { border:1px solid var(--line); background:var(--card); color:var(--ink); padding:6px 12px; border-radius:6px; cursor:pointer; }
+  nav button.on, .sub button.on { border-color:var(--accent); color:var(--accent); }
+  main { padding:8px 16px 32px; max-width:1200px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:12px; margin:8px 0; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:8px; }
+  .muted { color:var(--muted); }
+  .err { color:var(--bad); }
+  input, select, textarea { font:inherit; padding:5px 8px; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--ink); }
+  textarea { width:100%; min-height:70px; }
+  button.act { border:1px solid var(--accent); background:var(--accent); color:#fff; padding:5px 10px; border-radius:6px; cursor:pointer; }
+  table { width:100%; border-collapse:collapse; }
+  td, th { text-align:left; padding:4px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
+  .hidden { display:none; }
+  code { font-family:ui-monospace, Consolas, monospace; font-size:12px; word-break:break-all; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Knowledge Hub</h1><span id="ver" class="muted"></span>
+  <span class="who" id="who"></span>
+  <button id="signin" class="act hidden">Sign in</button>
+  <button id="signout" class="hidden">Sign out</button>
+</header>
+<nav id="tabs">
+  <button data-tab="knowledge" class="maint">Knowledge</button>
+  <button data-tab="lessons" class="maint">Lesson learn</button>
+  <button data-tab="sync">Sync Knowledge</button>
+</nav>
+<main>
+  <div id="login" class="card hidden"></div>
+  <div id="msg" class="err"></div>
+
+  <section id="tab-knowledge" class="hidden">
+    <div class="card">
+      <input id="pfilter" placeholder="Filter projects"> <label><input type="checkbox" id="pshowpersonal"> personal projects</label>
+    </div>
+    <div id="pcards" class="grid"></div>
+    <div id="items" class="card hidden"></div>
+  </section>
+
+  <section id="tab-lessons" class="hidden">
+    <div class="card" id="lbbox"></div>
+    <div class="card">
+      <select id="lproject"></select> <button id="lload">Show lessons</button>
+      <div id="llist"></div>
+      <h4>Add a lesson</h4>
+      <input id="ltitle" placeholder="Title" style="width:100%"><br><br>
+      <textarea id="ltext" placeholder="Text"></textarea><br>
+      <button class="act" id="ladd">Add</button>
+    </div>
+  </section>
+
+  <section id="tab-sync" class="hidden">
+    <div class="sub">
+      <button data-sub="receive" class="on">Receive</button>
+      <button data-sub="give" class="maint">Give (keys)</button>
+      <button data-sub="jobs">Sync jobs</button>
+      <button data-sub="accounts" class="maint">New accounts</button>
+    </div>
+    <div id="sub-receive" class="card">
+      <p>Paste a connection key from the giving KH.</p>
+      <input id="skey" style="width:100%" placeholder="khsync1...."><br><br>
+      <button class="act" id="sconnect">Connect</button>
+      <div id="smanifest"></div>
+    </div>
+    <div id="sub-give" class="card hidden">
+      <input id="klabel" placeholder="Label"> <input id="kdays" type="number" min="1" max="90" value="7" style="width:70px"> days
+      <input id="kprojects" placeholder="projects (comma, empty = all)"> <button class="act" id="kmake">Make key</button>
+      <div id="knew"></div><div id="klist"></div><div id="kgiven"></div>
+    </div>
+    <div id="sub-jobs" class="card hidden"></div>
+    <div id="sub-accounts" class="card hidden"></div>
+  </section>
+</main>
+<script>
+(function () {
+  "use strict";
+  var cfg = null, me = null, store = window.localStorage;
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
+  function msg(t) { $("msg").textContent = t || ""; }
+
+  function api(method, path, body, retried) {
+    var h = {"Content-Type": "application/json"};
+    var tok = store.getItem("kh_access");
+    if (tok) h.Authorization = "Bearer " + tok;
+    return fetch(path, {method: method, headers: h, body: body ? JSON.stringify(body) : undefined}).then(function (r) {
+      if (r.status === 401 && !retried && store.getItem("kh_refresh")) {
+        return api("POST", "/home/login/refresh", {refresh_token: store.getItem("kh_refresh")}, true).then(function (t) {
+          if (t.state === "ok") { store.setItem("kh_access", t.access_token); store.setItem("kh_refresh", t.refresh_token || ""); }
+          return api(method, path, body, true);
+        });
+      }
+      return r.json().catch(function () { return {}; }).then(function (d) {
+        if (!r.ok) { var e = new Error((d && (d.detail && (d.detail.error || d.detail))) || ("HTTP " + r.status)); e.status = r.status; throw e; }
+        return d;
+      });
+    });
+  }
+
+  function showTab(name) {
+    document.querySelectorAll("#tabs button").forEach(function (b) { b.classList.toggle("on", b.dataset.tab === name); });
+    ["knowledge", "lessons", "sync"].forEach(function (t) { $("tab-" + t).classList.toggle("hidden", t !== name); });
+    if (name === "knowledge") loadProjects();
+    if (name === "lessons") loadLessonsTab();
+    if (name === "sync") showSub("receive");
+  }
+  function showSub(name) {
+    document.querySelectorAll(".sub button").forEach(function (b) { b.classList.toggle("on", b.dataset.sub === name); });
+    ["receive", "give", "jobs", "accounts"].forEach(function (s) { $("sub-" + s).classList.toggle("hidden", s !== name); });
+    if (name === "give") loadKeys();
+    if (name === "jobs") loadJobs();
+    if (name === "accounts") loadAccounts();
+  }
+
+  // ---- sign-in ----
+  function startLogin() {
+    api("POST", "/home/login/start").then(function (d) {
+      $("login").classList.remove("hidden");
+      $("login").innerHTML = "Open <a target=_blank href='" + esc(d.verification_uri_complete || d.verification_uri) +
+        "'>" + esc(d.verification_uri) + "</a> and enter code <b>" + esc(d.user_code) + "</b>.";
+      var iv = (d.interval || 5) * 1000;
+      var poll = function () {
+        api("POST", "/home/login/poll", {device_code: d.device_code, code_verifier: d.code_verifier}).then(function (t) {
+          if (t.state === "ok") {
+            store.setItem("kh_access", t.access_token); store.setItem("kh_refresh", t.refresh_token || "");
+            $("login").classList.add("hidden"); boot();
+          } else if (t.state === "pending") { setTimeout(poll, iv); }
+          else { $("login").textContent = "Sign-in failed: " + (t.error || ""); }
+        }).catch(function (e) { msg(e.message); });
+      };
+      setTimeout(poll, iv);
+    }).catch(function (e) { msg(e.message); });
+  }
+
+  // ---- knowledge ----
+  function loadProjects() {
+    api("GET", "/home/projects").then(function (d) {
+      var f = $("pfilter").value.toLowerCase(), pers = $("pshowpersonal").checked;
+      $("pcards").innerHTML = d.projects.filter(function (p) {
+        return (pers || !p.personal) && p.id.toLowerCase().indexOf(f) >= 0;
+      }).map(function (p) {
+        var parts = Object.keys(p.parts).map(function (k) {
+          return "<a href='#' data-p='" + esc(p.id) + "' data-part='" + k + "'>" + k + "</a> " + p.parts[k]; }).join(" &middot; ");
+        return "<div class='card'><b>" + esc(p.id) + "</b> <span class=muted>" + esc(p.visibility || "") + "</span><br>" +
+          "<span class=muted>" + esc(p.descriptor) + "</span><br>" + parts + "<br><span class=muted>graph: " + esc(p.graph) + "</span></div>";
+      }).join("");
+    }).catch(function (e) { msg(e.message); });
+  }
+  function loadItems(project, part, offset) {
+    api("GET", "/home/items?project=" + encodeURIComponent(project) + "&part=" + part + "&offset=" + (offset || 0) + "&limit=50").then(function (d) {
+      var box = $("items"); box.classList.remove("hidden");
+      box.innerHTML = "<b>" + esc(project) + " / " + esc(part) + "</b> " + d.total + " rows" + (d.sorted ? "" : " (store order)") +
+        " <button id='idel'>Delete selected</button><table><tr><th></th><th>time</th><th>text</th><th>meta</th></tr>" +
+        d.items.map(function (r) {
+          return "<tr><td><input type=checkbox value='" + esc(r.id) + "'></td><td>" + esc(r.time || "") + "</td><td>" +
+            esc(r.text) + (r.length > 600 ? " ..." : "") + "<br><code>" + esc(r.id) + "</code></td><td class=muted>" +
+            esc(JSON.stringify(r.meta)) + "</td></tr>"; }).join("") + "</table>";
+      $("idel").onclick = function () {
+        var ids = Array.prototype.map.call(box.querySelectorAll("input:checked"), function (i) { return i.value; });
+        if (!ids.length || !confirm("Delete " + ids.length + " rows?")) return;
+        api("POST", "/home/items/delete", {project: project, part: part, ids: ids}).then(function () { loadItems(project, part, offset); });
+      };
+    }).catch(function (e) { msg(e.message); });
+  }
+
+  // ---- lessons + learn back ----
+  function loadLessonsTab() {
+    api("GET", "/home/projects").then(function (d) {
+      $("lproject").innerHTML = d.projects.filter(function (p) { return !p.personal; }).map(function (p) {
+        return "<option>" + esc(p.id) + "</option>"; }).join("");
+      api("GET", "/home/learnback").then(function (lb) { renderLearnback(lb, d.projects); });
+    }).catch(function (e) { msg(e.message); });
+  }
+  function renderLearnback(lb, projects) {
+    var box = $("lbbox");
+    if (!lb.enabled) { box.innerHTML = "<b>Learn back</b> <span class=muted>disabled: " + esc(lb.reason) + "</span>"; return; }
+    var ticks = projects.filter(function (p) { return !p.personal; }).map(function (p) {
+      return "<label><input type=checkbox class=lbp value='" + esc(p.id) + "'> " + esc(p.id) + "</label>"; }).join(" ") +
+      " <label><input type=checkbox class=lbp value='common'> common</label>";
+    box.innerHTML = "<b>Learn back</b> <span class=muted>" + esc(lb.llm) + " / " + esc(lb.model) + " / " + esc(lb.tz) + "</span><br>" + ticks +
+      "<br><button class=act id=lbnow>Start learn back now</button> <select id=lbkind><option>once</option><option>daily</option><option>weekly</option></select>" +
+      " <input id=lbat placeholder='2026-11-01T02:00 | 02:00 | fri 00:00'> <button id=lbsched>Schedule</button>" +
+      "<h4>Schedules</h4>" + lb.schedules.map(function (s) {
+        return "<div>" + esc(s.kind) + " " + esc(s.at) + " next " + esc(s.next_utc) + " " + esc(s.projects.join(", ")) +
+          (s.enabled ? "" : " (off)") + " <button data-sid='" + esc(s.id) + "'>delete</button></div>"; }).join("") +
+      "<h4>Runs</h4>" + (lb.running.length ? "<div>running: " + esc(lb.running[0].id) + "</div>" : "") +
+      lb.runs.map(function (r) { return "<div>" + esc(r.started) + " " + esc(r.state) + " " + esc(r.projects.join(", ")) + "</div>"; }).join("");
+    function picked() { return Array.prototype.map.call(box.querySelectorAll(".lbp:checked"), function (i) { return i.value; }); }
+    $("lbnow").onclick = function () { api("POST", "/home/learnback/run", {projects: picked()}).then(loadLessonsTab).catch(function (e) { msg(e.message); }); };
+    $("lbsched").onclick = function () { api("POST", "/home/learnback/schedules", {projects: picked(), kind: $("lbkind").value, at: $("lbat").value}).then(loadLessonsTab).catch(function (e) { msg(e.message); }); };
+    box.querySelectorAll("button[data-sid]").forEach(function (b) {
+      b.onclick = function () { api("POST", "/home/learnback/schedules/" + b.dataset.sid + "/delete").then(loadLessonsTab); };
+    });
+  }
+  function loadLessons() {
+    var p = $("lproject").value;
+    api("GET", "/home/lessons?project=" + encodeURIComponent(p)).then(function (d) {
+      $("llist").innerHTML = "<table>" + d.lessons.map(function (l) {
+        var act = (l.status === "proposed" || l.status === "contested") ?
+          " <button data-a=approve data-id='" + esc(l.id) + "'>approve</button> <button data-a=reject data-id='" + esc(l.id) + "'>reject</button>" : "";
+        return "<tr><td><b>" + esc(l.title) + "</b> <span class=muted>" + esc(l.status) + " " + esc(l.by || "") + "</span>" + act +
+          "<br>" + esc(l.text) + "</td></tr>"; }).join("") + "</table>";
+      $("llist").querySelectorAll("button[data-a]").forEach(function (b) {
+        b.onclick = function () {
+          api("POST", "/home/lessons/decide", {project: p, ids: [b.dataset.id], decision: b.dataset.a, reason: ""}).then(loadLessons);
+        };
+      });
+    }).catch(function (e) { msg(e.message); });
+  }
+
+  // ---- sync ----
+  function connect() {
+    var key = $("skey").value.trim();
+    api("POST", "/sync/connect", {key: key}).then(function (d) {
+      $("smanifest").innerHTML = "<p>Connected to " + esc(d.giver) + "</p>" + d.manifest.projects.map(function (p) {
+        return "<div><label><input type=checkbox class=sp value='" + esc(p.id) + "'> <b>" + esc(p.id) + "</b></label> " +
+          Object.keys(p.parts).map(function (k) { return k + " " + p.parts[k]; }).join(", ") + "</div>"; }).join("") +
+        "<br><button class=act id=spull>Pull selected</button>";
+      $("spull").onclick = function () {
+        var sel = Array.prototype.map.call(document.querySelectorAll(".sp:checked"), function (i) { return {project: i.value}; });
+        api("POST", "/sync/pull", {key: key, selection: sel}).then(function () { showSub("jobs"); }).catch(function (e) { msg(e.message); });
+      };
+    }).catch(function (e) { msg(e.message); });
+  }
+  function loadKeys() {
+    api("GET", "/sync/keys").then(function (d) {
+      $("klist").innerHTML = "<h4>Keys</h4>" + d.keys.map(function (k) {
+        return "<div>" + esc(k.label) + " <code>" + esc(k.kid) + "</code> until " + esc(k.expires_at) +
+          (k.revoked_at ? " (revoked)" : " <button data-kid='" + esc(k.kid) + "'>revoke</button>") + "</div>"; }).join("");
+      $("klist").querySelectorAll("button[data-kid]").forEach(function (b) {
+        b.onclick = function () { api("DELETE", "/sync/keys/" + b.dataset.kid).then(loadKeys); };
+      });
+    }).catch(function (e) { msg(e.message); });
+    api("GET", "/sync/given").then(function (d) {
+      $("kgiven").innerHTML = "<h4>Given</h4>" + d.given.map(function (g) {
+        return "<div>" + esc(g.job_id) + " " + esc(g.state) + " " + esc(g.updated) + "</div>"; }).join("");
+    }).catch(function () {});
+  }
+  function makeKey() {
+    var ps = $("kprojects").value.split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+    api("POST", "/sync/keys", {label: $("klabel").value, days: +$("kdays").value || 7, projects: ps.length ? ps : null}).then(function (d) {
+      $("knew").innerHTML = "<p>Copy this key now; it is shown once:</p><code>" + esc(d.key) + "</code>";
+      loadKeys();
+    }).catch(function (e) { msg(e.message); });
+  }
+  function loadJobs() {
+    api("GET", "/sync/jobs").then(function (d) {
+      $("sub-jobs").innerHTML = d.jobs.length ? d.jobs.map(function (j) {
+        return "<div><code>" + esc(j.id) + "</code> " + esc(j.state) + " from " + esc(j.source) + " " + esc(j.started) +
+          ((j.state === "running" || j.state === "queued") ? " <button data-j='" + esc(j.id) + "'>cancel</button>" : "") +
+          "<br><span class=muted>" + esc(JSON.stringify(j.doc.projects || {})) + "</span></div>"; }).join("") : "<span class=muted>No jobs.</span>";
+      $("sub-jobs").querySelectorAll("button[data-j]").forEach(function (b) {
+        b.onclick = function () { api("POST", "/sync/jobs/" + b.dataset.j + "/cancel").then(loadJobs); };
+      });
+    }).catch(function (e) { msg(e.message); });
+  }
+  function loadAccounts() {
+    api("GET", "/sync/accounts").then(function (d) {
+      $("sub-accounts").innerHTML = d.accounts.length ? d.accounts.map(function (a) {
+        return "<div>" + esc(a.email) + " <code>" + esc(a.password || "") + "</code> <button data-e='" + esc(a.email) + "'>sent</button></div>"; }).join("")
+        : "<span class=muted>No new accounts.</span>";
+      $("sub-accounts").querySelectorAll("button[data-e]").forEach(function (b) {
+        b.onclick = function () { api("POST", "/sync/accounts/" + encodeURIComponent(b.dataset.e) + "/sent").then(loadAccounts); };
+      });
+    }).catch(function (e) { msg(e.message); });
+  }
+
+  // ---- boot ----
+  function boot() {
+    msg("");
+    api("GET", "/home/config").then(function (c) {
+      cfg = c; $("ver").textContent = c.kh_version + " / " + c.emb_model;
+      return api("GET", "/sync/me").then(function (m) {
+        me = m;
+        $("who").textContent = c.auth ? (m.email || "") + (m.maintainer ? " (maintainer)" : "") : "local maintainer (sign-in off)";
+        $("signin").classList.add("hidden");
+        $("signout").classList.toggle("hidden", !c.auth);
+        document.querySelectorAll(".maint").forEach(function (b) { b.classList.toggle("hidden", !m.maintainer); });
+        showTab(m.maintainer ? "knowledge" : "sync");
+      }).catch(function (e) {
+        if (e.status === 403) { msg("Not a registered KH user."); return; }
+        if (c.auth) { $("signin").classList.remove("hidden"); $("who").textContent = "not signed in"; return; }
+        msg(e.message);
+      });
+    }).catch(function (e) { msg(e.message); });
+  }
+
+  document.querySelectorAll("#tabs button").forEach(function (b) { b.onclick = function () { showTab(b.dataset.tab); }; });
+  document.querySelectorAll(".sub button").forEach(function (b) { b.onclick = function () { showSub(b.dataset.sub); }; });
+  $("pcards").onclick = function (ev) {
+    var a = ev.target.closest("a[data-part]"); if (!a) return; ev.preventDefault(); loadItems(a.dataset.p, a.dataset.part, 0);
+  };
+  $("pfilter").oninput = loadProjects; $("pshowpersonal").onchange = loadProjects;
+  $("lload").onclick = loadLessons;
+  $("ladd").onclick = function () {
+    api("POST", "/home/lessons", {project: $("lproject").value, title: $("ltitle").value, text: $("ltext").value}).then(function () {
+      $("ltitle").value = ""; $("ltext").value = ""; loadLessons(); }).catch(function (e) { msg(e.message); });
+  };
+  $("sconnect").onclick = connect; $("kmake").onclick = makeKey;
+  $("signin").onclick = startLogin;
+  $("signout").onclick = function () { store.removeItem("kh_access"); store.removeItem("kh_refresh"); location.reload(); };
+  boot();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+build/
+dist/
+
+# Local runtime state
+hooks.db
+*.db
+logs/
+*.log
+.env
+.env.*
+
+# Claude Code local files
+.claude/scheduled_tasks.lock
+.claude/settings.local.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

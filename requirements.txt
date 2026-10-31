@@ -1,0 +1,21 @@
+# Knowledge Hub v6.5 rebuild - runtime dependencies.
+# Required (the app starts and the tests pass with only these):
+fastapi>=0.115
+uvicorn>=0.30
+pydantic>=2.7
+numpy>=1.26
+requests>=2.31
+pyjwt[crypto]>=2.8
+python-dotenv>=1.0
+python-multipart>=0.0.9
+httpx>=0.27
+pytest>=8.0
+
+# Optional (imported lazily; install only where needed):
+# sentence-transformers==5.6.0   # KH_EMBEDDER=local|auto (real bge-small-en-v1.5 embeddings)
+# torch==2.12.1                  # needed by sentence-transformers (use the +cpu wheel on servers)
+# transformers==5.12.1           # sentence-transformers / vision
+# hdbcli==2.29.23                # KH_STORE_BACKEND / KH_VECTOR_BACKEND / GRAPH_BACKEND = hana
+# chromadb>=0.6.0                # KH_VECTOR_BACKEND=chroma
+# nltk                           # sentence splitting for /vector/chunk (regex fallback otherwise)
+# anthropic                      # learn-back / worker (§4)

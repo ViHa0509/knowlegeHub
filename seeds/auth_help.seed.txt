@@ -1,0 +1,41 @@
+KNOWLEDGE HUB (KH) - SIGN-IN AND SETUP GUIDE FOR AN ASSISTANT
+
+KH at {kh_url} needs a personal sign-in. People sign in with their own company account through the KH identity
+service ({issuer}). Never ask anyone for a password, token or code, and never type one for them: the person signs
+in in their own browser.
+
+WHAT TO INSTALL
+KH is used through the KH helper (the `kh` command, Claude Code hooks and the MCP server "knowledge-hub").
+Download: {source}
+
+STEPS (do them in order; PROFILE = $CLAUDE_CONFIG_DIR, or ~/.claude when it is not set)
+1. Create the helper's own Python environment, once:
+     python -m venv "PROFILE/kh-helper"
+   (Python 3.10 or newer. On Windows, if Python is missing: winget install Python.Python.3.12 --scope user)
+2. Install the helper into it:
+     "PROFILE/kh-helper/Scripts/python" -m pip install --upgrade {source}
+   (bin/python instead of Scripts/python outside Windows.) If the download is a zip, unpack it and install the
+   kh_helper-*.whl file inside it.
+3. Sign in. Start the login in the background, because it waits for the browser (set the environment variable
+   KH_URL={kh_url} for this command when this KH is not the helper's default):
+     "PROFILE/kh-helper/Scripts/python" -m kh_helper.cli login
+   It prints a sign-in link. Show that link to the person and ask them to open it and sign in. Do not open or
+   complete it yourself.
+4. When the login has finished, connect the CLI (hooks and MCP server):
+     "PROFILE/kh-helper/Scripts/python" -m kh_helper.cli setup
+5. Check it:
+     "PROFILE/kh-helper/Scripts/python" -m kh_helper.cli status
+     "PROFILE/kh-helper/Scripts/python" -m kh_helper.cli me
+   `me` shows the e-mail, role, personal project and the projects this person may use.
+6. Tell the person to restart the CLI so the hooks and the MCP server load.
+
+UPDATE ONLY (the helper is already installed and signed in)
+     "PROFILE/kh-helper/Scripts/python" -m kh_helper.cli upgrade
+   then restart the CLI. No new sign-in is needed.
+
+RULES
+- An answer of 401 means "not signed in" or "sign-in expired": run step 3 again.
+- An answer of 403 means the person does not have that right on that project. It is final; do not retry with
+  different claims. A project owner, a tenant admin or a system admin can grant access.
+- Everything sent to KH is English. Translate before every call; keep names, ids, code and errors verbatim.
+- On a borrowed computer, sign out when done: "PROFILE/kh-helper/Scripts/python" -m kh_helper.cli logout

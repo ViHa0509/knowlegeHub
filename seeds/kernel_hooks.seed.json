@@ -1,0 +1,29 @@
+{
+  "source": "rebuild: prod kernel_hooks.json is summarised in spec §3.5; PreToolUse/pre-action-check and UserPromptSubmit/step-wise are prod text, the others are reconstructed from the spec summary",
+  "hooks": [
+    {
+      "hook_type": "UserPromptSubmit",
+      "name": "prompt-guard",
+      "position": 1,
+      "content": "KH PER-REQUEST CHECK: label every intent of this message from the ACTIONS of the KH TURN CONTEXT ('talk with user' when unclear; never 'none'). GET /policy/plan?action=<label> only for plans not already in this conversation. Do not repeat the calls the turn context already answered. Do the work itself STEP-WISE (below). No turn context: GET /orchestrator/project_match?text=<the message in English>, then GET /policy/actions?project=<id>."
+    },
+    {
+      "hook_type": "UserPromptSubmit",
+      "name": "step-wise",
+      "position": 5,
+      "content": "STEP-WISE KH: one POST /context/step {text, project} per step, instead of separate /vector/query, /entities/match and /log/recent calls. BEFORE ANSWERING: every claim must point to an item id from a pack; read open_threads; any thread the answer depends on gets one more step (include_log=true for history). At most 3 extra steps per question. Read a whole row (POST /vector/scroll {ids}) only for a truncated item you use."
+    },
+    {
+      "hook_type": "PreToolUse",
+      "name": "pre-action-check",
+      "position": 1,
+      "content": "KH PRE-ACTION CHECK (obey the line that matches the call you are about to make):\n- ANY KH WRITE (POST /vector/add): body = {\"text\":...,\"scope\":\"<scope>\",\"metadata\":{\"scope\":\"<scope>\",\"project\":\"<owner>\",...}}. scope goes top-level AND in metadata: top-level alone decides where the row lands (default knowledge). A work log also needs metadata topic == subject and a real ISO-8601 UTC ts. Read the row back after writing; 'ok' only proves the embedding was computed.\n- Build JSON bodies as data (tool arguments, a file, json.dumps), not by hand in a shell string; non-ASCII and quotes break shell-built bodies.\n- Writing a file you have not read: read it first."
+    },
+    {
+      "hook_type": "Stop",
+      "name": "store-log",
+      "position": 1,
+      "content": "KH END-OF-TURN CHECK: if this turn changed something, discussed or decided a solution, or the person gave new information (fact, constraint, correction, requirement), follow action 'store worklog' (load its plan once per conversation). No project means the personal project, never the orchestrator. Say at most one short line about it, in the language of the person's last message."
+    }
+  ]
+}

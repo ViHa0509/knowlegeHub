@@ -1,0 +1,820 @@
+{
+  "source": "rebuild: partial vocabulary (spec §3.8.1 lists 12 facets / 299 tags; only the kh, risk, moment and cli facets are given in full)",
+  "facets": {
+    "kh": {
+      "description": "Knowledge Hub itself",
+      "tags": [
+        [
+          "kh_input",
+          "what is sent into KH",
+          "kh input,send to kh"
+        ],
+        [
+          "kh_output",
+          "what KH answers",
+          "kh output,kh answer"
+        ],
+        [
+          "kh_call",
+          "how to call KH",
+          "kh_call,call kh,kh helper,mcp tool"
+        ],
+        [
+          "kh_auth",
+          "KH sign-in, tokens and permissions",
+          "403,sign-in,kh login,permission"
+        ],
+        [
+          "kh_project",
+          "KH project choice",
+          "project_match,which project,kh project"
+        ],
+        [
+          "kh_action",
+          "KH action labels and plans",
+          "action label,policy plan,kh_plan"
+        ],
+        [
+          "kh_lesson",
+          "KH lessons",
+          "lesson-learned,kh lesson,lessons"
+        ],
+        [
+          "kh_step",
+          "KH step packs",
+          "kh_step,context step"
+        ],
+        [
+          "kh_store",
+          "KH stores and owners",
+          "kh store,stores"
+        ],
+        [
+          "kh_log",
+          "KH work logs",
+          "worklog,work log,kh_log"
+        ],
+        [
+          "kh_finding",
+          "KH findings",
+          "finding,findings"
+        ],
+        [
+          "kh_knowledge",
+          "KH knowledge rows",
+          "kh_save,knowledge row"
+        ],
+        [
+          "kh_policy",
+          "KH policies",
+          "policy,policies,hook rule"
+        ],
+        [
+          "kh_kernel",
+          "the KH kernel",
+          "kernel,kernel rule"
+        ],
+        [
+          "kh_personal",
+          "personal project and layer",
+          "personal project,personal layer,personalization"
+        ],
+        [
+          "kh_common",
+          "common layer",
+          "common layer,common tier"
+        ],
+        [
+          "kh_market",
+          "the market project",
+          "market"
+        ],
+        [
+          "kh_orchestrator",
+          "the orchestrator project",
+          "orchestrator"
+        ],
+        [
+          "kh_message",
+          "KH messages",
+          "kh_message,mailbox,inbox"
+        ],
+        [
+          "kh_member",
+          "project members",
+          "kh_members,members"
+        ],
+        [
+          "kh_version",
+          "version rows",
+          "ver_,versions"
+        ],
+        [
+          "kh_mode",
+          "KH work mode",
+          "kh auto,work mode"
+        ],
+        [
+          "kh_entity",
+          "entity cards",
+          "entity card,entities"
+        ],
+        [
+          "kh_learnback",
+          "learn-back",
+          "learn-back,learnback,distill"
+        ],
+        [
+          "kh_usage",
+          "usage counting",
+          "repeated across days,usage"
+        ],
+        [
+          "kh_tool",
+          "kh-tools rows",
+          "kh-tools"
+        ],
+        [
+          "kh_codegraph",
+          "code graph",
+          "codegraph,code graph"
+        ],
+        [
+          "kh_hook",
+          "KH hooks",
+          "hook,hooks"
+        ],
+        [
+          "kh_speaker",
+          "speaker and listener",
+          "speaker,listener"
+        ],
+        [
+          "kh_layer",
+          "common and personal layers",
+          "two layers,layers"
+        ]
+      ]
+    },
+    "lang": {
+      "description": "language handling",
+      "tags": [
+        [
+          "lang_english",
+          "English inside KH",
+          "english,english-only"
+        ],
+        [
+          "lang_translate",
+          "translation",
+          "translate,translation"
+        ],
+        [
+          "lang_verbatim",
+          "keep names, ids and code verbatim",
+          "verbatim"
+        ],
+        [
+          "lang_user",
+          "the user's own language",
+          "user language,their language"
+        ],
+        [
+          "lang_vietnamese",
+          "Vietnamese text",
+          "vietnamese,tieng viet"
+        ]
+      ]
+    },
+    "action": {
+      "description": "what is done (schema.org Actions)",
+      "tags": [
+        [
+          "sign_in",
+          "sign in action",
+          "sign in,log in,login,signin,dang nhap"
+        ],
+        [
+          "sign_out",
+          "sign out action",
+          "sign out,log out,logout"
+        ],
+        [
+          "deploy",
+          "deploy action",
+          "deploy,deployment,cf push"
+        ],
+        [
+          "build",
+          "build action",
+          "build,compile"
+        ],
+        [
+          "release",
+          "release action",
+          "release,ship"
+        ],
+        [
+          "install",
+          "install action",
+          "install,setup"
+        ],
+        [
+          "upgrade",
+          "upgrade action",
+          "upgrade,update version"
+        ],
+        [
+          "configure",
+          "configure action",
+          "configure,config,settings"
+        ],
+        [
+          "run_script",
+          "run script action",
+          "run script,run the script"
+        ],
+        [
+          "merge",
+          "merge action",
+          "merge"
+        ],
+        [
+          "push",
+          "push action",
+          "push"
+        ],
+        [
+          "export",
+          "export action",
+          "export"
+        ],
+        [
+          "import",
+          "import action",
+          "import"
+        ],
+        [
+          "upload",
+          "upload action",
+          "upload"
+        ],
+        [
+          "download",
+          "download action",
+          "download"
+        ],
+        [
+          "archive",
+          "archive action",
+          "archive"
+        ],
+        [
+          "backup",
+          "backup action",
+          "backup,back up"
+        ],
+        [
+          "restore",
+          "restore action",
+          "restore"
+        ],
+        [
+          "migrate",
+          "migrate action",
+          "migrate,migration"
+        ],
+        [
+          "track_time",
+          "track time action",
+          "track time,timesheet,log hours"
+        ],
+        [
+          "send",
+          "send action",
+          "send"
+        ],
+        [
+          "notify",
+          "notify action",
+          "notify,notification"
+        ],
+        [
+          "announce",
+          "announce action",
+          "announce,announcement"
+        ],
+        [
+          "schedule",
+          "schedule action",
+          "schedule"
+        ],
+        [
+          "monitor",
+          "monitor action",
+          "monitor"
+        ],
+        [
+          "convert",
+          "convert action",
+          "convert"
+        ],
+        [
+          "copy",
+          "copy action",
+          "copy"
+        ],
+        [
+          "move",
+          "move action",
+          "move"
+        ],
+        [
+          "rename",
+          "rename action",
+          "rename"
+        ],
+        [
+          "screenshot",
+          "screenshot action",
+          "screenshot,screen shot"
+        ],
+        [
+          "sync",
+          "sync action",
+          "sync,synchronize"
+        ],
+        [
+          "seed",
+          "seed action",
+          "seed"
+        ],
+        [
+          "open_page",
+          "open page action",
+          "open page,open the page,open url"
+        ],
+        [
+          "cleanup",
+          "cleanup action",
+          "clean up,cleanup"
+        ],
+        [
+          "invite",
+          "invite action",
+          "invite"
+        ],
+        [
+          "grant_access",
+          "grant access action",
+          "grant access,give access"
+        ],
+        [
+          "index",
+          "index action",
+          "index"
+        ],
+        [
+          "scan",
+          "scan action",
+          "scan"
+        ],
+        [
+          "benchmark",
+          "benchmark action",
+          "benchmark"
+        ],
+        [
+          "search",
+          "search action",
+          "search,look up,find"
+        ],
+        [
+          "read",
+          "read action",
+          "read"
+        ],
+        [
+          "create",
+          "create action",
+          "create,add,new"
+        ],
+        [
+          "update",
+          "update action",
+          "update,change,edit"
+        ],
+        [
+          "delete",
+          "delete action",
+          "delete,remove"
+        ],
+        [
+          "review",
+          "review action",
+          "review,audit"
+        ],
+        [
+          "ask",
+          "ask action",
+          "ask,confirm"
+        ],
+        [
+          "suggest",
+          "suggest action",
+          "suggest,recommend"
+        ],
+        [
+          "count",
+          "count action",
+          "count,counter"
+        ],
+        [
+          "reply",
+          "reply action",
+          "reply,answer"
+        ],
+        [
+          "write",
+          "write action",
+          "write,draft"
+        ],
+        [
+          "test",
+          "test action",
+          "test,testing"
+        ],
+        [
+          "debug",
+          "debug action",
+          "debug,troubleshoot,fix"
+        ]
+      ]
+    },
+    "object": {
+      "description": "what a rule or task is about",
+      "tags": [
+        [
+          "app",
+          "app object",
+          "app,application,web app,website"
+        ],
+        [
+          "page",
+          "page object",
+          "page,web page"
+        ],
+        [
+          "file",
+          "file object",
+          "file,files"
+        ],
+        [
+          "repo",
+          "repo object",
+          "repo,repository"
+        ],
+        [
+          "code",
+          "code object",
+          "code,source code"
+        ],
+        [
+          "database",
+          "database object",
+          "database,db,table"
+        ],
+        [
+          "server",
+          "server object",
+          "server,service"
+        ],
+        [
+          "token",
+          "token object",
+          "token,api key"
+        ],
+        [
+          "secret",
+          "secret object",
+          "secret,password,passcode,credential"
+        ],
+        [
+          "email",
+          "email object",
+          "email,e-mail,mail"
+        ],
+        [
+          "message",
+          "message object",
+          "message,chat"
+        ],
+        [
+          "report",
+          "report object",
+          "report"
+        ],
+        [
+          "ticket",
+          "ticket object",
+          "ticket,issue"
+        ],
+        [
+          "pull_request",
+          "pull request object",
+          "pull request,pr,merge request"
+        ],
+        [
+          "branch",
+          "branch object",
+          "branch"
+        ],
+        [
+          "document",
+          "document object",
+          "document,doc"
+        ],
+        [
+          "spreadsheet",
+          "spreadsheet object",
+          "spreadsheet,excel,sheet"
+        ],
+        [
+          "project_obj",
+          "project obj object",
+          "project"
+        ],
+        [
+          "timesheet",
+          "timesheet object",
+          "timesheet,hours"
+        ],
+        [
+          "build_artifact",
+          "build artifact object",
+          "artifact,wheel,package"
+        ],
+        [
+          "container",
+          "container object",
+          "container,docker image"
+        ],
+        [
+          "vm",
+          "vm object",
+          "vm,virtual machine"
+        ]
+      ]
+    },
+    "domain": {
+      "description": "business or technical domain",
+      "tags": [
+        [
+          "dom_sap",
+          "SAP systems",
+          "sap,s/4,btp"
+        ],
+        [
+          "dom_finance",
+          "finance",
+          "finance,invoice"
+        ],
+        [
+          "dom_hr",
+          "human resources",
+          "hr,leave"
+        ],
+        [
+          "dom_devops",
+          "devops",
+          "ci,cd,pipeline"
+        ]
+      ]
+    },
+    "comm": {
+      "description": "communication style",
+      "tags": [
+        [
+          "reply_length",
+          "length of replies",
+          "short,brief,verbose,verbosity"
+        ],
+        [
+          "audience",
+          "who reads it",
+          "audience,reader,listener"
+        ],
+        [
+          "address_form",
+          "how to address people",
+          "address form,pronoun,anh,chi,em"
+        ],
+        [
+          "tone",
+          "tone of voice",
+          "tone,polite,formal"
+        ]
+      ]
+    },
+    "risk": {
+      "description": "risky actions",
+      "tags": [
+        [
+          "risk_destructive",
+          "delete or overwrite",
+          "delete,overwrite,drop"
+        ],
+        [
+          "risk_access",
+          "access or settings",
+          "access,permission,settings"
+        ],
+        [
+          "risk_outward",
+          "sending outside",
+          "send outside,external"
+        ],
+        [
+          "risk_money",
+          "money",
+          "payment,money,purchase"
+        ],
+        [
+          "risk_production",
+          "production",
+          "production,prod"
+        ],
+        [
+          "risk_irreversible",
+          "cannot be undone",
+          "irreversible,cannot be undone"
+        ],
+        [
+          "risk_secret",
+          "secrets",
+          "secret,password,token"
+        ],
+        [
+          "risk_shared",
+          "shared state",
+          "shared,everyone"
+        ]
+      ]
+    },
+    "moment": {
+      "description": "when a rule applies (generic)",
+      "tags": [
+        [
+          "at_session_start",
+          "at session start",
+          "session start"
+        ],
+        [
+          "at_each_prompt",
+          "at each prompt",
+          "each prompt,every message"
+        ],
+        [
+          "before_tool",
+          "before a tool runs",
+          "before tool,pretooluse"
+        ],
+        [
+          "after_tool",
+          "after a tool ran",
+          "after tool,posttooluse"
+        ],
+        [
+          "at_turn_end",
+          "at the end of a turn",
+          "turn end,stop hook"
+        ],
+        [
+          "at_compact",
+          "at context compaction",
+          "compact,compaction"
+        ],
+        [
+          "before_reply",
+          "before replying",
+          "before reply,before every reply"
+        ],
+        [
+          "always",
+          "always",
+          "always"
+        ]
+      ]
+    },
+    "place": {
+      "description": "where work happens",
+      "tags": [
+        [
+          "place_terminal",
+          "the terminal",
+          "terminal,shell"
+        ],
+        [
+          "place_browser",
+          "the browser",
+          "browser,chrome"
+        ],
+        [
+          "place_ide",
+          "the IDE",
+          "ide,vs code"
+        ]
+      ]
+    },
+    "cli": {
+      "description": "which CLI a rule targets (generic)",
+      "tags": [
+        [
+          "any_cli",
+          "every CLI",
+          "any cli,every cli"
+        ],
+        [
+          "claude_code",
+          "Claude Code",
+          "claude code"
+        ],
+        [
+          "codex_cli",
+          "Codex CLI",
+          "codex"
+        ],
+        [
+          "gemini_cli",
+          "Gemini CLI",
+          "gemini"
+        ],
+        [
+          "cursor",
+          "Cursor",
+          "cursor"
+        ],
+        [
+          "copilot",
+          "Copilot",
+          "copilot"
+        ],
+        [
+          "no_hooks_cli",
+          "a CLI without hooks",
+          "no hooks"
+        ]
+      ]
+    },
+    "people": {
+      "description": "who is involved",
+      "tags": [
+        [
+          "people_user",
+          "the person at the keyboard",
+          "user,person"
+        ],
+        [
+          "people_team",
+          "a team",
+          "team,colleagues"
+        ],
+        [
+          "people_maintainer",
+          "KH maintainers",
+          "maintainer,admin"
+        ]
+      ]
+    },
+    "system": {
+      "description": "named systems",
+      "tags": [
+        [
+          "sys_github",
+          "GitHub",
+          "github"
+        ],
+        [
+          "sys_teams",
+          "Microsoft Teams",
+          "teams"
+        ],
+        [
+          "sys_keycloak",
+          "Keycloak",
+          "keycloak"
+        ],
+        [
+          "sys_hana",
+          "SAP HANA",
+          "hana"
+        ],
+        [
+          "sys_jira",
+          "Jira",
+          "jira"
+        ]
+      ]
+    }
+  }
+}

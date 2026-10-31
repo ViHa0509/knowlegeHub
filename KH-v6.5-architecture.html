@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Knowledge Hub v6.5</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one schematic sheet, then reading sections on a narrow column; diagram is the hero */
+:root {
+  --bg: #F3F5F2;
+  --sheet: #FBFCFA;
+  --fg: #18211D;
+  --muted: #5B6862;
+  --line: #C6CFCA;
+  --accent: #0E6B63;
+  --accent-soft: #DCEDEA;
+  --learn: #A9661A;
+  --learn-soft: #F5E8D6;
+  --ghost: #8A9590;
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121815; --sheet: #182019; --fg: #E4EBE7; --muted: #9AA8A1; --line: #34413B;
+    --accent: #4FB8AC; --accent-soft: #173A36; --learn: #E0A35A; --learn-soft: #3A2C1A; --ghost: #6E7B75;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121815; --sheet: #182019; --fg: #E4EBE7; --muted: #9AA8A1; --line: #34413B;
+  --accent: #4FB8AC; --accent-soft: #173A36; --learn: #E0A35A; --learn-soft: #3A2C1A; --ghost: #6E7B75;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font: 400 16px/1.6 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 40px 64px;
+}
+.wrap { max-width: 1160px; margin: 0 auto; display: grid; gap: 56px; }
+.col { max-width: 760px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: clamp(2rem, 4.5vw, 3.1rem); font-weight: 700; line-height: 1.05; }
+h2 { font-size: 1.55rem; font-weight: 700; margin-bottom: 14px; }
+h3 { font-size: 1.05rem; font-weight: 700; }
+p { margin: 0 0 12px; }
+.eyebrow { font: 500 12px/1 var(--f-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+.lede { font-size: 1.15rem; color: var(--muted); max-width: 64ch; margin-top: 14px; }
+code, .mono { font-family: var(--f-mono); font-size: 0.86em; }
+code { background: var(--accent-soft); padding: 1px 5px; border-radius: 3px; }
+
+.sheet { background: var(--sheet); border: 1px solid var(--line); border-radius: 6px; padding: 18px; }
+.scroll { overflow-x: auto; }
+.scroll svg { display: block; min-width: 980px; width: 100%; height: auto; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 14px; font-size: 14px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.sw { width: 18px; height: 12px; border-radius: 2px; border: 1.5px solid var(--line); background: var(--sheet); }
+.sw.a { border-color: var(--accent); background: var(--accent-soft); }
+.sw.l { border-color: var(--learn); background: var(--learn-soft); }
+.sw.g { border-style: dashed; border-color: var(--ghost); }
+
+/* SVG styling */
+.b { fill: var(--sheet); stroke: var(--line); stroke-width: 1.5; }
+.bc { fill: var(--bg); stroke: var(--line); stroke-width: 1.5; }
+.ba { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+.bl { fill: var(--learn-soft); stroke: var(--learn); stroke-width: 1.5; }
+.bg { fill: none; stroke: var(--ghost); stroke-width: 1.5; stroke-dasharray: 6 5; }
+.t { font: 700 14px var(--f-display); fill: var(--fg); }
+.tl { font: 700 12px var(--f-mono); fill: var(--muted); letter-spacing: 0.1em; }
+.i { font: 400 12px var(--f-mono); fill: var(--muted); }
+.ig { font: 400 12px var(--f-mono); fill: var(--ghost); }
+.ar { stroke: var(--fg); stroke-width: 1.4; fill: none; }
+.arl { stroke: var(--learn); stroke-width: 1.4; fill: none; }
+.al { font: 500 11px var(--f-mono); fill: var(--muted); }
+.head { fill: var(--fg); }
+.headl { fill: var(--learn); }
+
+/* Turn flow */
+ol.flow { list-style: none; padding: 0; margin: 0; display: grid; gap: 0; counter-reset: s; }
+ol.flow li { counter-increment: s; display: grid; grid-template-columns: 44px 1fr; gap: 14px; padding: 14px 0; border-top: 1px solid var(--line); }
+ol.flow li::before { content: counter(s); font: 700 1.4rem/1 var(--f-display); color: var(--accent); padding-top: 2px; }
+ol.flow li > div { min-width: 0; }
+ol.flow b { font-family: var(--f-display); }
+.hook { display: inline-block; font: 500 11px/1 var(--f-mono); color: var(--accent); border: 1px solid var(--accent); border-radius: 3px; padding: 3px 6px; margin-left: 6px; vertical-align: 2px; }
+
+/* Data model */
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.grid2 > div { min-width: 0; }
+.proj { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; }
+.proj h3 { font-family: var(--f-mono); font-size: 0.95rem; }
+.proj p { color: var(--muted); font-size: 15px; margin: 4px 0 0; }
+
+.loop { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font: 500 13px var(--f-mono); }
+.loop .n { background: var(--learn-soft); border: 1px solid var(--learn); color: var(--fg); padding: 6px 10px; border-radius: 4px; }
+.loop .x { color: var(--learn); }
+
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; padding: 9px 12px 9px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 500 12px var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+td:first-child { font-family: var(--f-mono); font-size: 13px; white-space: nowrap; }
+td:last-child { font-family: var(--f-mono); font-size: 13px; color: var(--muted); white-space: nowrap; }
+
+.pill { display: inline-block; font: 500 11px/1 var(--f-mono); padding: 4px 7px; border-radius: 99px; border: 1px solid; }
+.pill.ok { color: var(--accent); border-color: var(--accent); }
+.pill.wip { color: var(--learn); border-color: var(--learn); }
+.pill.no { color: var(--ghost); border-color: var(--ghost); border-style: dashed; }
+
+ul.rules { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.foot { color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); padding-top: 16px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header class="col">
+  <div class="eyebrow">Kiến trúc tổng quan · rebuild từ spec v6.5</div>
+  <h1>Knowledge Hub v6.5</h1>
+  <p class="lede">KH là bộ nhớ dùng chung cho AI agent. Server không chạy LLM nào để trả lời: nó chỉ lưu trữ, phân quyền và truy xuất một cách tất định. Mọi suy luận do agent gọi tới (Claude Code) tự làm. Client <code>kh-helper</code> gắn KH vào từng lượt chat qua hook và MCP.</p>
+</header>
+
+<section>
+  <h2>Sơ đồ hệ thống</h2>
+  <div class="sheet">
+    <div class="scroll">
+<svg viewBox="0 0 1120 700" role="img" aria-label="Sơ đồ kiến trúc Knowledge Hub: máy người dùng, KH server, các backend">
+  <defs>
+    <marker id="h" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head"/></marker>
+    <marker id="hl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="headl"/></marker>
+  </defs>
+
+  <!-- Column A: user machine -->
+  <text x="20" y="30" class="tl">MÁY NGƯỜI DÙNG</text>
+  <rect x="20" y="46" width="270" height="56" rx="5" class="b"/>
+  <text x="36" y="70" class="t">Claude Code / CLI khác</text>
+  <text x="36" y="90" class="i">agent làm mọi suy luận</text>
+  <path d="M155,102 V128" class="ar" marker-end="url(#h)" marker-start="url(#h)"/>
+
+  <rect x="20" y="132" width="270" height="336" rx="5" class="bc"/>
+  <text x="36" y="156" class="t">kh-helper (pip wheel)</text>
+  <rect x="34" y="168" width="242" height="64" rx="4" class="ba"/>
+  <text x="46" y="189" class="t">Hooks ×5</text>
+  <text x="46" y="207" class="i">SessionStart · UserPrompt</text>
+  <text x="46" y="223" class="i">PreToolUse · PostToolUse · Stop</text>
+  <rect x="34" y="242" width="242" height="64" rx="4" class="b"/>
+  <text x="46" y="263" class="t">MCP server knowledge-hub</text>
+  <text x="46" y="281" class="i">15 tool: kh_call · kh_step</text>
+  <text x="46" y="297" class="i">kh_save · kh_log · kh_message…</text>
+  <rect x="34" y="316" width="242" height="52" rx="4" class="b"/>
+  <text x="46" y="337" class="t">kh CLI</text>
+  <text x="46" y="355" class="i">login · setup · call</text>
+  <rect x="34" y="378" width="242" height="76" rx="4" class="bl"/>
+  <text x="46" y="399" class="t">Work-log chạy nền</text>
+  <text x="46" y="417" class="i">claude -p --model haiku</text>
+  <text x="46" y="433" class="i">tóm tắt lượt chat thành</text>
+  <text x="46" y="447" class="i">1 worklog (scope=log)</text>
+
+  <rect x="20" y="494" width="270" height="56" rx="5" class="b"/>
+  <text x="36" y="518" class="t">Trình duyệt · /home</text>
+  <text x="36" y="538" class="i">tab admin + tab người dùng</text>
+
+  <!-- bus from client to server -->
+  <path d="M276,200 H322" class="ar"/>
+  <path d="M276,274 H322" class="ar"/>
+  <path d="M276,416 H322" class="ar"/>
+  <path d="M290,522 H322" class="ar"/>
+  <path d="M322,522 V117" class="ar"/>
+  <path d="M322,117 H368" class="ar" marker-end="url(#h)"/>
+  <text x="20" y="590" class="al">HTTPS · Bearer JWT · X-KH-Actor</text>
+  <text x="20" y="606" class="al">KH chỉ nhận tiếng Anh: client dịch</text>
+  <text x="20" y="622" class="al">trước mỗi lần gọi</text>
+
+  <!-- Column B: server -->
+  <rect x="350" y="46" width="450" height="624" rx="6" class="b"/>
+  <text x="366" y="72" class="tl">KH SERVER · FASTAPI main.py · 1 PROCESS</text>
+
+  <rect x="368" y="88" width="414" height="58" rx="4" class="bc"/>
+  <text x="382" y="110" class="t">Cổng auth</text>
+  <text x="382" y="130" class="i">JWT Keycloak · auth_rules.json: route → quyền theo project</text>
+
+  <rect x="368" y="160" width="202" height="122" rx="4" class="ba"/>
+  <text x="380" y="184" class="t">Context engine</text>
+  <text x="380" y="205" class="i">/turn/context</text>
+  <text x="380" y="222" class="i">/context/step (6000 ký tự)</text>
+  <text x="380" y="239" class="i">policy actions + plans</text>
+  <text x="380" y="256" class="i">kernel 3 tầng · tool guard</text>
+  <text x="380" y="273" class="i">entities · usage · repeats</text>
+
+  <rect x="580" y="160" width="202" height="122" rx="4" class="b"/>
+  <text x="592" y="184" class="t">Storage API</text>
+  <text x="592" y="205" class="i">/vector/add · query</text>
+  <text x="592" y="222" class="i">/vector/scroll · delete</text>
+  <text x="592" y="239" class="i">/log/recent · hot window</text>
+  <text x="592" y="256" class="i">chunks · keys · layers</text>
+
+  <rect x="368" y="292" width="202" height="122" rx="4" class="b"/>
+  <text x="380" y="316" class="t">Projects &amp; people</text>
+  <text x="380" y="337" class="i">registry · project_match</text>
+  <text x="380" y="354" class="i">personal-&lt;email&gt;</text>
+  <text x="380" y="371" class="i">session binding 72 h</text>
+  <text x="380" y="388" class="i">messages · mailbox</text>
+
+  <rect x="580" y="292" width="202" height="122" rx="4" class="bl"/>
+  <text x="592" y="316" class="t">Vòng học</text>
+  <text x="592" y="337" class="i">distill · learn-back</text>
+  <text x="592" y="354" class="i">promote → tầng common</text>
+  <text x="592" y="371" class="i">feedback · findings</text>
+  <text x="592" y="388" class="i">events kh.*</text>
+
+  <rect x="368" y="424" width="202" height="122" rx="4" class="b"/>
+  <text x="380" y="448" class="t">Admin &amp; phân phối</text>
+  <text x="380" y="469" class="i">/home · sync</text>
+  <text x="380" y="486" class="i">downloads · artifacts</text>
+  <text x="380" y="503" class="i">gallery · revisions</text>
+  <text x="380" y="520" class="i">codegraph</text>
+
+  <rect x="580" y="424" width="202" height="122" rx="4" class="b"/>
+  <text x="592" y="448" class="t">Embedder</text>
+  <text x="592" y="469" class="i">bge-small-en-v1.5</text>
+  <text x="592" y="486" class="i">384 chiều, cùng process</text>
+  <text x="592" y="503" class="i">query không instruction</text>
+  <text x="592" y="520" class="i">test: embedder hash</text>
+
+  <rect x="368" y="560" width="414" height="94" rx="4" class="bg"/>
+  <text x="382" y="584" class="t">/v1 capability modules (§6)</text>
+  <text x="382" y="605" class="ig">14 module: registry · items · rules · vault · packs…</text>
+  <text x="382" y="622" class="ig">chỉ cần khi có consumer multi-agent bên ngoài</text>
+  <text x="382" y="639" class="ig">chưa build</text>
+
+  <!-- Column C: backends -->
+  <text x="850" y="30" class="tl">BACKEND</text>
+  <rect x="850" y="46" width="250" height="150" rx="5" class="b"/>
+  <text x="866" y="70" class="t">HANA Cloud (prod)</text>
+  <text x="866" y="92" class="i">1 schema chứa toàn bộ state</text>
+  <text x="866" y="110" class="i">bảng quan hệ · leases</text>
+  <text x="866" y="128" class="i">vector: kh_know_&lt;id&gt;</text>
+  <text x="866" y="146" class="i">kh_log_&lt;id&gt; · kh_&lt;scope&gt;_&lt;id&gt;</text>
+  <text x="866" y="164" class="i">graph</text>
+  <text x="866" y="184" class="ig">LOCAL: SQLite hooks.db</text>
+
+  <rect x="850" y="222" width="250" height="96" rx="5" class="b"/>
+  <text x="866" y="246" class="t">kh-keycloak</text>
+  <text x="866" y="268" class="i">cấp JWT · JWKS</text>
+  <text x="866" y="286" class="i">/kh/* members · catalog</text>
+  <text x="866" y="304" class="ig">repo riêng</text>
+
+  <rect x="850" y="344" width="250" height="110" rx="5" class="bl"/>
+  <text x="866" y="368" class="t">kh-worker</text>
+  <text x="866" y="390" class="i">job LLM chạy đêm</text>
+  <text x="866" y="408" class="i">distil · promote · daily</text>
+  <text x="866" y="426" class="i">LLM Anthropic, có budget</text>
+
+  <rect x="850" y="480" width="250" height="74" rx="5" class="bg"/>
+  <text x="866" y="504" class="t">kh-events sidecar</text>
+  <text x="866" y="526" class="ig">tuỳ chọn · flush event</text>
+
+  <!-- server to backends -->
+  <path d="M800,120 H848" class="ar" marker-end="url(#h)"/>
+  <text x="806" y="112" class="al">hdbcli</text>
+  <path d="M800,270 H848" class="ar" marker-end="url(#h)"/>
+  <text x="806" y="262" class="al">JWKS</text>
+  <path d="M848,400 H800" class="arl" marker-end="url(#hl)"/>
+  <text x="806" y="392" class="al">next</text>
+  <text x="806" y="420" class="al">submit</text>
+  <path d="M800,517 H848" class="ar" marker-end="url(#h)"/>
+  <text x="806" y="509" class="al">events</text>
+</svg>
+    </div>
+    <div class="legend">
+      <span><i class="sw a"></i>Đường đi của một lượt chat (sản phẩm chính)</span>
+      <span><i class="sw l"></i>Có dùng LLM, chạy nền</span>
+      <span><i class="sw g"></i>Tuỳ chọn / chưa build</span>
+    </div>
+  </div>
+</section>
+
+<section class="col">
+  <h2>Một lượt chat đi qua KH thế nào</h2>
+  <ol class="flow">
+    <li><div><b>Mở session</b><span class="hook">SessionStart</span><br>Hook gọi <code>GET /kernel/render</code>, lấy về bộ kernel đã gộp ba tầng common, project, personal (gộp theo <code>slot</code>; luật <code>locked</code> không bị ghi đè), cùng personalization và tin nhắn đang chờ.</div></li>
+    <li><div><b>Người dùng gửi tin</b><span class="hook">UserPromptSubmit</span><br>Hook gọi <code>GET /turn/context</code> và in khối KH TURN CONTEXT vào ngữ cảnh: project khớp, menu ACTIONS, FINDINGS, người và hệ thống được nhắc tới, các lesson gần nghĩa.</div></li>
+    <li><div><b>Agent làm việc</b><br>Agent gán nhãn action cho từng ý định, lấy plan một lần bằng <code>/policy/plan</code>, rồi gọi <code>POST /context/step</code> cho mỗi bước để nhận một gói ngữ cảnh có giới hạn (floor 0.68). Mọi thao tác ghi đi qua <code>/vector/add</code>; server tự gắn author và actor rồi chuyển vào đúng collection của project.</div></li>
+    <li><div><b>Trước khi chạy tool</b><span class="hook">PreToolUse</span><br>Hook gọi <code>/kernel/pretool</code>. Nếu một tool guard khớp, nó có thể chặn lệnh hoặc chèn thêm cảnh báo.</div></li>
+    <li><div><b>Kết thúc lượt</b><span class="hook">Stop</span><br>Hook chạy các kiểm tra cuối lượt và xếp một job work-log. Một process ẩn dùng haiku tóm tắt lượt chat rồi lưu một worklog vào project đang bind (giữ 72 giờ) hoặc vào project cá nhân.</div></li>
+    <li><div><b>Chạy nền</b><br>Event <code>kh.*</code> được ghi lại. Distill và learn-back biến worklog thành lesson có khoá để người duyệt. Promote đưa những luật cá nhân mà đủ nhiều người cùng giữ lên tầng common.</div></li>
+  </ol>
+</section>
+
+<section>
+  <div class="col">
+    <h2>Dữ liệu được tổ chức thế nào</h2>
+    <p>Đơn vị cô lập dữ liệu là <b>project</b>. Mỗi dòng dữ liệu có <code>metadata.project</code>. Mỗi cặp (project, scope) là một collection riêng, ví dụ <code>kh_know_&lt;id&gt;</code> cho knowledge, <code>kh_log_&lt;id&gt;</code> cho worklog, <code>kh_findings_&lt;id&gt;</code>. Có bốn loại project đặc biệt:</p>
+  </div>
+  <div class="grid2" style="margin-top:16px">
+    <div class="proj"><h3>orchestrator</h3><p>Danh bạ dùng chung: registry project, luật common, bảng versions. Không nhận log hay findings.</p></div>
+    <div class="proj"><h3>lesson-learned</h3><p>Lesson đã được admin duyệt, ai cũng đọc được. Đây cũng là kênh thông báo chung.</p></div>
+    <div class="proj"><h3>market</h3><p>Bài chia sẻ công khai chưa qua duyệt. Agent chỉ đọc khi người dùng yêu cầu.</p></div>
+    <div class="proj"><h3>personal-&lt;email&gt;</h3><p>Không gian riêng của từng người: log, ghi chú, luật cá nhân, personalization.</p></div>
+  </div>
+</section>
+
+<section class="col">
+  <h2>Vòng học</h2>
+  <p>Đây là chỗ duy nhất phía server dùng LLM, và nó chạy nền, không nằm trên đường trả lời.</p>
+  <div class="loop" aria-label="Luồng của vòng học">
+    <span class="n">worklog</span><span class="x">→</span>
+    <span class="n">distill / learn-back</span><span class="x">→</span>
+    <span class="n">lesson có khoá</span><span class="x">→</span>
+    <span class="n">người duyệt</span><span class="x">→</span>
+    <span class="n">lesson-learned</span>
+  </div>
+  <div class="loop" style="margin-top:10px">
+    <span class="n">luật cá nhân</span><span class="x">→</span>
+    <span class="n">promote (đủ số người khác nhau)</span><span class="x">→</span>
+    <span class="n">kernel common</span>
+  </div>
+</section>
+
+<section class="col">
+  <h2>Bản đồ source</h2>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Thư mục</th><th>Vai trò</th><th>Spec</th></tr></thead>
+    <tbody>
+      <tr><td>main.py</td><td>App FastAPI, lifespan, route lõi, nạp các nhóm route qua <code>ROUTE_GROUPS</code></td><td>§1</td></tr>
+      <tr><td>app/sqldb, vector_*, embeddings/, graph_db/</td><td>Storage hai backend (SQLite / HANA), vector store, embedder, graph</td><td>§1</td></tr>
+      <tr><td>app/auth*, projects*, personal, messages, session_project</td><td>JWT, bảng luật phân quyền, project, mailbox, bind session</td><td>§2</td></tr>
+      <tr><td>app/turn, step, policy_actions/, kernel/, hooks, entities, usage</td><td>Context engine: phần sản phẩm chính</td><td>§3</td></tr>
+      <tr><td>app/distill, learnback, promote, feedback, eventing/, sync, home</td><td>Vòng học, sự kiện, trang admin, đồng bộ</td><td>§4</td></tr>
+      <tr><td>app/revisions, downloads, gallery, codegraph</td><td>Route phụ: lịch sử chỉnh sửa, nguồn tải, gallery, đồ thị code</td><td>§4</td></tr>
+      <tr><td>worker/kh_worker</td><td>Job LLM chạy đêm: distil, promote, daily</td><td>§4</td></tr>
+      <tr><td>tools/kh-helper</td><td>CLI <code>kh</code>, hook, MCP server, work-log nền</td><td>§5</td></tr>
+      <tr><td>seeds/</td><td>14 luật kernel common, 14 action dùng cho mọi project, tag, hook rule</td><td>App. A</td></tr>
+      <tr><td>tests/</td><td>pytest chia theo khu vực, embedder hash, không cần mạng</td><td>—</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section class="col">
+  <h2>Nguyên tắc thiết kế</h2>
+  <ul class="rules">
+    <li><b>Server không chạy LLM.</b> Nhờ vậy câu trả lời rẻ, tất định và dễ kiểm tra. Toàn bộ suy luận nằm ở agent.</li>
+    <li><b>Chỉ dùng tiếng Anh bên trong KH.</b> Client dịch trước khi gọi, nên embedding và các ngưỡng luôn nhất quán.</li>
+    <li><b>Ngưỡng đã được hiệu chỉnh.</b> Query được encode không kèm instruction của bge. Step floor là 0.68, lesson floor là 0.6. Đổi một trong hai thứ này thì phải hiệu chỉnh lại.</li>
+    <li><b>Quyền được kiểm tra ở server.</b> Lỗi 403 là câu trả lời cuối cùng; hội thoại không thể thay đổi quyền.</li>
+    <li><b>Kernel có ba tầng.</b> Luật cá nhân thay luật common cùng slot, trừ khi luật common bị khoá.</li>
+  </ul>
+</section>
+
+<section class="col">
+  <h2>Tình trạng rebuild</h2>
+  <table>
+    <tbody>
+      <tr><td>§1–§3</td><td>Nền tảng, auth, context engine: đã build, 186 test pass</td><td><span class="pill ok">xong</span></td></tr>
+      <tr><td>§5</td><td>kh-helper: 67 test pass</td><td><span class="pill ok">xong</span></td></tr>
+      <tr><td>§4 route phụ</td><td>revisions, downloads, gallery, codegraph: 36 test pass</td><td><span class="pill ok">xong</span></td></tr>
+      <tr><td>§4 test</td><td>Vòng học: 108 test · worker: 83 test · tổng 480 test pass</td><td><span class="pill ok">xong</span></td></tr>
+      <tr><td>§6 /v1</td><td>110 route capability</td><td><span class="pill no">chưa làm</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<p class="col foot">Nguồn: spec KH-6.5-co-che-prod.md (commit gốc 41f756b) và source rebuild trong Knowledge-Hub, ngày 31/10/2026.</p>
+
+</div>
+</body>
+</html>
