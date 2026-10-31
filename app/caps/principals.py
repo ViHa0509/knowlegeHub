@@ -742,7 +742,7 @@ def attach(app: FastAPI) -> None:
     async def get_principals(ns: str, role: str | None = Query(None), state: str | None = Query(None),
                              limit: str | None = Query(None), ctx: Ctx = Depends(core.ns_ctx)):
         _may_manage(ctx)
-        lim = core.clamp_limit(limit, 100, LIST_MAX)
+        lim = core.clamp_limit(limit, 500, LIST_MAX)
         return {"principals": await core.run(list_, ctx, role, state, lim)}
 
     @app.get("/v1/{ns}/principals/{pid}", tags=tag, summary="Read a service principal")

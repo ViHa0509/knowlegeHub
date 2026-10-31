@@ -335,7 +335,7 @@ def attach(app: FastAPI) -> None:
         return {"projects": projects_overview()}
 
     @app.get("/home/items", tags=["home"])
-    def home_items(project: str, part: str = "knowledge", offset: int = 0, limit: int = 50):
+    def home_items(project: str, part: str, offset: int = 0, limit: int = 10):
         return items(project, part, max(0, offset), limit)
 
     @app.post("/home/items/delete", tags=["home"])

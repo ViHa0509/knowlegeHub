@@ -744,9 +744,9 @@ def attach(app: FastAPI) -> None:
         return {"ok": True}
 
     @app.get("/sync/given", tags=["sync"])
-    def sync_given():
+    def sync_given(limit: int = 30):
         with _conn() as c:
-            rows = c.execute("SELECT * FROM sync_given ORDER BY updated DESC").fetchall()
+            rows = c.execute("SELECT * FROM sync_given ORDER BY updated DESC").fetchall()[:max(0, limit)]
         out = []
         now = datetime.now(timezone.utc)
         for r in rows:
@@ -769,11 +769,11 @@ def attach(app: FastAPI) -> None:
         return JSONResponse(r, status_code=202)
 
     @app.get("/sync/jobs", tags=["sync"])
-    def sync_jobs():
+    def sync_jobs(limit: int = 30):
         jobs = list_jobs()
         if not _is_maintainer():
             jobs = [j for j in jobs if j["created_by"] == _email()]
-        return {"jobs": jobs}
+        return {"jobs": jobs[:max(0, limit)]}
 
     @app.get("/sync/jobs/{job_id}", tags=["sync"])
     def sync_job(job_id: str):

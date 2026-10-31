@@ -83,7 +83,7 @@ def test_purge_and_reimport_byte_identical(client):
     token = r1.headers["X-KH-Export-Token"]
     assert client.post(f"/v1/admin/ns/{ns}:purge", json={}).status_code == 428
     assert client.post(f"/v1/admin/ns/{ns}:purge", json={"confirm": "wrong"}).status_code == 422
-    r = client.post(f"/v1/admin/ns/{ns}:purge", json={"confirm": token})
+    r = client.post(f"/v1/admin/ns/{ns}:purge", params={"confirm": token})  # ?confirm= as in the original build
     assert r.status_code == 200, r.text
     j = r.json()
     assert j["state"] == "purged" and j["deleted"]["kh_event"] >= 3 and j["vectors_dropped"] == [f"ns_{ns}_knowledge"]
@@ -112,7 +112,7 @@ def test_purge_and_reimport_byte_identical(client):
     # re-import onto an existing ns is refused; a new id works
     assert client.post(f"/v1/admin/ns:import?ns={ns}", content=r1.content).status_code == 409
     new = "t" + ns[1:-1] + "z"
-    r = client.post(f"/v1/admin/ns:import?ns={new}&rebuild=async", content=r1.content)
+    r = client.post(f"/v1/admin/ns:import?ns={new}", content=r1.content)  # rebuild defaults to async
     assert r.status_code == 201 and r.json()["rebuild"] == "queued" and r.json()["source_ns"] == ns
     ev = client.get(f"/v1/{new}/events").json()["events"]
     assert [e["body"].get("n") for e in ev if e["kind"] == "step.done"] == [0, 1, 2]

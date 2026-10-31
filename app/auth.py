@@ -659,7 +659,8 @@ class ActorMiddleware:
 
 
 async def _json(send, status: int, body: dict, headers: dict | None = None):
-    raw = json.dumps(body).encode()
+    # Same bytes as Starlette's JSONResponse (and the original KH): compact separators, UTF-8 kept.
+    raw = json.dumps(body, ensure_ascii=False, allow_nan=False, separators=(",", ":")).encode("utf-8")
     hdrs = [(b"content-type", b"application/json"), (b"content-length", str(len(raw)).encode())]
     for k, v in (headers or {}).items():
         hdrs.append((k.lower().encode(), str(v).encode()))

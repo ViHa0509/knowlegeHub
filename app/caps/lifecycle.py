@@ -830,7 +830,7 @@ def attach(app: FastAPI) -> None:
                                           "Content-Disposition": f'attachment; filename="{ns}-{export_id}.zip"'})
 
     @app.post("/v1/admin/ns:import", tags=tag, summary="Import a namespace export (zip body)")
-    async def import_ns(request: Request, ns: str | None = Query(None), rebuild: str = Query("sync")):
+    async def import_ns(request: Request, ns: str | None = Query(None), rebuild: str = Query("async")):
         fh = await _read_limited(request, import_max_bytes())
         try:
             out = await core.run(do_import, fh, ns, rebuild)
@@ -839,9 +839,10 @@ def attach(app: FastAPI) -> None:
         return core.reply(out, status=201)
 
     @app.post("/v1/admin/ns/{ns:ns}:purge", tags=tag, summary="Purge a detached namespace")
-    async def purge_ns(request: Request, ns: str, force: bool = Query(False)):
+    async def purge_ns(request: Request, ns: str, force: bool = Query(False), confirm: str | None = Query(None)):
         body = await core.read_json(request, required=False)
-        confirm = body.get("confirm") if isinstance(body, dict) else None
+        if not confirm:
+            confirm = body.get("confirm") if isinstance(body, dict) else None
         return await core.run(purge, ns, confirm, force)
 
     @app.post("/v1/admin/agents:stop", tags=tag, summary="Suspend every active namespace (global stop)")

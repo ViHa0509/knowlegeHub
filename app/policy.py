@@ -8,8 +8,8 @@ import logging
 import os
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, Request
-from pydantic import BaseModel, Field
+from fastapi import Body, FastAPI, HTTPException, Request
+from pydantic import BaseModel, Field, ValidationError
 
 from app import ctx_config as C
 from app import ctx_util as U
@@ -106,7 +106,7 @@ def attach(app: FastAPI) -> None:
         return add(body, U.model_of(request))
 
     @app.get("/policy/list", tags=["policy"])
-    def policy_list(project: Optional[str] = None):
+    def policy_list(project: Optional[str] = ORCH):
         from app import vector_store as vs
 
         pid = vs.own_project(project)
@@ -124,9 +124,14 @@ def attach(app: FastAPI) -> None:
         return match(body, U.model_of(request))
 
     @app.delete("/policy", tags=["policy"])
-    def policy_delete(body: PolicyDelete):
+    def policy_delete(body: dict = Body(...)):
+        # The original takes a raw JSON object here: {policy_id, project?}.
         from app import vector_store as vs
 
+        try:
+            body = PolicyDelete.model_validate(body)
+        except ValidationError as e:
+            raise HTTPException(status_code=422, detail=e.errors(include_url=False, include_context=False))
         pid = vs.own_project(body.project)
         U.need(pid, "project.write")
         h = _coll(pid, False)

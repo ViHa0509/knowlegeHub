@@ -71,7 +71,8 @@ def test_write_validation_all_or_nothing(client):
     assert r.status_code == 422 and r.json()["error"] == "validation_failed"
     idx = {x["index"] for x in r.json()["rejected"]}
     assert idx == {1, 2, 3, 4, 5}
-    assert client.get(f"/v1/{ns}/metrics").json()["observations"] == []
+    assert client.get(f"/v1/{ns}/metrics", params={"series": "lat"}).json()["observations"] == []
+    assert client.get(f"/v1/{ns}/metrics").status_code == 422  # series is required (original build)
     big = [{"series": "lat", "value": 1, "ts_ms": i} for i in range(metrics.BATCH_MAX + 1)]
     assert client.post(f"/v1/{ns}/metrics", json=big).status_code == 413
 
@@ -84,7 +85,7 @@ def test_list_filters(client):
         {"series": "lat", "value": 2, "ts_ms": t0 + 10, "unit_id": "b", "run_id": "r2", "baseline": True},
         {"series": "lat", "value": 3, "ts_ms": t0 + 20, "unit_id": "c", "run_id": "r2"},
     ])
-    g = lambda **q: client.get(f"/v1/{ns}/metrics", params=q).json()["observations"]  # noqa: E731
+    g = lambda **q: client.get(f"/v1/{ns}/metrics", params={"series": "lat", **q}).json()["observations"]  # noqa: E731
     assert [o["value"] for o in g(series="lat")] == [3, 2, 1]
     assert [o["value"] for o in g(run_id="r2")] == [3, 2]
     assert [o["value"] for o in g(baseline="true")] == [2]

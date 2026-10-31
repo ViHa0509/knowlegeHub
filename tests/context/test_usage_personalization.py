@@ -1,7 +1,7 @@
 """Usage repeats (§3.12) and the personalization render / legacy guards (§3.9)."""
 from __future__ import annotations
 
-from datetime import date
+from datetime import datetime, timezone
 
 from app import personalization, usage
 
@@ -17,7 +17,7 @@ def test_learn_and_repeats(client, add_row, uid):
     for i in range(3):
         add_row(f"backup of the database {uid} run {i}", scope="log", project=p, author=f"u{uid}@x.com",
                 actor=f"s{i}")
-    today = date.today().isoformat()
+    today = datetime.now(timezone.utc).date().isoformat()  # log ts are UTC
     rep = usage.learn(today, [p])
     assert rep["keyed"] >= 3
     person = "personal-u" + uid + "-x-com"

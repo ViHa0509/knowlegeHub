@@ -449,7 +449,7 @@ def attach(app: FastAPI) -> None:
     async def get_revisions(ns: str, type: str, id: str, limit: str | None = Query(None),
                             ctx: Ctx = Depends(core.ns_ctx)):
         trow = _trow(ctx, type, "read")
-        lim = core.clamp_limit(limit, 100, REVISIONS_MAX)
+        lim = core.clamp_limit(limit, REVISIONS_MAX, REVISIONS_MAX)
         return await core.run(list_revisions, ctx, trow, type, _check_id(id), lim)
 
     @app.get("/v1/{ns}/records/{type}/{id}", tags=tag, summary="Read a record (?rev= for an older revision)")

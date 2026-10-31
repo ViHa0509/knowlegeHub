@@ -812,7 +812,7 @@ def attach(app: FastAPI) -> None:
         return core.reply(await core.run(write, ctx, obs))
 
     @app.get("/v1/{ns}/metrics", tags=tag, summary="List metric observations")
-    async def get_metrics(ns: str, series: str | None = Query(None), project: str | None = Query(None),
+    async def get_metrics(ns: str, series: str = Query(...), project: str | None = Query(None),
                           run_id: str | None = Query(None), unit_id: str | None = Query(None),
                           baseline: str | None = Query(None), from_: str | None = Query(None, alias="from"),
                           to: str | None = Query(None), limit: str | None = Query(None),

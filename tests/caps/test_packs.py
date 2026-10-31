@@ -64,6 +64,9 @@ def test_versions_freeze_and_read(client):
     assert g["latest_version"] == "v1.0" and g["title"] == "RFP 1" and g["parts"][0]["text"] == packs.normalize(DOC1)
     assert "text" not in client.get(f"/v1/{ns}/packs/rfp").json()["parts"][0]
     assert [x["pack_id"] for x in client.get(f"/v1/{ns}/packs").json()["packs"]] == ["rfp"]
+    # original build: ?project= filters the list
+    assert [x["pack_id"] for x in client.get(f"/v1/{ns}/packs", params={"project": project}).json()["packs"]] == ["rfp"]
+    assert client.get(f"/v1/{ns}/packs", params={"project": "other-project"}).json()["packs"] == []
     assert [x["label"] for x in client.get(f"/v1/{ns}/packs/rfp/versions").json()["versions"]] == ["v1.0"]
     assert client.get(f"/v1/{ns}/packs/nope").status_code == 404
     assert client.get(f"/v1/{ns}/packs/rfp", params={"version": "v9.0"}).status_code == 404
@@ -121,6 +124,12 @@ def test_quotes_reanchor_and_resolve(client):
     cur = client.get(f"/v1/{ns}/quotes/{urlq(rb['latest']['quote_id'], safe='')}", params={"pack": "rfp"}).json()
     assert cur["status"] == "current" and cur["hops"] == 0
     assert client.get(f"/v1/{ns}/quotes/nope", params={"pack": "rfp"}).status_code == 404
+    # original build: ?pack is optional (the one pack holding the id is found), ?origin filters the list
+    nopack = client.get(f"/v1/{ns}/quotes/{urlq(qv['quote_id'], safe='')}", params={"version": "v1.0"})
+    assert nopack.status_code == 200 and nopack.json()["status"] == "reanchored"
+    assert client.get(f"/v1/{ns}/quotes/nope").status_code == 404
+    v2q = client.get(f"/v1/{ns}/packs/rfp/quotes", params={"version": "v2.0", "origin": "anchor"}).json()["quotes"]
+    assert v2q and all(x["origin"] == "anchor" for x in v2q)
 
     # addendum v2.1 overlays v2.0; an addendum of the older v1.0 cannot freeze after v2.0
     ad = client.post(f"/v1/{ns}/packs/rfp/versions/v2.0/addenda",

@@ -138,7 +138,7 @@ def graph_traverse(body: GraphTraverseRequest) -> dict:
 
 def attach(app: FastAPI) -> None:
     @app.get("/orchestrator/project_match", tags=["orchestrator"])
-    def orchestrator_project_match(text: str = ""):
+    def orchestrator_project_match(text: str):
         return project_match(text)
 
     @app.post("/orchestrator/hybrid", tags=["orchestrator"])

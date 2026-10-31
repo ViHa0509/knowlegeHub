@@ -675,7 +675,7 @@ def attach(app: FastAPI) -> None:
         return actors()
 
     @app.get("/messages/channel", tags=["messages"])
-    def messages_channel(project: Optional[str] = None, limit: int = 200):
+    def messages_channel(project: str, limit: int = 200):
         return channel(project, limit)
 
     @app.post("/messages/people", tags=["messages"])

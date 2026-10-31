@@ -1136,7 +1136,7 @@ def attach(app: FastAPI) -> None:
     async def get_scans(ns: str, project: str | None = Query(None), limit: str | None = Query(None),
                         ctx: Ctx = Depends(core.ns_ctx)):
         _require(ctx, "read")
-        return await core.run(list_scans, ctx, project, core.clamp_limit(limit, 100, SCANS_LIST_MAX))
+        return await core.run(list_scans, ctx, project, core.clamp_limit(limit, 50, SCANS_LIST_MAX))
 
     @app.get("/v1/{ns}/rules/scans/{scan_id}", tags=tag, summary="Read one coverage scan")
     async def get_one_scan(ns: str, scan_id: str, ctx: Ctx = Depends(core.ns_ctx)):

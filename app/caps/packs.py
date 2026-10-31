@@ -30,7 +30,7 @@ VERSION_MAX_CHARS = 16 * 1024 * 1024
 CHUNK_CHARS = 1200
 QUOTE_MAX_CHARS = 20000
 LIST_MAX = 1000
-LIST_DEFAULT = 100
+LIST_DEFAULT = 1000
 MAP_HOPS_MAX = 1000
 TEXT_MAX = 4000
 QUESTION_MAX = 2000
@@ -820,10 +820,14 @@ def retrieval_provider(ctx: Ctx, req: dict | None = None, **kw) -> list[dict]:
 # -- reads ------------------------------------------------------------------------------------------------------
 
 
-def list_packs(ctx: Ctx, after: str, limit: int) -> dict:
+def list_packs(ctx: Ctx, after: str, limit: int, project: str = "") -> dict:
+    q = "SELECT * FROM kh_pack_head WHERE ns=? AND pack_id > ?"
+    params: list = [ctx.ns, after or ""]
+    if project:
+        q += " AND project=?"
+        params.append(project)
     with sqldb.connect() as c:
-        rows = c.execute(f"SELECT * FROM kh_pack_head WHERE ns=? AND pack_id > ? ORDER BY pack_id "
-                         f"LIMIT {int(limit) + 1}", (ctx.ns, after or "")).fetchall()
+        rows = c.execute(q + f" ORDER BY pack_id LIMIT {int(limit) + 1}", params).fetchall()
     more = len(rows) > limit
     rows = rows[:limit]
     out = {"packs": [_head_view(r) for r in rows if ctx.may_project(r["project"])]}
@@ -901,7 +905,8 @@ def cite(ctx: Ctx, pack: str, body: dict) -> tuple[int, dict]:
         return (200 if exists else 201), _quote_view(pack, q)
 
 
-def list_quotes(ctx: Ctx, pack: str, ver: str | None, path: str | None, after: str, limit: int) -> dict:
+def list_quotes(ctx: Ctx, pack: str, ver: str | None, path: str | None, after: str, limit: int,
+                origin: str = "") -> dict:
     with sqldb.connect() as c:
         h = _visible_head(c, ctx, pack)
         r = _resolve_ver(c, ctx.ns, pack, h, ver)
@@ -910,6 +915,9 @@ def list_quotes(ctx: Ctx, pack: str, ver: str | None, path: str | None, after: s
         if path:
             q += " AND path=?"
             params.append(path)
+        if origin:
+            q += " AND origin=?"
+            params.append(origin)
         rows = c.execute(q + f" ORDER BY quote_id LIMIT {int(limit) + 1}", params).fetchall()
     more = len(rows) > limit
     out = {"pack_id": pack, "version": r["label"], "quotes": [_quote_view(pack, x) for x in rows[:limit]]}
@@ -918,8 +926,22 @@ def list_quotes(ctx: Ctx, pack: str, ver: str | None, path: str | None, after: s
     return out
 
 
-def resolve_quote(ctx: Ctx, quote_id: str, pack: str, ver: str | None) -> dict:
+def _pack_of_quote(c, ctx: Ctx, quote_id: str) -> str:
+    """The one visible pack holding a quote id (GET /v1/{ns}/quotes/{id} without ?pack)."""
+    packs = [r[0] for r in c.execute("SELECT DISTINCT pack_id FROM kh_quote WHERE ns=? AND quote_id=? ORDER BY pack_id",
+                                     (ctx.ns, quote_id)).fetchall()]
+    packs = [p for p in packs if (h := _head(c, ctx.ns, p)) is not None and ctx.may_project(h["project"])]
+    if not packs:
+        raise CapError("not_found", f"quote '{quote_id}' not found")
+    if len(packs) > 1:
+        raise CapError("invalid", f"quote '{quote_id}' is in several packs ({', '.join(packs[:10])}); name ?pack=")
+    return packs[0]
+
+
+def resolve_quote(ctx: Ctx, quote_id: str, pack: str | None, ver: str | None) -> dict:
     with sqldb.connect() as c:
+        if not pack:
+            pack = _pack_of_quote(c, ctx, quote_id)
         h = _visible_head(c, ctx, pack)
         if ver in (None, ""):
             labels = [r[0] for r in c.execute("SELECT version FROM kh_quote WHERE ns=? AND pack_id=? AND quote_id=?",
@@ -1369,10 +1391,10 @@ def attach(app: FastAPI) -> None:
     tag = ["v1 packs"]
 
     @app.get("/v1/{ns}/packs", tags=tag, summary="List packs")
-    async def get_packs(ns: str, after: str = Query(""), limit: str | None = Query(None),
+    async def get_packs(ns: str, project: str = Query(""), after: str = Query(""), limit: str | None = Query(None),
                         ctx: Ctx = Depends(core.ns_ctx)):
         _require_read(ctx)
-        return await core.run(list_packs, ctx, after, core.clamp_limit(limit, LIST_DEFAULT, LIST_MAX))
+        return await core.run(list_packs, ctx, after, core.clamp_limit(limit, LIST_DEFAULT, LIST_MAX), project)
 
     @app.get("/v1/{ns}/packs/{pack}", tags=tag, summary="A pack version (?version=vN.k|latest&text=true)")
     async def get_pack_route(ns: str, pack: str, version: str | None = Query(None), text: bool = Query(False),
@@ -1445,16 +1467,17 @@ def attach(app: FastAPI) -> None:
 
     @app.get("/v1/{ns}/packs/{pack}/quotes", tags=tag, summary="List quotes of a version")
     async def get_quotes(ns: str, pack: str, version: str | None = Query(None), path: str | None = Query(None),
-                         after: str = Query(""), limit: str | None = Query(None), ctx: Ctx = Depends(core.ns_ctx)):
+                         origin: str = Query(""), after: str = Query(""), limit: str | None = Query(None),
+                         ctx: Ctx = Depends(core.ns_ctx)):
         _require_read(ctx)
         return await core.run(list_quotes, ctx, _check_pack(pack), version, path, after,
-                              core.clamp_limit(limit, LIST_DEFAULT, LIST_MAX))
+                              core.clamp_limit(limit, LIST_DEFAULT, LIST_MAX), origin)
 
     @app.get("/v1/{ns}/quotes/{quote_id:path}", tags=tag, summary="Resolve a quote to the latest version")
-    async def get_quote(ns: str, quote_id: str, pack: str = Query(...), version: str | None = Query(None),
+    async def get_quote(ns: str, quote_id: str, pack: str = Query(""), version: str | None = Query(None),
                         ctx: Ctx = Depends(core.ns_ctx)):
         _require_read(ctx)
-        return await core.run(resolve_quote, ctx, quote_id, _check_pack(pack), version)
+        return await core.run(resolve_quote, ctx, quote_id, _check_pack(pack) if pack else None, version)
 
     # -- assumptions ----------------------------------------------------------------------------------------
     @app.post("/v1/{ns}/packs/{pack}/assumptions", tags=tag, summary="Record an assumption (ASSUMED-n)")

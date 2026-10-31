@@ -399,8 +399,8 @@ def prompt_event(masked_text: str, project: Optional[str]) -> None:
 def attach(app: FastAPI) -> None:
     @app.get("/turn/context", tags=["context"])
     async def turn_context(request: Request, text: str, action: Optional[str] = None, context: Optional[str] = None,
-                           entities: Optional[list[str]] = Query(None, alias="entities[]")):
-        ents = entities or request.query_params.getlist("entities") or None
+                           entities: Optional[list[str]] = Query(None)):
+        ents = entities or request.query_params.getlist("entities[]") or None
         return await asyncio.to_thread(build, text, U.model_of(request), action, context, ents)
 
 

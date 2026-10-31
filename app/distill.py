@@ -1528,7 +1528,7 @@ def attach(app: FastAPI, log_lanes_fn=None) -> None:  # noqa: ARG001
         return reopen(body.project, body.ids)
 
     @app.get("/distill/rekey", tags=["distill"])
-    def distill_rekey_get(project: str, limit: int = Query(50, ge=1, le=500)):
+    def distill_rekey_get(project: str, limit: int = Query(20, ge=1, le=100)):
         return rekey_candidates(project, limit)
 
     @app.post("/distill/rekey", tags=["distill"])

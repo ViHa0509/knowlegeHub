@@ -377,7 +377,7 @@ def attach(app: FastAPI) -> None:
     async def get_leases(ns: str, prefix: str = Query(""), limit: str | None = Query(None),
                          ctx: Ctx = Depends(core.ns_ctx)):
         ctx.require("leases", "use")
-        lim = core.clamp_limit(limit, 100, LIST_MAX)
+        lim = core.clamp_limit(limit, 500, LIST_MAX)
         return {"leases": await core.run(lease_list, ctx, prefix or "", lim)}
 
     @app.post("/v1/{ns}/leases/{name:path}", tags=tag, summary="Lease verbs: name:acquire | :renew | :release")

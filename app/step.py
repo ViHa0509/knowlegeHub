@@ -53,12 +53,12 @@ class WithItem(BaseModel):
 class StepRequest(BaseModel):
     text: str = Field(..., min_length=1, max_length=4000)
     project: Optional[str] = None
-    budget_chars: int = Field(6000, ge=500, le=40000)
-    k: int = Field(6, ge=1, le=20)
+    budget_chars: Optional[int] = Field(None, ge=500, le=40000)  # None -> KH_STEP_BUDGET_CHARS
+    k: Optional[int] = Field(None, ge=1, le=20)  # None -> KH_STEP_K
     include_log: bool = False
     action: Optional[str] = Field(None, max_length=120)
     context: Optional[str] = Field(None, max_length=120)
-    entities: list[str] = Field(default_factory=list, max_length=10)
+    entities: Optional[list[str]] = Field(None, max_length=10)
     only_tiers: Optional[list[str]] = None
     with_items: Optional[list[WithItem]] = Field(None, max_length=10)
     overrides: Optional[dict[str, Any]] = None
@@ -293,7 +293,7 @@ async def build(body: StepRequest, model, recent: Optional[Callable[..., dict]] 
         tasks["mine"] = _safe(t(_by_meaning, text, config.PERSONAL_LESSON_SCOPE, personal, k, floor, model), [])
     if keyed:
         for ln in real_lanes:
-            tasks[f"key:{ln}"] = _safe(t(_key_read, ln, body.action, body.context, body.entities,
+            tasks[f"key:{ln}"] = _safe(t(_key_read, ln, body.action, body.context, body.entities or [],
                                          int(P["STEP_KEY_LIMIT"]), text, model), ([], ""))
     for ln in real_lanes:
         tasks[f"contexts:{ln}"] = _safe(t(_contexts, ln), [])
@@ -314,7 +314,7 @@ async def build(body: StepRequest, model, recent: Optional[Callable[..., dict]] 
         for lane, item, key in _exact_first(results, body.action, body.context):
             pack.add("distilled", {"id": item.get("id"), "score": None, "key": key, "status": item.get("status"),
                                    "text": _line_of(item, with_sources=maint)})
-        keys_info = {"action": body.action, "context": body.context, "entities": body.entities,
+        keys_info = {"action": body.action, "context": body.context, "entities": body.entities or [],
                      "answered_by": {ln: res[1] for ln, res in results.items() if res[1]}}
     for wi in body.with_items or []:
         pack.add("distilled", {"id": wi.id, "score": None, "key": "injected", "status": "candidate",

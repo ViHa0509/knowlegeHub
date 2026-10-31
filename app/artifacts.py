@@ -220,9 +220,12 @@ def upload(name: str, content_b64: str, module: str | None = None, version: str 
     return row
 
 
-def list_artifacts() -> list[dict]:
+def list_artifacts(module: Optional[str] = None) -> list[dict]:
     with _conn() as c:
-        rows = c.execute("SELECT * FROM artifact_file ORDER BY created_at DESC").fetchall()
+        if module:
+            rows = c.execute("SELECT * FROM artifact_file WHERE module=? ORDER BY created_at DESC", (module,)).fetchall()
+        else:
+            rows = c.execute("SELECT * FROM artifact_file ORDER BY created_at DESC").fetchall()
     return [{k: r[k] for k in ("name", "module", "version", "sha256", "size", "content_type", "backend",
                                "created_at", "created_by")} for r in rows]
 
@@ -327,8 +330,8 @@ def attach(app: FastAPI) -> None:
         return upload(body.name, body.content_b64, body.module, body.version, getattr(p, "email", None))
 
     @app.get("/artifacts", tags=["artifacts"])
-    def artifacts_list():
-        return {"artifacts": list_artifacts()}
+    def artifacts_list(module: Optional[str] = None):
+        return {"artifacts": list_artifacts(module)}
 
     @app.delete("/artifacts/{name}", tags=["artifacts"])
     def artifacts_delete(name: str):

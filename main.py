@@ -727,7 +727,7 @@ class GraphEdge(BaseModel):
 
 
 class GraphAddRequest(BaseModel):
-    entities: list[GraphEntity] = Field(default_factory=list)
+    entities: list[GraphEntity]
     edges: list[GraphEdge] = Field(default_factory=list)
 
 
