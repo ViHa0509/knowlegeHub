@@ -4,7 +4,7 @@ A shared memory and context engine for AI coding agents such as Claude Code.
 
 Knowledge Hub (KH) stores what agents and people learn while they work: knowledge, work logs, findings, policies and lessons. Each item belongs to a project. On every user message, KH hands the agent a compact, permission-checked context block. The server runs **no LLM to answer requests**. It does deterministic storage, permissions and retrieval, and the calling agent does all the reasoning.
 
-This repository is a clean-room rebuild of the production KH v6.5 from its written specification (kept private, not published in this repository). It implements all **296 operations** of the production API and has 617 automated tests.
+It started as a demo for my team: the goal is to help people work together better by managing and sharing context, so teammates and their AI coding agents build on each other's work instead of starting from zero. It was built from a written design specification, which is kept private and not published in this repository.
 
 ## Features
 
@@ -41,7 +41,7 @@ This repository is a clean-room rebuild of the production KH v6.5 from its writt
   | outbox | signed webhooks |
   | lifecycle | export, import, purge |
 
-- **Two storage backends.** SQLite for local work, SAP HANA Cloud for production. Every table has DDL for both.
+- **Two storage backends behind one storage layer.** SQLite for local work and demos, SAP HANA Cloud for a shared team instance. Every table has DDL for both, and the layer is designed to extend to PostgreSQL (pgvector).
 
 ## Architecture
 
@@ -62,7 +62,7 @@ flowchart LR
         V1["/v1 capability modules"]
         EM["Embedder<br/>bge-small-en-v1.5 (384-dim)"]
     end
-    DB[("SQLite (local)<br/>or HANA Cloud (prod)<br/>relational · vectors · graph")]
+    DB[("SQLite (local)<br/>or HANA Cloud (team)<br/>relational · vectors · graph")]
     KC["Keycloak"]
     W["kh_worker<br/>nightly LLM jobs"]
     H -- "HTTPS + JWT" --> A
@@ -133,7 +133,7 @@ All settings come from environment variables. The main ones:
 | `KH_FEEDBACK_CRON`, `KH_MESSAGE_CRON`, `KH_CAPS_CRONS` | on | Background jobs |
 | `KH_CAP_<MODULE>` | module default | Switch a `/v1` module on or off |
 
-The full list, with exact defaults, is in [`app/config.py`](app/config.py) and the spec (§1.4).
+The full list, with exact defaults, is in [`app/config.py`](app/config.py).
 
 KH is **English-only**. Clients translate everything before sending it, so stored text and embeddings stay consistent.
 
@@ -150,10 +150,9 @@ app/                    server modules (one route group per module)
   caps/                      /v1 capability modules
 worker/kh_worker/       nightly LLM jobs (distil, promote, daily)
 tools/kh-helper/        client: kh CLI, hooks, MCP server, work log
-tools/route_coverage.py compares the app's routes with the spec
-seeds/                  seed kernel rules, actions and tags (spec Appendix A)
+seeds/                  seed kernel rules, actions and tags
 tests/                  pytest suites per area
-docs/                   spec, rebuild contract, deviations, integration notes
+docs/                   build contract, deviations, integration notes
 .claude/skills/         project skills for Claude Code
 ```
 
@@ -173,18 +172,18 @@ See [`tools/kh-helper/README.md`](tools/kh-helper/README.md) for details.
 ```bash
 .venv/Scripts/python -m pytest -q                      # full suite (~2 min, no network)
 .venv/Scripts/python -m pytest -q tests/caps           # one area
-.venv/Scripts/python tools/route_coverage.py           # expect "built: 296/296"
 ```
 
 Tests use the deterministic `hash` embedder, temporary SQLite stores and fake LLMs. They need no network, model download or database server.
 
-Before changing code, read [`docs/rebuild-contract.md`](docs/rebuild-contract.md) for the shared conventions. Record any departure from the spec in [`docs/deviations.md`](docs/deviations.md). The `kh-spec` and `kh-change` skills in `.claude/skills/` walk Claude Code through both.
+Before changing code, read [`docs/rebuild-contract.md`](docs/rebuild-contract.md) for the shared conventions. Record any departure from the design in [`docs/deviations.md`](docs/deviations.md).
 
 ## Status and limits
 
-- All 296 production operations exist. Where the spec leaves a value UNKNOWN, the rebuild chooses one and lists it in [`docs/deviations.md`](docs/deviations.md). Check these against production before relying on them.
+- This is a demo for team use, not a hardened product. Where the design leaves a value open, the choice made is listed in [`docs/deviations.md`](docs/deviations.md).
 - Not yet built:
-  - the five roadmap `/v1` modules (people, daily, outcomes, learn, improve), which are off on production;
+  - a PostgreSQL (pgvector) storage backend;
+  - five roadmap `/v1` modules (people, daily, outcomes, learn, improve);
   - the Windows offline installer for `kh-helper`;
   - half of the kernel tag vocabulary (151 of 299 tags are seeded).
 - Not covered by tests: sync with a second KH instance, Keycloak account provisioning, and event delivery to a sidecar. These need live services.
