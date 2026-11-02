@@ -4,7 +4,7 @@ A shared memory and context engine for AI coding agents such as Claude Code.
 
 Knowledge Hub (KH) stores what agents and people learn while they work: knowledge, work logs, findings, policies and lessons. Each item belongs to a project. On every user message, KH hands the agent a compact, permission-checked context block. The server runs **no LLM to answer requests**. It does deterministic storage, permissions and retrieval, and the calling agent does all the reasoning.
 
-This repository is a clean-room rebuild of the production KH v6.5 from its written specification ([`docs/spec/KH-6.5-co-che-prod.md`](docs/spec/KH-6.5-co-che-prod.md)). It implements all **296 operations** of the production API and has 617 automated tests.
+This repository is a clean-room rebuild of the production KH v6.5 from its written specification (kept private, not published in this repository). It implements all **296 operations** of the production API and has 617 automated tests.
 
 ## Features
 

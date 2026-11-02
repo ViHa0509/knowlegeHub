@@ -25,3 +25,6 @@ logs/
 Thumbs.db
 .vscode/
 .idea/
+
+# Production spec: kept local, never published
+docs/spec/
