@@ -1,5 +1,5 @@
 {
-  "source": "rebuild: prod kernel_hooks.json is summarised in spec §3.5; PreToolUse/pre-action-check and UserPromptSubmit/step-wise are prod text, the others are reconstructed from the spec summary",
+  "source": "rebuild: prod kernel_hooks.json is summarised in spec §3.5; PreToolUse/pre-action-check and UserPromptSubmit/step-wise are prod text, Stop/store-log is prod text from the KH_Setup export of 2026-11-17 (Prod GET /hooks/list), the others are reconstructed from the spec summary",
   "hooks": [
     {
       "hook_type": "UserPromptSubmit",
@@ -23,7 +23,7 @@
       "hook_type": "Stop",
       "name": "store-log",
       "position": 1,
-      "content": "KH END-OF-TURN CHECK: if this turn changed something, discussed or decided a solution, or the person gave new information (fact, constraint, correction, requirement), follow action 'store worklog' (load its plan once per conversation). No project means the personal project, never the orchestrator. Say at most one short line about it, in the language of the person's last message."
+      "content": "KH: if this turn changed something, discussed or decided a solution, or the person gave new information - in a project or in none - follow action 'store worklog' (its plan is in this conversation or fetch it); no project means the personal project. Otherwise, or if a log is already stored, do nothing more. Any text you write now is at most one short line, in the language of the person's last message, never English by default."
     }
   ]
 }
