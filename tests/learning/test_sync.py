@@ -174,3 +174,28 @@ def test_pull_takes_a_personal_project_the_giver_offers(client, monkeypatch):
     assert job["doc"]["projects"][pid]["parts"]["knowledge"]["created"] == 1
     h = vs.get_existing(vs.part_collection_name("knowledge", pid))
     assert vs.get_ids_vt(h, ["p1"])[0]["source_text"] == "own note"
+
+
+def test_pull_takes_the_hot_window_listed_in_counts(client, monkeypatch):
+    """KH 7.1 offers limits.parts = [] and shows its hot window only in the project's counts."""
+    pid = "hot-proj"
+    monkeypatch.setattr(sync, "_peer_manifest", lambda url, key: {
+        "projects": [{"id": pid, "counts": {"knowledge": 0, "hotlog": 1}}], "limits": {"parts": []}})
+    asked = []
+
+    def peer(method, url, path, key, body=None, params=None):
+        if path == "/sync/peer/export":
+            asked.append(body["part"])
+            if body["part"] == "hotlog":
+                return {"rows": [{"id": "h1", "document": "recent work", "metadata": {"project": pid}}],
+                        "next_offset": None}
+        return {"rows": [], "next_offset": None}
+
+    monkeypatch.setattr(sync, "_peer", peer)
+    key = "khsync1." + __import__("base64").urlsafe_b64encode(
+        b'{"u": "http://giver", "k": "abc"}').decode().rstrip("=") + ".sig"
+    out = sync.start_pull(key, [{"project": pid}], wait=True)
+    assert out["state"] == "done", out
+    assert "hotlog" in asked
+    job = client.get(f"/sync/jobs/{out['job_id']}").json()
+    assert job["doc"]["projects"][pid]["parts"]["hotlog"]["created"] == 1

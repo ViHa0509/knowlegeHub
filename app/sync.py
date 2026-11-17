@@ -549,6 +549,9 @@ def run_pull(job_id: str, key: str, selection: list[dict], since=None, until=Non
                     projects.get_or_create_project(pid, descriptor=entries[pid].get("descriptor") or "", source="sync")
                     pdoc["registry"] = "created"
             parts = sel.get("parts") or default_parts
+            # KH 7.1 sends limits.parts = [] (all parts) and lists the hot window only in the project's counts.
+            if not sel.get("parts") and "hotlog" not in parts and ((entries[pid].get("counts") or {}).get("hotlog")):
+                parts = parts + ["hotlog"]
             for part in parts:
                 tot = {"created": 0, "unchanged": 0, "kept": 0, "updated": 0, "pages": 0}
                 offset = 0
