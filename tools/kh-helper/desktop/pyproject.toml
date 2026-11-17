@@ -1,0 +1,10 @@
+[project]
+name = "knowledge-hub-desktop"
+version = "0.0.0"
+description = "kh-helper MCP server 'knowledge-hub' as a Claude Desktop extension"
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.31,<3",
+    "keyring>=25,<26",
+    "mcp>=2.2,<3",
+]

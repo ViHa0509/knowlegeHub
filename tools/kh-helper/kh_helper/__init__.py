@@ -8,4 +8,4 @@ import time
 # The MCP startup deadline counts from this moment.
 STARTED = time.monotonic()
 
-__version__ = "1.19.3"
+__version__ = "1.23.0"

@@ -1,4 +1,4 @@
-# kh-helper 1.19.3
+# kh-helper 1.23.0
 
 The Knowledge Hub client. It is the only thing on the client that holds credentials: the assistant asks the
 helper to make a call and gets back the JSON answer; it never sees a password, refresh token or access token.
@@ -14,7 +14,7 @@ Three ways in:
 
 ```
 python -m venv <PROFILE>/kh-helper          # PROFILE = $CLAUDE_CONFIG_DIR or ~/.claude
-<PROFILE>/kh-helper/Scripts/python -m pip install kh_helper-1.19.3-py3-none-any.whl
+<PROFILE>/kh-helper/Scripts/python -m pip install kh_helper-1.23.0-py3-none-any.whl
 <PROFILE>/kh-helper/Scripts/python -m kh_helper.cli login
 <PROFILE>/kh-helper/Scripts/python -m kh_helper.cli setup
 ```

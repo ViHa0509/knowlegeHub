@@ -1,0 +1,40 @@
+{
+  "manifest_version": "0.4",
+  "name": "knowledge-hub",
+  "display_name": "Knowledge Hub",
+  "version": "0.0.0",
+  "description": "Knowledge Hub (KH) through the signed-in person's own rights.",
+  "long_description": "The kh-helper MCP server 'knowledge-hub' packaged for Claude Desktop. It signs in with the person's company account in the browser (tool kh_login), keeps the sign-in in the OS credential store and makes every KH call with a fresh short-lived token. Claude never sees a password or token.",
+  "author": {
+    "name": "Knowledge Hub"
+  },
+  "server": {
+    "type": "uv",
+    "entry_point": "src/server.py",
+    "mcp_config": {
+      "command": "uv",
+      "args": ["run", "--directory", "${__dirname}", "src/server.py"],
+      "env": {
+        "KH_URL": "${user_config.kh_url}"
+      }
+    }
+  },
+  "user_config": {
+    "kh_url": {
+      "type": "string",
+      "title": "Knowledge Hub URL",
+      "description": "The Knowledge Hub server to use.",
+      "default": "https://knowledge-hub.cfapps.br10.hana.ondemand.com",
+      "required": false
+    }
+  },
+  "tools_generated": true,
+  "compatibility": {
+    "platforms": ["darwin", "linux", "win32"],
+    "runtimes": {
+      "python": ">=3.10"
+    }
+  },
+  "keywords": ["knowledge-hub", "kh", "memory", "knowledge"],
+  "license": "MIT"
+}

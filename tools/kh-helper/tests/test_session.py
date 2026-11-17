@@ -15,7 +15,7 @@ def test_home_and_defaults(env):
     assert S.DEFAULT_KH_URL == "http://localhost:8000"
     assert S.HTTP_TIMEOUT == 60
     from kh_helper import __version__
-    assert __version__ == "1.19.3"
+    assert __version__ == "1.23.0"
 
 
 def test_device_login_stores_refresh_in_keyring(server, kr, env):

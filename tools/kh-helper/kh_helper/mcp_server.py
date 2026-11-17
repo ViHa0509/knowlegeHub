@@ -38,6 +38,13 @@ INSTRUCTIONS = """Knowledge Hub (KH) through the signed-in person's own rights.
   kh_context("PreToolUse") before editing files, and kh_context("Stop") before you finish,
   and follow what they say."""
 
+DESKTOP_NOTE = """CLAUDE DESKTOP: this server runs as a desktop extension, without a terminal or hooks.
+- 'not signed in' means: call kh_login, give the person the link it returns (they sign in with their company
+  account in the browser), then check with kh_status. kh_logout ends the sign-in on this computer.
+- There are no hooks here: follow the kh_context lines above for every message."""
+
+LOGIN_LINK_SECONDS = 15
+
 LATE_RULES = ("KH did not answer within a few seconds when this server started, so the KH session rules are not "
               "included here. Call kh_context(\"SessionStart\") once before your first KH request and follow it.")
 
@@ -78,7 +85,54 @@ def context_text(session, event: str, project: str = "") -> str:
         return quiet.SLOW_TOOL
 
 
-def instructions(session) -> str:
+class DesktopLogin:
+    """Browser sign-in started from a tool call: the link comes back at once, the wait runs in a thread."""
+
+    def __init__(self, session):
+        self.session = session
+        self.lock = threading.Lock()
+        self.thread: threading.Thread | None = None
+        self.link: str | None = None
+        self.result: dict | None = None
+        self.error: str | None = None
+
+    def _run(self, ready: threading.Event) -> None:
+        def capture(*parts, **_kw):
+            for line in " ".join(str(p) for p in parts).splitlines():
+                if line.strip().startswith("http"):
+                    self.link = line.strip()
+                    ready.set()
+
+        self.session.print = capture
+        try:
+            self.result = self.session.login()
+        except Exception as e:  # noqa: BLE001
+            self.error = str(e)
+        finally:
+            ready.set()
+
+    def start(self, wait: float = LOGIN_LINK_SECONDS) -> dict:
+        with self.lock:
+            if self.thread and self.thread.is_alive():
+                return {"state": "waiting", "link": self.link}
+            self.link = self.result = self.error = None
+            ready = threading.Event()
+            self.thread = threading.Thread(target=self._run, args=(ready,), daemon=True)
+            self.thread.start()
+        ready.wait(wait)
+        return self.state()
+
+    def state(self) -> dict:
+        if self.error:
+            return {"state": "failed", "error": self.error}
+        if self.result:
+            return {"state": "signed_in", **self.result}
+        if self.thread and self.thread.is_alive():
+            return {"state": "waiting", "link": self.link}
+        return {"state": "idle"}
+
+
+def instructions(session, desktop: bool = False) -> str:
     box: dict = {}
 
     def read():
@@ -97,6 +151,8 @@ def instructions(session) -> str:
         text += "\n\nKH SESSION RULES:\n" + rules
     else:
         text += "\n\n" + LATE_RULES
+    if desktop:
+        return text + "\n\n" + DESKTOP_NOTE
     try:
         note = H.hooks_note("claude-code")
         if note:
@@ -106,9 +162,9 @@ def instructions(session) -> str:
     return text
 
 
-def build(session=None, instructions_text: str | None = None):
+def build(session=None, instructions_text: str | None = None, desktop: bool = False):
     session = session or S.Session()
-    text = instructions_text if instructions_text is not None else instructions(session)
+    text = instructions_text if instructions_text is not None else instructions(session, desktop)
     # Imported after the rules thread has started (a cold Windows import is slow).
     from mcp.server.mcpserver import MCPServer
 
@@ -202,14 +258,34 @@ def build(session=None, instructions_text: str | None = None):
             quiet.log("kh_help", e)
             return quiet.SLOW_TOOL
 
+    if desktop:
+        login = DesktopLogin(session)
+
+        @server.tool()
+        def kh_login() -> str:
+            """Start the browser sign-in; returns the link to give the person (state waiting|signed_in|failed)."""
+            try:
+                return json.dumps(login.start(), ensure_ascii=False)
+            except Exception as e:  # noqa: BLE001
+                return json.dumps({"state": "failed", "error": str(e)}, ensure_ascii=False)
+
+        @server.tool()
+        def kh_logout() -> str:
+            """End the Knowledge Hub sign-in on this computer."""
+            try:
+                return json.dumps({"logout": session.logout()}, ensure_ascii=False)
+            except Exception as e:  # noqa: BLE001
+                return json.dumps({"error": str(e)}, ensure_ascii=False)
+
     return server
 
 
 TOOL_NAMES = ("kh_call", "kh_me", "kh_status", "kh_context", "kh_catalog", "kh_members", "kh_message", "kh_step",
               "kh_plan", "kh_save", "kh_log", "kh_tags_suggest", "kh_kernel_rule", "kh_repeats", "kh_help")
+DESKTOP_TOOL_NAMES = TOOL_NAMES + ("kh_login", "kh_logout")
 
 
-def run(kh_url: str | None = None) -> None:
+def run(kh_url: str | None = None, desktop: bool = False) -> None:
     session = S.Session(kh_url)
-    server = build(session)
+    server = build(session, desktop=desktop)
     server.run("stdio")
