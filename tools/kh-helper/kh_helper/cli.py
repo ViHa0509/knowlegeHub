@@ -1,6 +1,6 @@
 """`kh` command line.
 
-Exit codes: 0 ok, 1 KH error, 2 not signed in, 3 wrong owner, 4 password not changed.
+Exit codes: 0 ok, 1 KH error, 2 not signed in, 3 wrong owner.
 """
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ import sys
 from . import __version__, clis, owner, quiet
 from . import session as S
 
-EXIT_OK, EXIT_KH, EXIT_SIGNIN, EXIT_OWNER, EXIT_PASSWORD = 0, 1, 2, 3, 4
+EXIT_OK, EXIT_KH, EXIT_SIGNIN, EXIT_OWNER = 0, 1, 2, 3
 
 
 def _out(data) -> None:
@@ -64,7 +64,6 @@ def _parser() -> argparse.ArgumentParser:
     sub = p.add_subparsers(dest="cmd", required=True)
     lg = sub.add_parser("login")
     lg.add_argument("--no-browser", action="store_true")
-    sub.add_parser("password")
     sub.add_parser("logout")
     sub.add_parser("status")
     sub.add_parser("me")
@@ -235,10 +234,6 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 _out(f"To connect Knowledge Hub to {name}, run: kh setup")
             return EXIT_OK
-        if args.cmd == "password":
-            res = session.change_password()
-            _out(f"Password changed for {res.get('email')}.")
-            return EXIT_OK
         if args.cmd == "logout":
             _out({"kh_url": session.kh_url, "result": session.logout()})
             return EXIT_OK
@@ -292,9 +287,6 @@ def main(argv: list[str] | None = None) -> int:
     except owner.WrongOwner as e:
         _err(f"wrong owner: {e}")
         return EXIT_OWNER
-    except S.PasswordNotChanged as e:
-        _err(f"password not changed: {e}")
-        return EXIT_PASSWORD
     except S.LoginFailed as e:
         _err(f"sign-in failed: {e}")
         return EXIT_KH

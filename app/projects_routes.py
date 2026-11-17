@@ -1,6 +1,7 @@
 """Project endpoints (spec §2.8): /projects, /projects/registry[/sync], /projects/{id}[/visibility].
 
-Create, delete and visibility go to the identity service (KC) first with the caller's own token (sign-in on);
+Create, delete and visibility go to the identity service first with the caller's own token (sign-in on only;
+open mode never calls it);
 KH then keeps the registry row, bundle naming, C4 registry row and the visibility mirror.
 """
 from __future__ import annotations

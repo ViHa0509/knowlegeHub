@@ -19,7 +19,7 @@ It started as a demo for my team: the goal is to help people work together bette
   - `lesson-learned`: reviewed lessons that everyone can read.
   - `market`: public posts.
   - One `personal-<email>` workspace per user.
-- **Identity and permissions.** Keycloak JWTs, a route-to-permission rule table and per-project access levels. Without an issuer configured, the server runs in an open local mode.
+- **Identity and permissions.** Open mode by default: no sign-in, every call allowed, for a local or single-user KH. Optional sign-in: JWTs from an identity service set with `KH_AUTH_ISSUER`, a route-to-permission rule table and per-project access levels. The identity service must also serve KH's identity extension at `<issuer>/kh/...` (projects, members, visibility); no such service is shipped with this repo.
 - **Learning loop.** Work logs are distilled into keyed lessons for review. Personal rules held by enough people are promoted to the common tier.
 - **Client package.** `kh-helper` provides the `kh` CLI, Claude Code hooks, the `knowledge-hub` MCP server and an automatic background work log.
 - **`/v1` capability modules.** Namespaces for external multi-agent systems, with 14 modules:
@@ -63,7 +63,7 @@ flowchart LR
         EM["Embedder<br/>bge-small-en-v1.5 (384-dim)"]
     end
     DB[("SQLite (local)<br/>or HANA Cloud (team)<br/>relational · vectors · graph")]
-    KC["Keycloak"]
+    KC["Identity service<br/>(optional, sign-in on)"]
     W["kh_worker<br/>nightly LLM jobs"]
     H -- "HTTPS + JWT" --> A
     B --> A
@@ -128,7 +128,7 @@ All settings come from environment variables. The main ones:
 | `GRAPH_BACKEND` | `sqlite` | Graph store: `sqlite` or `hana` |
 | `KH_HOOKS_DB` | `./hooks.db` | SQLite file for local storage |
 | `KH_EMBEDDER` | `local` | `local` (bge-small-en-v1.5), `remote`, `auto` or `hash` (deterministic, no model) |
-| `KH_AUTH_ISSUER` | unset | Keycloak realm URL. When unset, sign-in is off (open mode) |
+| `KH_AUTH_ISSUER` | unset | Issuer URL of an optional identity service. When unset, sign-in is off (open mode, the default) |
 | `HANA_HOST`, `HANA_PORT`, `HANA_USERNAME`, `HANA_PASSWORD`, `HANA_SCHEMA` | unset | HANA Cloud connection |
 | `KH_FEEDBACK_CRON`, `KH_MESSAGE_CRON`, `KH_CAPS_CRONS` | on | Background jobs |
 | `KH_CAP_<MODULE>` | module default | Switch a `/v1` module on or off |
@@ -159,7 +159,7 @@ docs/                   build contract, deviations, integration notes
 ## Client: kh-helper
 
 ```bash
-kh login              # sign in through Keycloak
+kh login              # sign in (only when the KH has sign-in on)
 kh setup              # install the Claude Code hooks and the knowledge-hub MCP server
 kh status             # show sign-in and connection state
 kh call GET "/turn/context?text=how%20do%20we%20deploy"
@@ -186,7 +186,7 @@ Before changing code, read [`docs/rebuild-contract.md`](docs/rebuild-contract.md
   - five roadmap `/v1` modules (people, daily, outcomes, learn, improve);
   - the Windows offline installer for `kh-helper`;
   - half of the kernel tag vocabulary (151 of 299 tags are seeded).
-- Not covered by tests: sync with a second KH instance, Keycloak account provisioning, and event delivery to a sidecar. These need live services.
+- Not covered by tests: sync with a second KH instance, account provisioning in an identity service, and event delivery to a sidecar. These need live services.
 
 ## License
 

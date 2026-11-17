@@ -1,5 +1,6 @@
 """principals (spec §6.5): service principals (agents) with KH-signed EdDSA tokens, the namespace client,
-`/v1/token`, `/v1/me`. Agents are not Keycloak users: they are rows authenticated with KH-signed JWTs.
+`/v1/token`, `/v1/me`. Agents are not sign-in users: they are rows authenticated with KH-signed JWTs.
+Namespace clients are always provisioned by KH itself (no Keycloak provisioner).
 
 Grants never widen: principal.projects ∩ ns.projects ∩ projects of `on_behalf_of` (snapshot `kh_owner_grant`).
 """
@@ -58,7 +59,8 @@ def client_prefix() -> str:
 
 
 def provisioner() -> str:
-    return (config._env("KH_NS_PROVISIONER", "local") or "local").lower()
+    """Always 'local': KH issues namespace client secrets itself (the Keycloak provisioner was removed)."""
+    return "local"
 
 
 LIMITS = {"token_s": 900, "principals_per_ns": 2000, "list": LIST_MAX, "verify_leeway_s": LEEWAY_S}
@@ -399,32 +401,8 @@ def check_secret(secret: str, stored: str | None) -> bool:
 
 
 def provision_client(ns: str, row: dict, request: Request | None = None) -> dict:
-    """Create or rotate the ns client. local: secret shown once; keycloak: relay to KC."""
+    """Create or rotate the ns client; the secret is shown once."""
     client_id = client_prefix() + ns
-    if provisioner() == "keycloak":
-        from app import auth
-
-        try:
-            status, data = auth.relay("POST", "/kh/namespaces", {"ns": ns, "client_id": client_id,
-                                                                 "owner": row.get("owner_email")})
-        except Exception as e:  # noqa: BLE001
-            raise CapError("provisioner_unavailable", f"identity service unreachable: {e}")
-        if status in (404, 405, 501) or status >= 500:
-            raise CapError("provisioner_unavailable", f"identity service cannot provision clients ({status})")
-        if status >= 300:
-            raise CapError("invalid", f"identity service refused: {data}")
-        with sqldb.connect() as c:
-            now = sqldb.now_ms(c)
-            old = c.execute("SELECT rev FROM kh_ns_client WHERE ns=?", (ns,)).fetchone()
-            sqldb.upsert(c, "kh_ns_client", ["ns"], {"ns": ns, "client_id": client_id, "provisioner": "keycloak",
-                                                     "secret_hash": None, "state": "active",
-                                                     "created_ms": now, "rotated_ms": now if old else None,
-                                                     "rev": (int(old[0]) + 1) if old else 1})
-        invalidate(ns)
-        out = {"ns": ns, "client_id": client_id, "provisioner": "keycloak", "rotated": bool(old)}
-        if isinstance(data, dict) and data.get("client_secret"):
-            out["client_secret"] = data["client_secret"]
-        return out
     secret = secrets.token_urlsafe(32)
     with sqldb.connect() as c:
         now = sqldb.now_ms(c)
@@ -638,59 +616,7 @@ def me(request: Request) -> dict:
             "projects": core.person_projects(p)}
 
 
-# ---------------------------------------------------------------------------
-# Cron: owner grants from Keycloak
-# ---------------------------------------------------------------------------
-
-
-def refresh_owner_grants() -> int:
-    """Refresh kh_owner_grant via KC `GET {issuer}/kh/users/{email}/projects` (client credentials)."""
-    cid, secret = config._env("KH_KC_CLIENT_ID"), config._env("KH_KC_CLIENT_SECRET")
-    iss = config._env("KH_AUTH_ISSUER")
-    if not (cid and secret and iss):
-        return 0
-    import requests
-
-    iss = iss.rstrip("/")
-    try:
-        t = requests.post(f"{iss}/protocol/openid-connect/token",
-                          data={"grant_type": "client_credentials", "client_id": cid, "client_secret": secret},
-                          timeout=10)
-        t.raise_for_status()
-        bearer = t.json()["access_token"]
-    except Exception as e:  # noqa: BLE001
-        log.warning("owner grant refresh: no KC token: %s", e)
-        return 0
-    with sqldb.connect() as c:
-        emails = {str(r[0]).lower() for r in c.execute("SELECT email FROM kh_owner_grant").fetchall()}
-        emails |= {str(r[0]).lower() for r in c.execute(
-            "SELECT DISTINCT on_behalf_of FROM kh_principal WHERE state='active' AND on_behalf_of IS NOT NULL"
-        ).fetchall()}
-    n = 0
-    for email in sorted(e for e in emails if e and "@" in e):
-        try:
-            r = requests.get(f"{iss}/kh/users/{email}/projects", headers={"Authorization": f"Bearer {bearer}"},
-                             timeout=10)
-            if r.status_code != 200:
-                continue
-            data = r.json()
-            projects = data.get("projects") if isinstance(data, dict) else data
-            if isinstance(projects, dict):
-                projects = list(projects)
-            if isinstance(data, dict) and data.get("role") == "maintainer":
-                projects = ["*"]
-            with sqldb.connect() as c:
-                sqldb.upsert(c, "kh_owner_grant", ["email"], {"email": email,
-                                                              "projects_json": core.dumps(sorted(projects or [])),
-                                                              "source": "refresh", "refreshed_ms": sqldb.now_ms(c)})
-            _pcache.pop(("grant", email), None)
-            n += 1
-        except Exception as e:  # noqa: BLE001
-            log.debug("owner grant refresh for %s failed: %s", email, e)
-    return n
-
-
-CRONS = [("cron.owner_grants", 600, refresh_owner_grants)]
+CRONS: list = []  # owner grants are refreshed from each caller's own token (source "token")
 
 
 # ---------------------------------------------------------------------------

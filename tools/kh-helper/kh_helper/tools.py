@@ -110,7 +110,7 @@ def repeats(session):
     return session.call("GET", "/usage/repeats")
 
 
-# ---------------------------------------------------------------- identity (Keycloak KH extension)
+# ---------------------------------------------------------------- identity (KH extension of the identity service; sign-in on only)
 
 MEMBER_ACTIONS = ("people", "list", "add", "remove", "exclude", "include", "exclusions")
 

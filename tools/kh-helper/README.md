@@ -20,7 +20,7 @@ python -m venv <PROFILE>/kh-helper          # PROFILE = $CLAUDE_CONFIG_DIR or ~/
 ```
 
 HOME (where the copy keeps state) is `KH_HELPER_HOME`, else the running venv, else `<PROFILE>/kh-helper`.
-The sign-in lasts up to 90 days (Keycloak offline session); the refresh token is kept in the OS keyring.
+The sign-in (only for a KH with sign-in on) lasts up to 90 days (an offline session of the identity service); the refresh token is kept in the OS keyring.
 
 ## Tests
 
@@ -28,7 +28,7 @@ The sign-in lasts up to 90 days (Keycloak offline session); the refresh token is
 .venv/Scripts/python -m pytest tools/kh-helper/tests -q
 ```
 
-The tests use a fake KH/Keycloak (requests adapter), a memory keyring, temp HOME/CLAUDE_CONFIG_DIR and a fake
+The tests use a fake KH and identity service (requests adapter), a memory keyring, temp HOME/CLAUDE_CONFIG_DIR and a fake
 `claude` runner; they never touch a real profile or server.
 
 ## Windows offline installer (not part of this package)

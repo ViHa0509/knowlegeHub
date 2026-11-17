@@ -1,8 +1,8 @@
 """/home admin page (spec §4.10): `GET /home` serves `app/static/home.html` (public, no-store); sign-in proxy
-(device code + PKCE S256 against Keycloak); Knowledge tab (projects, items, parts, members, personal backfill);
+(device code + PKCE S256 against the identity service, sign-in on only); Knowledge tab (projects, items, parts, members, personal backfill);
 Lesson learn tab (lessons; the learn-back box is `app/learnback.py`); Sync tab uses `/sync/*` (`app/sync.py`).
 
-Test seam: `HTTP` (requests-like session) replaces calls to Keycloak.
+Test seam: `HTTP` (requests-like session) replaces calls to the identity service.
 """
 from __future__ import annotations
 

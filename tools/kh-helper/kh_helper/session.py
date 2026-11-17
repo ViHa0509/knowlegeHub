@@ -2,7 +2,7 @@
 
 The helper is the only holder of credentials:
 - the refresh token lives in the OS keyring (service 'kh-helper', account '<kh_url> <HOME>');
-- access tokens (Keycloak, ~5 min) live only in process memory;
+- access tokens (from the identity service, ~5 min) live only in process memory;
 - helper.json under HOME holds non-secret state (kh_url, issuer, client_id, signed_in, owner, ...).
 The assistant never sees a password, refresh token or access token; it gets JSON answers.
 """
@@ -45,10 +45,6 @@ HTTP_FACTORY = requests.Session
 
 class NotSignedIn(Exception):
     """Nobody is signed in on this machine, or the sign-in ended."""
-
-
-class PasswordNotChanged(Exception):
-    """kh password: Keycloak did not report kc_action_status=success."""
 
 
 class LoginFailed(Exception):
@@ -313,12 +309,7 @@ class Session:
                 tokens = self._device_flow()
         return self._store(tokens)
 
-    def change_password(self, open_browser=None) -> dict:
-        self.check_owner()
-        tokens = self._browser_flow(kc_action="UPDATE_PASSWORD", open_browser=open_browser)
-        return self._store(tokens)
-
-    def _browser_flow(self, kc_action: str | None = None, open_browser=None) -> dict:
+    def _browser_flow(self, open_browser=None) -> dict:
         verifier, challenge = pkce_pair(64)
         state = secrets.token_urlsafe(24)
         server = HTTPServer(("127.0.0.1", 0), _Callback)
@@ -330,8 +321,6 @@ class Session:
             "client_id": self.client_id(), "response_type": "code", "redirect_uri": redirect, "scope": SCOPE,
             "state": state, "code_challenge": challenge, "code_challenge_method": "S256",
         }
-        if kc_action:
-            params["kc_action"] = kc_action
         url = f"{self.issuer()}/protocol/openid-connect/auth?" + urllib.parse.urlencode(params)
         self.print(f"Sign in to Knowledge Hub in your browser:\n  {url}\n(waiting up to 10 minutes)")
         try:
@@ -354,11 +343,7 @@ class Session:
         if res.get("state") != state:
             raise LoginFailed("sign-in answer had the wrong state")
         if "code" not in res:
-            if kc_action:
-                raise PasswordNotChanged(res.get("error_description") or res.get("error") or "not changed")
             raise LoginFailed(res.get("error_description") or res.get("error") or "sign-in did not complete")
-        if kc_action and res.get("kc_action_status") != "success":
-            raise PasswordNotChanged(res.get("kc_action_status") or "password not changed")
         r = self.http.post(self.token_url(), data={
             "grant_type": "authorization_code", "code": res["code"], "redirect_uri": redirect,
             "client_id": self.client_id(), "code_verifier": verifier,
@@ -406,7 +391,7 @@ class Session:
         refresh = tokens.get("refresh_token")
         access = tokens.get("access_token")
         if not refresh or not access:
-            raise LoginFailed("Keycloak returned no tokens")
+            raise LoginFailed("the identity service returned no tokens")
         set_refresh(self.kh_url, refresh)
         email = _claims(access).get("email") or _claims(tokens.get("id_token")).get("email")
         exp = _claims(refresh).get("exp")
@@ -579,7 +564,7 @@ class Session:
         return self._call_url(method, self.kh_url + _unmangle(path), body, params)
 
     def call_identity(self, method: str, path: str, body=None):
-        """Keycloak's KH extension at <issuer>/kh/<path>, same headers."""
+        """The identity service's KH extension at <issuer>/kh/<path>, same headers (sign-in on only)."""
         return self._call_url(method, f"{self.issuer()}/kh/{path.lstrip('/')}", body)
 
 

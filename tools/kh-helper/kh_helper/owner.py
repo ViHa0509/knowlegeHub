@@ -1,7 +1,7 @@
 """Ownership lock: a sign-in answers only the CLI that made it (introduced 1.4.0).
 
 A Claude-owned HOME answers only Claude Code running with the same profile; an other-owned HOME never answers
-Claude Code. Enforced at login, change_password, status, every token refresh and `kh mcp`. Logout is always
+Claude Code. Enforced at login, status, every token refresh and `kh mcp`. Logout is always
 allowed.
 """
 from __future__ import annotations

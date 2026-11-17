@@ -5,7 +5,7 @@ Token providers:
 - `PrincipalAuth` (default `principal`): `POST /v1/token` client_credentials -> kh_people namespace token, then
   `POST /v1/kh_people/principals {role: distiller, principal_id: worker}` (409 = exists) and
   `POST /v1/kh_people/principals/worker/token` -> 15-min worker token, re-minted 90 s before expiry;
-- `PersonAuth` (`person`, sidecar): password grant on a confidential Keycloak client, refresh token reused.
+- `PersonAuth` (`person`, sidecar): password grant on a confidential client of the identity service, refresh token reused.
 
 Ledgers (leases, month spend, run events):
 - `KHLedger`: `/v1/kh_people/leases/<name>:acquire|renew|release`, `/v1/kh_people/metrics`,

@@ -219,5 +219,5 @@ def test_body_filters_hook(ns_env):
 
 def test_crons_listed():
     names = [n for m in caps.LOADED for n, _, _ in getattr(m, "CRONS", [])]
-    assert "cron.idempotency_purge" in names and "cron.owner_grants" in names
+    assert "cron.idempotency_purge" in names and "cron.owner_grants" not in names
     assert caps.start_crons() == 0  # KH_CAPS_CRONS=false in tests
