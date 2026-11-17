@@ -151,3 +151,26 @@ def test_sync_me_and_auth(client, monkeypatch):
     assert client.get("/sync/peer/hello").status_code == 401          # public route, the key is the credential
     mt = bearer(make_token("boss@x.com", role="maintainer"))
     assert client.get("/sync/keys", headers=mt).status_code == 200
+
+
+def test_pull_takes_a_personal_project_the_giver_offers(client, monkeypatch):
+    """KH 7.1 offers the key owner's own personal project; the receiver takes what the giver offers."""
+    pid = "personal-a-x-com"
+    monkeypatch.setattr(sync, "_peer_manifest", lambda url, key: {"projects": [{"id": pid, "personal": True}],
+                                                                   "limits": {}})
+
+    def peer(method, url, path, key, body=None, params=None):
+        if path == "/sync/peer/export" and body["part"] == "knowledge":
+            return {"rows": [{"id": "p1", "document": "own note", "metadata": {"project": pid}}],
+                    "next_offset": None}
+        return {"rows": [], "next_offset": None}
+
+    monkeypatch.setattr(sync, "_peer", peer)
+    key = "khsync1." + __import__("base64").urlsafe_b64encode(
+        b'{"u": "http://giver", "k": "abc"}').decode().rstrip("=") + ".sig"
+    out = sync.start_pull(key, [{"project": pid, "parts": ["knowledge"]}], wait=True)
+    assert out["state"] == "done", out
+    job = client.get(f"/sync/jobs/{out['job_id']}").json()
+    assert job["doc"]["projects"][pid]["parts"]["knowledge"]["created"] == 1
+    h = vs.get_existing(vs.part_collection_name("knowledge", pid))
+    assert vs.get_ids_vt(h, ["p1"])[0]["source_text"] == "own note"

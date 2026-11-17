@@ -285,11 +285,19 @@ def _same(a: dict, b: dict) -> bool:
     return {k: v for k, v in (a or {}).items() if k not in skip} == {k: v for k, v in (b or {}).items() if k not in skip}
 
 
+def _row_text(r: dict):
+    """A row's text: `text` from a rebuild giver, `document` from the original KH."""
+    return r.get("text") if "text" in r else r.get("document")
+
+
 def merge_rows(project: str, part: str, rows: list[dict], dry: bool = False) -> dict:
     counts = {"created": 0, "unchanged": 0, "kept": 0, "updated": 0}
     if not rows:
         return counts
     from app import chunks
+
+    if part == "hotlog":  # the original KH gives its hot window as its own part; here it is part of `log`
+        part = config.HOTLOG_SCOPE
 
     hot = vs.get_existing(config.HOTLOG_COLLECTION) if part == config.HOTLOG_SCOPE else None
     if part == "chunk":
@@ -309,13 +317,14 @@ def merge_rows(project: str, part: str, rows: list[dict], dry: bool = False) -> 
                                      "meta": (res.get("metadatas") or [{}])[i] or {}})
     for r in rows:
         meta = dict(r.get("metadata") or {})
+        text = _row_text(r)
         cur = existing.get(r["id"])
         if cur is None:
             counts["created"] += 1
             dest = target
         else:
             h, old = cur
-            if old["text"] == r.get("text") and _same(old["meta"], meta):
+            if old["text"] == text and _same(old["meta"], meta):
                 counts["unchanged"] += 1
                 continue
             t_old, t_new = _row_time(old["meta"]), _row_time(meta)
@@ -330,8 +339,8 @@ def merge_rows(project: str, part: str, rows: list[dict], dry: bool = False) -> 
         if emb is None:
             from app.embeddings import get_embedder
 
-            emb = get_embedder().encode(r.get("text") or "", normalize_embeddings=True)
-        dest.upsert(ids=[r["id"]], embeddings=[list(map(float, emb))], documents=[r.get("text")], metadatas=[meta])
+            emb = get_embedder().encode(text or "", normalize_embeddings=True)
+        dest.upsert(ids=[r["id"]], embeddings=[list(map(float, emb))], documents=[text], metadatas=[meta])
     return counts
 
 
@@ -386,22 +395,73 @@ def hello() -> dict:
     return {"protocol": PROTOCOL, "model": _model_name(), "dim": len(v), "probe": v, "kh_version": config.KH_VERSION}
 
 
+def _peer_hello(url: str, key: str) -> dict:
+    """The giver's hello; the original KH names the model fields `emb_model` / `emb_dim`."""
+    h = _peer("GET", url, "/sync/peer/hello", key)
+    h.setdefault("model", h.get("emb_model"))
+    h.setdefault("dim", h.get("emb_dim"))
+    return h
+
+
+def _peer_manifest(url: str, key: str) -> dict:
+    """The giver's manifest; the original KH names a project's row counts `counts`."""
+    m = _peer("GET", url, "/sync/peer/manifest", key)
+    for p in m.get("projects") or []:
+        if "parts" not in p:
+            p["parts"] = p.get("counts") or {}
+    return m
+
+
 def connect(key: str) -> dict:
     try:
         url, kid, _s = parse_key(key)
     except (ValueError, TypeError):
         raise HTTPException(status_code=422, detail="not a valid sync key")
-    h = _peer("GET", url, "/sync/peer/hello", key)
+    h = _peer_hello(url, key)
     mine = hello()
     cos = float(np.dot(np.asarray(h.get("probe") or [0.0] * mine["dim"], dtype=float),
                        np.asarray(mine["probe"], dtype=float))) if len(h.get("probe") or []) == mine["dim"] else 0.0
-    if h.get("protocol") != PROTOCOL or h.get("model") != mine["model"] or h.get("dim") != mine["dim"] or cos < PROBE_MIN:
+    same = h.get("protocol") == PROTOCOL and h.get("model") == mine["model"] and h.get("dim") == mine["dim"]
+    manifest, by = None, "probe"
+    if same and cos < PROBE_MIN:  # the original KH embeds another probe sentence: compare stored rows instead
+        manifest = _peer_manifest(url, key)
+        cos, by = _rows_cosine(url, key, manifest), "rows"
+    if not same or cos < PROBE_MIN:
         raise HTTPException(status_code=409, detail={
             "error": "incompatible", "giver": {k: h.get(k) for k in ("protocol", "model", "dim")},
             "receiver": {k: mine[k] for k in ("protocol", "model", "dim")}, "probe_cosine": round(cos, 6)})
-    manifest = _peer("GET", url, "/sync/peer/manifest", key)
+    manifest = manifest or _peer_manifest(url, key)
     return {"giver": url, "kid": kid, "protocol": PROTOCOL, "model": mine["model"], "probe_cosine": round(cos, 6),
-            "manifest": manifest}
+            "verified_by": by, "manifest": manifest}
+
+
+ROWS_CHECK_MAX_CHARS = 1500
+
+
+def _rows_cosine(url: str, key: str, manifest: dict) -> float:
+    """Best cosine between a few of the giver's stored row vectors and this KH's embedding of the same text.
+    Short rows only: a long row may have been cut differently before it was embedded."""
+    from app.embeddings import get_embedder
+
+    best = 0.0
+    for p in manifest.get("projects") or []:
+        if not (p.get("parts") or {}).get("knowledge"):
+            continue
+        try:
+            page = _peer("POST", url, "/sync/peer/export", key,
+                         {"project": p["id"], "part": "knowledge", "offset": 0, "limit": 5})
+        except HTTPException:
+            continue
+        for r in page.get("rows") or []:
+            text, emb = _row_text(r), r.get("embedding")
+            if not text or not emb or len(text) > ROWS_CHECK_MAX_CHARS:
+                continue
+            v = np.asarray(get_embedder().encode(text, normalize_embeddings=True), dtype=float).ravel()
+            if len(emb) == len(v):
+                best = max(best, float(np.dot(np.asarray(emb, dtype=float), v)))
+        if best >= PROBE_MIN:
+            break
+    return best
 
 
 # ---------------------------------------------------------------------------
@@ -466,13 +526,17 @@ def run_pull(job_id: str, key: str, selection: list[dict], since=None, until=Non
     progress("running")
     state = "done"
     try:
-        manifest = _peer("GET", url, "/sync/peer/manifest", key)
+        manifest = _peer_manifest(url, key)
         entries = {p["id"]: p for p in manifest.get("projects") or []}
+        default_parts = list(DEFAULT_PARTS)
+        if "hotlog" in ((manifest.get("limits") or {}).get("parts") or []):
+            default_parts.append("hotlog")
         if not maintainer:
             _peer("POST", url, "/sync/peer/verify", key, {})
         for sel in selection:
             pid = sel.get("project")
-            if pid not in entries or vs.is_personal(pid):
+            # The giver decides what it offers: KH 7.1 offers the key owner's own personal project.
+            if pid not in entries:
                 doc["projects"][pid] = {"error": "not offered by the giver"}
                 continue
             pdoc = {"registry": None, "parts": {}}
@@ -484,7 +548,7 @@ def run_pull(job_id: str, key: str, selection: list[dict], since=None, until=Non
                 if not projects.exists(pid):
                     projects.get_or_create_project(pid, descriptor=entries[pid].get("descriptor") or "", source="sync")
                     pdoc["registry"] = "created"
-            parts = sel.get("parts") or list(DEFAULT_PARTS)
+            parts = sel.get("parts") or default_parts
             for part in parts:
                 tot = {"created": 0, "unchanged": 0, "kept": 0, "updated": 0, "pages": 0}
                 offset = 0
