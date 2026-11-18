@@ -212,6 +212,10 @@
     {"route": "GET /thresholds", "kind": "authenticated"},
     {"route": "PUT /thresholds", "kind": "maintainer"},
     {"route": "DELETE /thresholds/{name}", "kind": "maintainer"},
+    {"route": "POST /messages/send", "kind": "authenticated"},
+    {"route": "GET /messages/sent", "kind": "authenticated"},
+    {"route": "POST /findings/resolve", "kind": "project", "permission": "project.write", "project_from": ["body.project"]},
+    {"route": "GET /personalization/guard_tools", "kind": "authenticated"},
     {"route": "* /v1/{ns}/{rest:path}", "kind": "ns"}
   ]
 }

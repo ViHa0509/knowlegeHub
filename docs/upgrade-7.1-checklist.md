@@ -70,11 +70,11 @@ The 7.1 OpenAPI page answers 500 (see item 12), so the route list below comes fr
 - [ ] `app.policy_actions.api` split; `GET /helper/manifest` (what the server asks of the helper).
 - [ ] `app.revisions.api`, `app.audit` (`/home/audit`, `/home/audit/export`), `app.log_ids`,
       `/home/retention/logs`, `/home/review`, `/home/review/apply`, `/home/rules/history`.
-- [ ] `/findings/resolve` (finding to lesson), `/personalization/guard_tools`, `/step/outcome(s)`.
+- [x] `/findings/resolve` (finding to lesson), `/personalization/guard_tools` (2026-11-18). `/step/outcome(s)`: 404 on the 7.1 build too.
 
 ## 5. Messages and people
 
-- [ ] `/messages/send`, `/messages/sent` (sent, delivered, opened per recipient), `/messages/mirror/check`
+- [~] `/messages/send`, `/messages/sent` built 2026-11-18. Still missing: `/messages/mirror/check`
       (`app.messages_mirror`), `/people`, `/members/`.
 
 ## 6. /v1 capability modules
