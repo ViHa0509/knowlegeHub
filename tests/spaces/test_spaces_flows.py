@@ -134,3 +134,11 @@ def test_save_flows(client, space):
     lg = client.post("/flows/save.log/run", json={"input": {"text": "2026-11-18 fixed alpha login", "space": "alpha"}})
     assert lg.json()["status"] == "done" and lg.json()["text"].startswith("saved log ")
     assert client.post("/flows/save.log/run", json={"input": {"text": " "}}).json()["status"] == "failed"
+
+
+def test_task_flow_line(client, space):
+    h = client.post("/hooks/UserPromptSubmit/run", json={"input": {"text": "build the task map for this"}}).json()
+    assert h["task_flow"]["id"] == "task.full-retrieve"
+    assert h["text"].rstrip().split("\n")[-1].startswith("TASK FLOW: call kh_task_full_retrieve for this task FIRST")
+    small = client.post("/hooks/UserPromptSubmit/run", json={"input": {"text": "hello, how are you today"}}).json()
+    assert small["task_flow"] is None and "TASK FLOW" not in small["text"]

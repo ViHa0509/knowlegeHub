@@ -103,7 +103,7 @@ def search(query: str, k: int, model) -> list[dict]:
         f = get(fid)
         row = listing(f)
         row["score"] = round(s, 3)
-        row["refused"] = neg > s
+        row["refused"] = neg > s and neg >= FLOW_MATCH_FLOOR  # a 'not' example refuses only as a confident match
         t = _prompt_trigger(f) or {}
         row["default"] = bool(t.get("default"))
         scored.append(row)

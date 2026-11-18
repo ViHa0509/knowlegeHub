@@ -135,7 +135,7 @@ def on_prompt_submit(inp: dict, model) -> dict:
     task = store.nearest_task_flow(text, model) if text.strip() else None
     out = [ctx["text"].rstrip(), "", _space_about_block(best)]
     if task:
-        tool = "kh_" + task["id"].split(".", 1)[-1].replace("-", "_").replace(".", "_")
+        tool = "kh_" + task["id"].replace(".", "_").replace("-", "_")
         out += ["", TASK_FLOW_LINE.format(tool=tool)]
     body = "\n".join(out)
     return {"status": "done", "outcome": "done", "message": "", "project": best, "text": body,
