@@ -122,3 +122,15 @@ def test_about_put_get(client, space):
     assert client.get("/projects/alpha/layout").json()["about"].startswith("Alpha billing")
     sc = {s["scope"]: s["rows"] for s in client.get("/spaces/alpha/scopes").json()["scopes"]}
     assert sc["about"] == 1
+
+
+def test_save_flows(client, space):
+    k = client.post("/flows/save.knowledge/run", json={"input": {"text": "Alpha uses port 8443 on DEV",
+                                                                  "kind": "fact", "space": "alpha"}}).json()
+    assert k["status"] == "done" and k["text"].startswith("saved 1 row: alpha/knowledges/")
+    les = client.post("/flows/save.knowledge/run", json={"input": {"text": "Never push alpha on Fridays",
+                                                                    "kind": "lesson", "space": "alpha"}}).json()
+    assert "/lesson-learns/" in les["text"]
+    lg = client.post("/flows/save.log/run", json={"input": {"text": "2026-11-18 fixed alpha login", "space": "alpha"}})
+    assert lg.json()["status"] == "done" and lg.json()["text"].startswith("saved log ")
+    assert client.post("/flows/save.log/run", json={"input": {"text": " "}}).json()["status"] == "failed"

@@ -189,7 +189,68 @@ def msg_inbox(inp: dict, model) -> dict:
             "trace": _trace(("inbox", "Message Inbox", True, "ok"))}
 
 
+# ---------------------------------------------------------------------------
+# Save flows (one node per call: this build has no agent split step)
+# ---------------------------------------------------------------------------
+
+LESSON_KINDS = {"lesson", "feedback"}
+
+
+def _save_space(inp: dict) -> Optional[str]:
+    sp = (inp.get("space") or "").strip()
+    return sp if sp and sp != "@bound" else _bound_space()
+
+
+def _vector_add(text: str, project: Optional[str], scope: str, meta: dict) -> dict:
+    import main
+
+    body = main.VectorAddRequest(text=text, project=project, scope=scope, metadata=meta)
+    return main.vector_add(body)
+
+
+def save_knowledge(inp: dict, model) -> dict:
+    from app.turn import mask
+
+    text, _n = mask(str(inp.get("text") or "").strip())
+    if not text:
+        return {"status": "failed", "outcome": "failed", "message": "text is empty", "text": "", "trace": []}
+    kind = (str(inp.get("kind") or "fact").strip().lower() or "fact")
+    space = _save_space(inp) or U.personal_tier()
+    scope = "lesson" if kind in LESSON_KINDS else "knowledge"
+    meta = {"kind": kind}
+    if inp.get("topic"):
+        meta["topic"] = str(inp["topic"])[:200]
+    got = _vector_add(text, space, scope, meta)
+    rid = got.get("vector_id")
+    shown = "lesson-learns" if scope == "lesson" else "knowledges"
+    msg = f"saved 1 row: {space or 'orchestrator'}/{shown}/{rid} (kind {kind})"
+    return {"status": "done", "outcome": "done", "message": "", "text": msg,
+            "output": {"ids": [rid], "space": space, "scope": shown},
+            "trace": _trace(("mask", "Mask Secrets", True, "ok"), ("save", "Save One Node", True, "ok"))}
+
+
+def save_log(inp: dict, model) -> dict:
+    from app.turn import mask
+
+    if inp.get("row_id"):
+        return {"status": "done", "outcome": "done", "message": "", "text": f"log {inp['row_id']} already stored",
+                "output": {"ids": [inp["row_id"]]}, "trace": _trace(("written", "Written Already?", True, "ok"))}
+    text, _n = mask(str(inp.get("text") or "").strip())
+    if not text:
+        return {"status": "failed", "outcome": "failed", "message": "text is empty", "text": "", "trace": []}
+    fields = inp.get("fields") if isinstance(inp.get("fields"), dict) else {}
+    meta = {k: v for k, v in fields.items() if k in ("topic", "subject", "ts", "timestamp")}
+    space = _save_space(inp) or U.personal_tier()
+    got = _vector_add(text, space, "log", meta)
+    rid = got.get("vector_id")
+    return {"status": "done", "outcome": "done", "message": "", "text": f"saved log {rid} in {space or 'orchestrator'}",
+            "output": {"ids": [rid], "space": space},
+            "trace": _trace(("mask", "Mask Secrets", True, "ok"), ("write", "Write the Log", True, "ok"))}
+
+
 RUNNERS: dict[str, Runner] = {
+    "save.knowledge": save_knowledge,
+    "save.log": save_log,
     "task.full-retrieve": full_retrieve,
     "sys.on_session_start": on_session_start,
     "sys.on_prompt_submit": on_prompt_submit,
