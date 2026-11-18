@@ -1,0 +1,3350 @@
+{
+ "source": "KH 7.1.0 build (GET /flows, 2026-11-18)",
+ "flows": [
+  {
+   "name": "On session start",
+   "desc": "Runs when a CLI session starts and after a compaction: the merged kernel, then the communication core (the ai-communication index and rules 0-8). KH cuts the answer into parts under the CLI's 10k cap.",
+   "triggers": [
+    {
+     "type": "event",
+     "event": "hook.SessionStart"
+    }
+   ],
+   "input": {
+    "part": "which part the hook prints (1, 2, 3)",
+    "source": "startup, resume or compact"
+   },
+   "steps": [
+    {
+     "id": "kernel",
+     "b": "flow.call",
+     "name": "Load Kernel",
+     "args": {
+      "flow": "flow.load-kernel"
+     },
+     "next": {
+      "ok": "comm",
+      "fail": "comm"
+     }
+    },
+    {
+     "id": "comm",
+     "b": "kh.call",
+     "name": "Communication Core",
+     "args": {
+      "op": "rows",
+      "space": "ai-communication",
+      "scope": "knowledges",
+      "where": "(pl.col(\"id\") == \"vec_comm_index\") | pl.col(\"rule\").str.contains(\"^[0-8]-\")",
+      "order": "position",
+      "limit": 20
+     },
+     "next": {
+      "ok": "fmt",
+      "fail": "@end"
+     },
+     "hidden": true
+    },
+    {
+     "id": "fmt",
+     "b": "text.format",
+     "name": "Format the Communication Core",
+     "args": {
+      "head": "COMMUNICATION CORE (ai-communication: the index tells which row fits a situation; rules 0-8 always apply to text you write for people):",
+      "row": "[{id}] {text}",
+      "each": true
+     },
+     "next": {
+      "ok": "@end",
+      "fail": "@end"
+     }
+    }
+   ],
+   "grid": [
+    [
+     "@start",
+     "Load Kernel",
+     "Communication Core",
+     "Format the Communication Core",
+     "@end"
+    ]
+   ],
+   "answer": {
+    "row": "{text}",
+    "part": 9000
+   },
+   "description": "Runs when a CLI session starts and after a compaction: the merged kernel, then the communication core (the ai-communication index and rules 0-8). KH cuts the answer into parts under the CLI's 10k cap.",
+   "first": "kernel",
+   "id": "sys.on_session_start",
+   "kind": "system",
+   "owner": "seed",
+   "version": 2,
+   "enabled": true,
+   "seeded": true,
+   "edited": false,
+   "updated_by": "seed",
+   "updated_at": "2026-11-18T16:20:25Z"
+  },
+  {
+   "name": "On prompt submit",
+   "desc": "Runs for every prompt: masks secrets, finds the space, new messages, the prompt hook rules, the turn context, then names the nearest task flow.",
+   "triggers": [
+    {
+     "type": "event",
+     "event": "hook.UserPromptSubmit"
+    }
+   ],
+   "input": {
+    "text": "the person's prompt",
+    "label": "the session's working folder",
+    "hook": "true when kh-helper's hook calls"
+   },
+   "steps": [
+    {
+     "id": "mask",
+     "b": "text.mask",
+     "name": "Mask Secrets",
+     "args": {},
+     "next": {
+      "ok": "space",
+      "fail": "space"
+     },
+     "hidden": true
+    },
+    {
+     "id": "space",
+     "b": "kh.call",
+     "name": "Find the Space",
+     "args": {
+      "op": "spaces",
+      "space": "@bound",
+      "scope": ""
+     },
+     "next": {
+      "ok": "inbox",
+      "fail": "inbox"
+     },
+     "hidden": true
+    },
+    {
+     "id": "inbox",
+     "b": "kh.call",
+     "name": "New Messages",
+     "args": {
+      "op": "inbox",
+      "space": "@named",
+      "scope": ""
+     },
+     "next": {
+      "ok": "rules",
+      "fail": "rules"
+     }
+    },
+    {
+     "id": "rules",
+     "b": "kh.call",
+     "name": "Hook Rules",
+     "args": {
+      "op": "rows",
+      "space": "orchestrator",
+      "scope": "hook-rules",
+      "where": "(pl.col(\"hook_type\") == \"UserPromptSubmit\") & (pl.col(\"enabled\") == 1)",
+      "order": "position"
+     },
+     "next": {
+      "ok": "fmt_rules",
+      "fail": "turn"
+     },
+     "hidden": true
+    },
+    {
+     "id": "fmt_rules",
+     "b": "text.format",
+     "name": "Format the Hook Rules",
+     "args": {
+      "row": "{text}",
+      "empty": ""
+     },
+     "next": {
+      "ok": "turn",
+      "fail": "turn"
+     }
+    },
+    {
+     "id": "turn",
+     "b": "flow.call",
+     "name": "Turn Context",
+     "args": {
+      "flow": "flow.turn-context"
+     },
+     "next": {
+      "ok": "task",
+      "fail": "task"
+     }
+    },
+    {
+     "id": "task",
+     "b": "kh.call",
+     "name": "Nearest Task Flow",
+     "args": {
+      "op": "match",
+      "space": "@named",
+      "scope": ""
+     },
+     "next": {
+      "ok": "@end",
+      "fail": "@end"
+     },
+     "hidden": true
+    }
+   ],
+   "grid": [
+    [
+     "@start",
+     "Mask Secrets",
+     "Find the Space",
+     "New Messages",
+     "Hook Rules"
+    ],
+    [
+     [
+      "Format the Hook Rules",
+      4
+     ],
+     "Turn Context",
+     "Nearest Task Flow",
+     "@end"
+    ]
+   ],
+   "answer": {
+    "row": "{text}",
+    "part": 9000
+   },
+   "description": "Runs for every prompt: masks secrets, finds the space, new messages, the prompt hook rules, the turn context, then names the nearest task flow.",
+   "first": "mask",
+   "id": "sys.on_prompt_submit",
+   "kind": "system",
+   "owner": "seed",
+   "version": 2,
+   "enabled": true,
+   "seeded": true,
+   "edited": false,
+   "updated_by": "seed",
+   "updated_at": "2026-11-18T16:20:25Z"
+  },
+  {
+   "name": "Before a tool runs",
+   "desc": "Runs before a guarded tool or a KH write: the rules that guard the tool (ask / deny), and for a KH write the write check rules.",
+   "triggers": [
+    {
+     "type": "event",
+     "event": "hook.PreToolUse"
+    }
+   ],
+   "input": {
+    "tool_name": "the tool about to run",
+    "tool_input": "its input",
+    "kh_write": "true when the call writes to KH"
+   },
+   "steps": [
+    {
+     "id": "guard",
+     "b": "flow.call",
+     "name": "Guard the Tool",
+     "args": {
+      "flow": "flow.guard-the-tool"
+     },
+     "next": {
+      "ok": "khw",
+      "fail": "khw"
+     }
+    },
+    {
+     "id": "khw",
+     "b": "logic.decide",
+     "name": "KH Write?",
+     "args": {
+      "cond": "pl.Series([input[\"kh_write\"]]).cast(pl.String).is_in([\"true\", \"True\", \"1\"]).all()",
+      "then": "yes",
+      "else": "no"
+     },
+     "next": {
+      "ok": "tools",
+      "fail": "@end"
+     },
+     "hidden": true
+    },
+    {
+     "id": "tools",
+     "b": "kh.call",
+     "name": "Tool Rules",
+     "args": {
+      "op": "rows",
+      "space": "orchestrator",
+      "scope": "hook-rules",
+      "where": "pl.col(\"hook_type\").is_in([\"PreToolUseTools\", \"PreToolUse\"]) & (pl.col(\"enabled\") == 1)",
+      "order": "position"
+     },
+     "next": {
+      "ok": "fmt",
+      "fail": "@end"
+     },
+     "hidden": true
+    },
+    {
+     "id": "fmt",
+     "b": "text.format",
+     "name": "Format the Tool Rules",
+     "args": {
+      "row": "{text}",
+      "empty": ""
+     },
+     "next": {
+      "ok": "@end",
+      "fail": "@end"
+     }
+    }
+   ],
+   "answer": {
+    "row": "{text}",
+    "part": 9000
+   },
+   "description": "Runs before a guarded tool or a KH write: the rules that guard the tool (ask / deny), and for a KH write the write check rules.",
+   "first": "guard",
+   "id": "sys.on_pre_tool_use",
+   "kind": "system",
+   "owner": "seed",
+   "version": 2,
+   "enabled": true,
+   "seeded": true,
+   "edited": false,
+   "updated_by": "seed",
+   "updated_at": "2026-11-18T16:20:25Z"
+  },
+  {
+   "name": "When a turn stops",
+   "desc": "Runs when a turn changed something and stored no work log (kh-helper checks the transcript first): the reminder that blocks the stop; when the turn used a task map, the chain is remembered as a case and every row opened after the map that the map did not show becomes a gap event.",
+   "triggers": [
+    {
+     "type": "event",
+     "event": "hook.Stop"
+    }
+   ],
+   "input": {},
+   "steps": [
+    {
+     "id": "rules",
+     "b": "kh.call",
+     "name": "Stop Rules",
+     "args": {
+      "op": "rows",
+      "space": "orchestrator",
+      "scope": "hook-rules",
+      "where": "(pl.col(\"hook_type\") == \"Stop\") & (pl.col(\"enabled\") == 1)",
+      "order": "position"
+     },
+     "next": {
+      "ok": "fmt",
+      "fail": "chain"
+     },
+     "hidden": true
+    },
+    {
+     "id": "fmt",
+     "b": "text.format",
+     "name": "Format the Stop Rules",
+     "args": {
+      "row": "{text}",
+      "empty": ""
+     },
+     "next": {
+      "ok": "chain",
+      "fail": "chain"
+     }
+    },
+    {
+     "id": "chain",
+     "b": "kh.call",
+     "name": "Remember the Chain",
+     "args": {
+      "op": "remember",
+      "space": "@bound",
+      "scope": "cases"
+     },
+     "next": {
+      "ok": "gaps",
+      "fail": "gaps"
+     },
+     "hidden": true
+    },
+    {
+     "id": "gaps",
+     "b": "kh.call",
+     "name": "Record the Gaps",
+     "args": {
+      "op": "record gaps",
+      "space": "@bound",
+      "scope": "events"
+     },
+     "next": {
+      "ok": "retroq",
+      "fail": "retroq"
+     },
+     "hidden": true
+    },
+    {
+     "id": "retroq",
+     "b": "logic.decide",
+     "name": "Changed and a Case?",
+     "args": {
+      "cond": "(input.get(\"changed\") == True) & (steps[\"Remember the Chain\"].height > 0)"
+     },
+     "next": {
+      "ok": "retro",
+      "fail": "@end"
+     },
+     "hidden": true
+    },
+    {
+     "id": "retro",
+     "b": "flow.call",
+     "name": "Look Back (Retro)",
+     "args": {
+      "flow": "save.retro",
+      "input": {
+       "space": ""
+      }
+     },
+     "next": {
+      "ok": "@end",
+      "fail": "@end"
+     },
+     "hidden": true
+    }
+   ],
+   "answer": {
+    "row": "{text}",
+    "part": 9000
+   },
+   "description": "Runs when a turn changed something and stored no work log (kh-helper checks the transcript first): the reminder that blocks the stop; when the turn used a task map, the chain is remembered as a case and every row opened after the map that the map did not show becomes a gap event.",
+   "first": "rules",
+   "id": "sys.on_stop",
+   "kind": "system",
+   "owner": "seed",
+   "version": 2,
+   "enabled": true,
+   "seeded": true,
+   "edited": false,
+   "updated_by": "seed",
+   "updated_at": "2026-11-18T16:20:25Z"
+  },
+  {
+   "name": "Load Kernel",
+   "desc": "The merged kernel: common rules, the profile's rules, the space's rules and the profile's untagged rules, rendered in the kernel's own order.",
+   "triggers": [],
+   "steps": [
+    {
+     "id": "common",
+     "b": "kh.call",
+     "name": "Load Common Rules",
+     "args": {
+      "op": "rows",
+      "space": "orchestrator",
+      "scope": "rules",
+      "where": "pl.col(\"enabled\")",
+      "limit": 500
+     },
+     "next": {
+      "ok": "profile",
+      "fail": "profile"
+     },
+     "hidden": true
+    },
+    {
+     "id": "profile",
+     "b": "kh.call",
+     "name": "Load Profile Rules",
+     "args": {
+      "op": "rows",
+      "space": "@profile",
+      "scope": "rules",
+      "where": "pl.col(\"enabled\")",
+      "limit": 500
+     },
+     "next": {
+      "ok": "space",
+      "fail": "space"
+     },
+     "hidden": true
+    },
+    {
+     "id": "space",
+     "b": "kh.call",
+     "name": "Load Space Rules",
+     "args": {
+      "op": "rows",
+      "space": "@bound",
+      "scope": "policies",
+      "where": "pl.col(\"enabled\")",
+      "limit": 500
+     },
+     "next": {
+      "ok": "untagged",
+      "fail": "untagged"
+     },
+     "hidden": true
+    },
+    {
+     "id": "untagged",
+     "b": "kh.call",
+     "name": "Load Untagged Rules",
+     "args": {
+      "op": "rows",
+      "space": "@profile",
+      "scope": "untagged-rules",
+      "limit": 200
+     },
+     "next": {
+      "ok": "render",
+      "fail": "render"
+     },
+     "hidden": true
+    },
+    {
+     "id": "render",
+     "b": "text.format",
+     "name": "Render the Kernel",
+     "args": {
+      "mode": "kernel",
+      "space": "@bound"
+     },
+     "next": {
+      "ok": "@end",
+      "fail": "@fail"
+     }
+    }
+   ],
+   "answer": {
+    "row": "{text}",
+    "part": 9000
+   },
+   "description": "The merged kernel: common rules, the profile's rules, the space's rules and the profile's untagged rules, rendered in the kernel's own order.",
+   "first": "common",
+   "id": "flow.load-kernel",
+   "kind": "task",
+   "owner": "seed",
+   "version": 1,
+   "enabled": true,
+   "seeded": true,
+   "edited": false,
+   "updated_by": "seed",
+   "updated_at": "2026-11-18T16:20:25Z"
+  },
+  {
+   "name": "Kernel Merge",
+   "desc": "The kernel's rules of three tiers merged per slot (project > personal > common, a locked common rule wins) and rendered in the kernel's order.",
+   "triggers": [],
+   "input": {
+    "project": "the space whose rules apply ('' = none)",
+    "personal": "the caller's personal space"
+   },
+   "steps": [
+    {
+     "id": "common",
+     "b": "kh.call",
+     "name": "Common Rules",
+     "args": {
+      "op": "rows",
+      "space": "orchestrator",
+      "scope": "rules",
+      "where": "pl.col(\"enabled\")",
+      "limit": 500,
+      "order": "position"
+     },
+     "next": {
+      "ok": "ck",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "ck",
+     "b": "data.compute",
+     "name": "Common Tier",
+     "args": {
+      "columns": "kind = pl.lit(\"common\")"
+     },
+     "next": {
+      "ok": "hasp",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "hasp",
+     "b": "logic.decide",
+     "name": "A Project?",
+     "args": {
+      "cond": "input[\"project\"] not in (\"\", None, \"orchestrator\")"
+     },
+     "next": {
+      "ok": "proj",
+      "fail": "haspe"
+     },
+     "hidden": true
+    },
+    {
+     "id": "proj",
+     "b": "kh.call",
+     "name": "Project Rules",
+     "args": {
+      "op": "rows",
+      "space": "${input.project}",
+      "scope": "policies",
+      "where": "pl.col(\"enabled\")",
+      "limit": 500,
+      "order": "position"
+     },
+     "next": {
+      "ok": "pk",
+      "fail": "haspe"
+     },
+     "hidden": true
+    },
+    {
+     "id": "pk",
+     "b": "data.compute",
+     "name": "Project Tier",
+     "args": {
+      "columns": "kind = pl.lit(\"project\")"
+     },
+     "next": {
+      "ok": "haspe",
+      "fail": "haspe"
+     },
+     "hidden": true
+    },
+    {
+     "id": "haspe",
+     "b": "logic.decide",
+     "name": "A Personal Space?",
+     "args": {
+      "cond": "input[\"personal\"] not in (\"\", None)"
+     },
+     "next": {
+      "ok": "pers",
+      "fail": "all"
+     },
+     "hidden": true
+    },
+    {
+     "id": "pers",
+     "b": "kh.call",
+     "name": "Personal Rules",
+     "args": {
+      "op": "rows",
+      "space": "${input.personal}",
+      "scope": "rules",
+      "where": "pl.col(\"enabled\")",
+      "limit": 500,
+      "order": "position"
+     },
+     "next": {
+      "ok": "ek",
+      "fail": "all"
+     },
+     "hidden": true
+    },
+    {
+     "id": "ek",
+     "b": "data.compute",
+     "name": "Personal Tier",
+     "args": {
+      "columns": "kind = pl.lit(\"personal\")"
+     },
+     "next": {
+      "ok": "all",
+      "fail": "all"
+     },
+     "hidden": true
+    },
+    {
+     "id": "all",
+     "b": "data.merge",
+     "name": "All Tiers",
+     "args": {
+      "from": "Common Tier, Project Tier, Personal Tier",
+      "dedupe": "keep both"
+     },
+     "next": {
+      "ok": "win",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "win",
+     "b": "data.group",
+     "name": "One Rule per Slot",
+     "args": {
+      "key": "slot",
+      "order": [
+       "(pl.col(\"kind\") == \"common\") & (pl.col(\"locked\") == True)",
+       "pl.col(\"kind\") == \"project\"",
+       "pl.col(\"kind\") == \"personal\"",
+       "pl.col(\"kind\") == \"common\""
+      ]
+     },
+     "next": {
+      "ok": "base",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "base",
+     "b": "data.join",
+     "name": "The Slot's Common Rule",
+     "args": {
+      "with": "Common Tier",
+      "on": "slot",
+      "how": "left",
+      "prefix": "c_"
+     },
+     "next": {
+      "ok": "ord",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "ord",
+     "b": "data.compute",
+     "name": "Order and Lines",
+     "args": {
+      "columns": "o1 = pl.when(pl.col(\"c_position\").is_not_null()).then(pl.col(\"c_position\")).otherwise(pl.col(\"position\") + 1000)\no2 = pl.when(pl.col(\"kind\") == \"common\").then(0).when(pl.col(\"kind\") == \"personal\").then(1).otherwise(2)\nblock = pl.when(pl.col(\"kind\") == \"common\").then(pl.col(\"text\")).when(pl.col(\"overrides\").fill_null(\"\") != \"\").then(pl.concat_str([pl.lit(\"[\"), pl.col(\"kind\"), pl.lit(\", replaces the common rule '\"), pl.col(\"overrides\"), pl.lit(\"'] \"), pl.col(\"text\")])).otherwise(None)\nextra = pl.when((pl.col(\"kind\") != \"common\") & (pl.col(\"overrides\").fill_null(\"\") == \"\")).then(pl.concat_str([pl.lit(\"- \"), pl.col(\"text\")])).otherwise(None)"
+     },
+     "next": {
+      "ok": "sort",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "sort",
+     "b": "data.sort",
+     "name": "Kernel Order",
+     "args": {
+      "by": "o1, o2, slot"
+     },
+     "next": {
+      "ok": "blocks",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "blocks",
+     "b": "text.format",
+     "name": "Rule Blocks",
+     "args": {
+      "row": "{block}",
+      "each": true,
+      "empty": ""
+     },
+     "next": {
+      "ok": "ex",
+      "fail": "@fail"
+     }
+    },
+    {
+     "id": "ex",
+     "b": "data.filter",
+     "name": "Personal and Project Lines",
+     "args": {
+      "cond": "(pl.col(\"kind\") != \"common\") & (pl.col(\"overrides\").fill_null(\"\") == \"\")",
+      "from": "Kernel Order"
+     },
+     "next": {
+      "ok": "anyx",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "anyx",
+     "b": "logic.decide",
+     "name": "Any?",
+     "args": {
+      "cond": "steps[\"Personal and Project Lines\"].height > 0"
+     },
+     "next": {
+      "ok": "exfmt",
+      "fail": "@end"
+     },
+     "hidden": true
+    },
+    {
+     "id": "exfmt",
+     "b": "text.format",
+     "name": "Personal and Project Rules",
+     "args": {
+      "head": "PERSONAL AND PROJECT RULES (already merged with the rules above; on overlap they win):",
+      "row": "{extra}"
+     },
+     "next": {
+      "ok": "@end",
+      "fail": "@fail"
+     }
+    }
+   ],
+   "answer": {
+    "row": "{text}",
+    "part": 200000
+   },
+   "description": "The kernel's rules of three tiers merged per slot (project > personal > common, a locked common rule wins) and rendered in the kernel's order.",
+   "first": "common",
+   "id": "flow.kernel-merge",
+   "kind": "task",
+   "owner": "seed",
+   "version": 1,
+   "enabled": true,
+   "seeded": true,
+   "edited": false,
+   "updated_by": "seed",
+   "updated_at": "2026-11-18T16:20:25Z"
+  },
+  {
+   "name": "Message Inbox",
+   "desc": "The notices the caller gets now: direct, announcements, mentions in the session's space, each once per account (or per session), as data.",
+   "triggers": [],
+   "input": {
+    "project": "the session's space",
+    "actor": "the asking session",
+    "reader": "maintainers: whom"
+   },
+   "steps": [
+    {
+     "id": "mine",
+     "b": "kh.call",
+     "name": "My Messages",
+     "args": {
+      "op": "my messages",
+      "space": "",
+      "scope": "messages",
+      "actor": "${input.actor}",
+      "reader": "${input.reader}"
+     },
+     "next": {
+      "ok": "rules",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "rules",
+     "b": "data.compute",
+     "name": "Delivery Rules",
+     "args": {
+      "columns": "live = (pl.col(\"expires_at\") == \"\") | (pl.col(\"expires_at\") > pl.col(\"now\"))\nin_project = (pl.col(\"channel\") != \"project\") | ((pl.col(\"project\") == pl.lit(input.get(\"project\") or \"\")) & (pl.col(\"may_read\") == True))\nreaches = ((pl.col(\"to_actor\") == \"\") | (pl.col(\"to_actor\") == pl.col(\"actor\"))) & ((pl.col(\"sender\") != pl.col(\"reader\")) | ((pl.col(\"actor\") != \"\") & (pl.col(\"sender_actor\") != \"\") & (pl.col(\"actor\") != pl.col(\"sender_actor\"))) | (((pl.col(\"actor\") == \"\") | (pl.col(\"sender_actor\") == \"\")) & (pl.col(\"channel\") == \"direct\")))\nper_account = pl.col(\"channel\").is_in([\"direct\", \"project\"]) & (pl.col(\"to_actor\") == \"\")\ndelivered = (pl.col(\"key_had\") == True) | (pl.col(\"per_account\") & (pl.col(\"account_had\") == True)) | (~pl.col(\"per_account\") & (pl.col(\"to_actor\") == \"\") & (pl.col(\"first_seen\") != \"\") & (pl.col(\"account_had\") == True) & (pl.col(\"created_at\") < pl.col(\"first_seen\")))"
+     },
+     "next": {
+      "ok": "due",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "due",
+     "b": "data.filter",
+     "name": "To Hand Out",
+     "args": {
+      "cond": "pl.col(\"live\") & pl.col(\"in_project\") & pl.col(\"reaches\") & ~pl.col(\"delivered\")"
+     },
+     "next": {
+      "ok": "order",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "order",
+     "b": "data.sort",
+     "name": "Oldest First",
+     "args": {
+      "by": "created_at, id"
+     },
+     "next": {
+      "ok": "@end",
+      "fail": "@fail"
+     }
+    }
+   ],
+   "answer": {
+    "row": "{id}",
+    "part": 9000
+   },
+   "description": "The notices the caller gets now: direct, announcements, mentions in the session's space, each once per account (or per session), as data.",
+   "first": "mine",
+   "id": "msg.inbox",
+   "kind": "task",
+   "owner": "seed",
+   "version": 1,
+   "enabled": true,
+   "seeded": true,
+   "edited": false,
+   "updated_by": "seed",
+   "updated_at": "2026-11-18T16:20:25Z"
+  },
+  {
+   "name": "Save knowledge (split by the agent)",
+   "desc": "Splits a text to keep into nodes with keys, verbatim core facts and links, and saves them through the write core (check, match, upsert).",
+   "triggers": [
+    {
+     "type": "event",
+     "event": "kh.agent_call"
+    }
+   ],
+   "input": {
+    "text": "the knowledge, in the person's words",
+    "kind": "fact | how-to | decision | lesson ...",
+    "topic": "a few words",
+    "space": "the space (empty: the session's bound one)"
+   },
+   "steps": [
+    {
+     "id": "mask",
+     "b": "text.mask",
+     "name": "Mask Secrets",
+     "args": {},
+     "next": {
+      "ok": "space",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "space",
+     "b": "kh.call",
+     "name": "Find the Space",
+     "args": {
+      "op": "spaces",
+      "space": "@bound",
+      "scope": ""
+     },
+     "next": {
+      "ok": "split",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "split",
+     "b": "agent.task",
+     "name": "Split into Nodes",
+     "args": {
+      "task": "Split this ${input.kind} into the write core's nodes (one node per fact or rule; topic ${input.topic}). Keep the person's words: every core line is quoted from the text.\n\n{input.text}",
+      "guide": "Node: {type, name, summary (one line), where, keys, core (<= 3 quotes, each a sentence of the text word for word, under 120 characters), sections: {detail: the whole text}}; edges: [[from, kind, to]] with ids of the bundle or qualified ids of rows the text names.",
+      "shape": "{\"nodes\": [], \"edges\": []}"
+     },
+     "next": {
+      "ok": "save",
+      "fail": "@fail"
+     }
+    },
+    {
+     "id": "save",
+     "b": "flow.call",
+     "name": "Save Structured",
+     "args": {
+      "flow": "save.structured",
+      "input": {
+       "space": "${steps.space.fields.best_space}",
+       "bundle": "${steps.split.items.0}"
+      }
+     },
+     "next": {
+      "ok": "@end",
+      "fail": "@fail"
+     }
+    }
+   ],
+   "answer": {
+    "row": "{text}",
+    "part": 9000
+   },
+   "description": "Splits a text to keep into nodes with keys, verbatim core facts and links, and saves them through the write core (check, match, upsert).",
+   "first": "mask",
+   "id": "save.knowledge",
+   "kind": "task",
+   "owner": "seed",
+   "version": 1,
+   "enabled": true,
+   "seeded": true,
+   "edited": false,
+   "updated_by": "seed",
+   "updated_at": "2026-11-18T16:20:25Z"
+  },
+  {
+   "name": "Promote a branch to prod",
+   "desc": "Owner only: the branch's rows of a scope (or the ids given) into prod, conflicts merged by the agent, the branch versions marked promoted.",
+   "triggers": [
+    {
+     "type": "event",
+     "event": "kh.agent_call"
+    }
+   ],
+   "input": {
+    "space": "the space",
+    "scope": "the scope",
+    "branch": "the variant, e.g. branch:feat-x",
+    "ids": "optional: only these logical ids (a list)"
+   },
+   "steps": [
+    {
+     "id": "rows",
+     "b": "kh.call",
+     "name": "Branch Rows",
+     "args": {
+      "op": "rows",
+      "space": "@input",
+      "scope": "${input.scope}",
+      "view": "${input.branch}",
+      "limit": 500
+     },
+     "next": {
+      "ok": "pick",
+      "fail": "@fail"
+     }
+    },
+    {
+     "id": "pick",
+     "b": "data.filter",
+     "name": "The Rows Asked",
+     "args": {
+      "cond": "pl.col(\"id\").is_in(input.get(\"ids\") or []) | pl.lit(not input.get(\"ids\"))"
+     },
+     "next": {
+      "ok": "mine",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "mine",
+     "b": "data.filter",
+     "name": "Changed in the Branch",
+     "args": {
+      "cond": "pl.col(\"variant\") == pl.lit(input[\"branch\"])"
+     },
+     "next": {
+      "ok": "write",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "write",
+     "b": "kh.call",
+     "name": "Write to Prod",
+     "args": {
+      "op": "write",
+      "space": "@input",
+      "scope": "${input.scope}",
+      "each": "*",
+      "owner_only": true,
+      "drop": "variant, deleted, stored_id, stored_qid, qid, space, scope, ts, score, count, total, truncated, has_more",
+      "if": "@base_ver",
+      "from": "Changed in the Branch"
+     },
+     "next": {
+      "ok": "mark",
+      "fail": "conflict"
+     }
+    },
+    {
+     "id": "conflict",
+     "b": "logic.decide",
+     "name": "A Conflict?",
+     "args": {
+      "cond": "steps[\"Write to Prod\"].height > 0"
+     },
+     "next": {
+      "ok": "merge",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "merge",
+     "b": "agent.task",
+     "name": "Merge the Conflicts",
+     "args": {
+      "task": "Prod changed these rows after the branch ${input.branch} read them. Merge each: keep prod's facts and the branch's change. Conflicts: ${steps.write.items}",
+      "guide": "One item per row: {id, text, fields (optional), if: <the 'current' ts of the conflict>}.",
+      "shape": "{\"items\": []}"
+     },
+     "next": {
+      "ok": "again",
+      "fail": "@fail"
+     }
+    },
+    {
+     "id": "again",
+     "b": "kh.call",
+     "name": "Write the Merged Rows",
+     "args": {
+      "op": "write",
+      "space": "@input",
+      "scope": "${input.scope}",
+      "each": "*",
+      "owner_only": true,
+      "if": "@if",
+      "from": "Merge the Conflicts"
+     },
+     "next": {
+      "ok": "mark",
+      "fail": "@fail"
+     }
+    },
+    {
+     "id": "mark",
+     "b": "kh.call",
+     "name": "Mark the Branch Promoted",
+     "args": {
+      "op": "patch",
+      "space": "@input",
+      "scope": "${input.scope}",
+      "variant": "${input.branch}",
+      "where": "pl.col(\"variant\") == pl.lit(input[\"branch\"])",
+      "fields": {
+       "promoted": true
+      },
+      "view": "${input.branch}"
+     },
+     "next": {
+      "ok": "ret",
+      "fail": "ret"
+     }
+    },
+    {
+     "id": "ret",
+     "b": "end.return",
+     "name": "Return",
+     "args": {
+      "lead": "Promoted ${input.branch} to prod."
+     },
+     "next": {}
+    }
+   ],
+   "answer": {
+    "row": "{text}",
+    "part": 9000
+   },
+   "description": "Owner only: the branch's rows of a scope (or the ids given) into prod, conflicts merged by the agent, the branch versions marked promoted.",
+   "first": "rows",
+   "id": "feature.promote",
+   "kind": "task",
+   "owner": "seed",
+   "version": 1,
+   "enabled": true,
+   "seeded": true,
+   "edited": false,
+   "updated_by": "seed",
+   "updated_at": "2026-11-18T16:20:25Z"
+  },
+  {
+   "name": "Turn Context",
+   "desc": "What the agent gets with each prompt about the space it is on: today's turn context (project, actions, findings, lessons), then the space's About and open findings.",
+   "triggers": [],
+   "steps": [
+    {
+     "id": "turn",
+     "b": "turn.context",
+     "name": "Turn Context",
+     "args": {
+      "text": "${input.text}"
+     },
+     "next": {
+      "ok": "about",
+      "fail": "about"
+     }
+    },
+    {
+     "id": "about",
+     "b": "kh.call",
+     "name": "Space About",
+     "args": {
+      "op": "rows",
+      "space": "@named",
+      "scope": "about",
+      "limit": 1
+     },
+     "next": {
+      "ok": "findings",
+      "fail": "findings"
+     },
+     "hidden": true
+    },
+    {
+     "id": "findings",
+     "b": "kh.call",
+     "name": "Open Findings",
+     "args": {
+      "op": "newest",
+      "space": "@bound",
+      "scope": "findings",
+      "where": "pl.col(\"status\") == \"open\"",
+      "limit": 5
+     },
+     "next": {
+      "ok": "facts",
+      "fail": "facts"
+     },
+     "hidden": true
+    },
+    {
+     "id": "facts",
+     "b": "data.merge",
+     "name": "Space Facts",
+     "args": {
+      "from": "Space About, Open Findings",
+      "dedupe": "keep both"
+     },
+     "next": {
+      "ok": "fmt",
+      "fail": "@end"
+     },
+     "hidden": true
+    },
+    {
+     "id": "fmt",
+     "b": "text.format",
+     "name": "Format Space Facts",
+     "args": {
+      "head": "SPACE ABOUT AND OPEN FINDINGS:",
+      "row": "- {id}: {text}",
+      "chars": 300,
+      "empty": ""
+     },
+     "next": {
+      "ok": "@end",
+      "fail": "@end"
+     }
+    }
+   ],
+   "answer": {
+    "row": "{text}",
+    "part": 9000
+   },
+   "description": "What the agent gets with each prompt about the space it is on: today's turn context (project, actions, findings, lessons), then the space's About and open findings.",
+   "first": "turn",
+   "id": "flow.turn-context",
+   "kind": "task",
+   "owner": "seed",
+   "version": 1,
+   "enabled": true,
+   "seeded": true,
+   "edited": false,
+   "updated_by": "seed",
+   "updated_at": "2026-11-18T16:20:25Z"
+  },
+  {
+   "name": "Guard the Tool",
+   "desc": "The space's and the profile's rules that guard the tool about to run: deny when one denies, else ask; nothing when no rule guards it.",
+   "triggers": [],
+   "steps": [
+    {
+     "id": "space",
+     "b": "kh.call",
+     "name": "Space Guards",
+     "args": {
+      "op": "rows",
+      "space": "@bound",
+      "scope": "policies",
+      "where": "pl.col(\"guard_tool\") == input[\"tool_name\"]"
+     },
+     "next": {
+      "ok": "profile",
+      "fail": "profile"
+     }
+    },
+    {
+     "id": "profile",
+     "b": "kh.call",
+     "name": "Profile Guards",
+     "args": {
+      "op": "rows",
+      "space": "@profile",
+      "scope": "rules",
+      "where": "pl.col(\"guard_tool\") == input[\"tool_name\"]"
+     },
+     "next": {
+      "ok": "any",
+      "fail": "any"
+     }
+    },
+    {
+     "id": "any",
+     "b": "logic.decide",
+     "name": "Any Guard?",
+     "args": {
+      "cond": "steps[\"Space Guards\"].height + steps[\"Profile Guards\"].height > 0",
+      "then": "guarded",
+      "else": "none"
+     },
+     "next": {
+      "ok": "decide",
+      "fail": "@end"
+     },
+     "hidden": true
+    },
+    {
+     "id": "decide",
+     "b": "logic.decide",
+     "name": "Ask or Deny",
+     "args": {
+      "cond": "((steps[\"Space Guards\"].height > 0) and (steps[\"Space Guards\"][\"guard_decision\"] == \"deny\").any()) or ((steps[\"Profile Guards\"].height > 0) and (steps[\"Profile Guards\"][\"guard_decision\"] == \"deny\").any())",
+      "then": "deny",
+      "else": "ask"
+     },
+     "next": {
+      "ok": "@end",
+      "fail": "@end"
+     }
+    }
+   ],
+   "answer": {
+    "row": "{text}",
+    "part": 9000
+   },
+   "description": "The space's and the profile's rules that guard the tool about to run: deny when one denies, else ask; nothing when no rule guards it.",
+   "first": "space",
+   "id": "flow.guard-the-tool",
+   "kind": "task",
+   "owner": "seed",
+   "version": 1,
+   "enabled": true,
+   "seeded": true,
+   "edited": false,
+   "updated_by": "seed",
+   "updated_at": "2026-11-18T16:20:25Z"
+  },
+  {
+   "name": "Task context (full retrieve)",
+   "desc": "The task map: keys + meaning, grouped on links, walked <= 2 steps (never through a hub), best matches and learned links first; at most 4,000 characters of pointers on what the caller can read.",
+   "triggers": [
+    {
+     "type": "event",
+     "event": "kh.agent_call"
+    },
+    {
+     "type": "prompt",
+     "space": "",
+     "default": true,
+     "examples": [
+      "what does KH know about this task",
+      "build the task map for this",
+      "find everything about this bug in the space"
+     ],
+     "not": [
+      "hello, how are you today",
+      "thanks, that is all for now",
+      "what can you, the assistant, do for me",
+      "turn KH AUTO mode on",
+      "turn KH auto off",
+      "save this lesson to KH",
+      "log this work to KH",
+      "store a work log for this session",
+      "send a message to my colleague",
+      "read my KH inbox messages"
+     ]
+    }
+   ],
+   "input": {
+    "text": "the task",
+    "space": "the space (optional: the session's bound one)",
+    "actions": "the task's hidden actions, ';' between them, each named with the system it touches (kernel rule 2), e.g. 'sign in to SAP BTP; trigger the GitHub CD pipeline'"
+   },
+   "steps": [
+    {
+     "id": "mask",
+     "b": "text.mask",
+     "name": "Mask Secrets",
+     "args": {},
+     "next": {
+      "ok": "space",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "space",
+     "b": "kh.call",
+     "name": "Find the Space",
+     "args": {
+      "op": "spaces",
+      "space": "@bound",
+      "scope": ""
+     },
+     "next": {
+      "ok": "keys",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "keys",
+     "b": "kh.call",
+     "name": "Keys in the Task",
+     "args": {
+      "op": "find",
+      "space": "@bound",
+      "scope": ""
+     },
+     "next": {
+      "ok": "m_any",
+      "fail": "m_any"
+     },
+     "hidden": true
+    },
+    {
+     "id": "m_any",
+     "b": "kh.call",
+     "name": "Meaning: Any Row",
+     "args": {
+      "op": "search",
+      "space": "@bound",
+      "scope": "links",
+      "limit": 10,
+      "floor": 0.45
+     },
+     "next": {
+      "ok": "m_know",
+      "fail": "m_know"
+     },
+     "hidden": true
+    },
+    {
+     "id": "m_know",
+     "b": "kh.call",
+     "name": "Meaning: Knowledge",
+     "args": {
+      "op": "search",
+      "space": "@bound",
+      "scope": "knowledges",
+      "limit": 10,
+      "floor": 0.45
+     },
+     "next": {
+      "ok": "m_find",
+      "fail": "m_find"
+     },
+     "hidden": true
+    },
+    {
+     "id": "m_find",
+     "b": "kh.call",
+     "name": "Meaning: Findings",
+     "args": {
+      "op": "search",
+      "space": "@bound",
+      "scope": "findings",
+      "limit": 10,
+      "floor": 0.45
+     },
+     "next": {
+      "ok": "m_less",
+      "fail": "m_less"
+     },
+     "hidden": true
+    },
+    {
+     "id": "m_less",
+     "b": "kh.call",
+     "name": "Meaning: Lessons",
+     "args": {
+      "op": "search",
+      "space": "@bound",
+      "scope": "lesson-learns",
+      "limit": 10,
+      "floor": 0.45
+     },
+     "next": {
+      "ok": "lessons",
+      "fail": "lessons"
+     },
+     "hidden": true
+    },
+    {
+     "id": "lessons",
+     "b": "kh.call",
+     "name": "Lessons of the Task and Actions",
+     "args": {
+      "op": "lessons",
+      "space": "@bound",
+      "scope": ""
+     },
+     "next": {
+      "ok": "ext",
+      "fail": "ext"
+     },
+     "hidden": true
+    },
+    {
+     "id": "ext",
+     "b": "logic.decide",
+     "name": "Graph Outside KH?",
+     "args": {
+      "cond": "\"${steps.space.fields.graph_store}\" == \"ragstoraged\"",
+      "then": "outside",
+      "else": "in KH"
+     },
+     "next": {
+      "ok": "rs_read",
+      "fail": "case"
+     },
+     "hidden": true
+    },
+    {
+     "id": "rs_read",
+     "b": "agent.task",
+     "name": "Read RAGStoraged",
+     "args": {
+      "by": "helper",
+      "task": "ragstoraged.ask: read the feature and code graph of this space in RAGStoraged project ${steps.space.fields.rs_project} for the task, and answer its hits",
+      "guide": "project=${steps.space.fields.rs_project}; k=10; expand=1; the task is the prompt. By hand: run python -m ragstore ask ${steps.space.fields.rs_project} \"<the task>\" -k 10 in the RAGStoraged folder and answer each hit as {id: 'rs:<project>:<node id>', text: '<label> - <file>: <snippet>', score}. RAGStoraged missing or without that project on this machine: answer one item {id: 'rs:missing', text: '<why>'}, never an empty list.",
+      "shape": "{\"items\": []}",
+      "data": {
+       "project": "${steps.space.fields.rs_project}",
+       "text": "${input.text}",
+       "k": 10,
+       "expand": 1
+      }
+     },
+     "next": {
+      "ok": "case",
+      "fail": "rs_note"
+     },
+     "hidden": true
+    },
+    {
+     "id": "rs_note",
+     "b": "text.note",
+     "name": "Graph Pointer",
+     "args": {
+      "text": "The feature and code graph of this space live in RAGStoraged project ${steps.space.fields.rs_project}, outside KH: read them with kh_graph(\"<question>\")."
+     },
+     "next": {
+      "ok": "case",
+      "fail": "case"
+     },
+     "hidden": true
+    },
+    {
+     "id": "case",
+     "b": "kh.call",
+     "name": "Case Memory",
+     "args": {
+      "op": "search",
+      "space": "@bound",
+      "scope": "cases",
+      "limit": 1,
+      "floor": 0.85
+     },
+     "next": {
+      "ok": "case_ok",
+      "fail": "hits"
+     },
+     "hidden": true
+    },
+    {
+     "id": "case_ok",
+     "b": "logic.decide",
+     "name": "Case Verified?",
+     "args": {
+      "cond": "(steps[\"Case Memory\"].height > 0) and (steps[\"Case Memory\"][\"score\"] >= 0.9).all() and (pl.Series([str(input.get(\"actions\") or \"\")]).str.strip_chars().str.len_chars().sum() == 0)",
+      "then": "yes",
+      "else": "no"
+     },
+     "next": {
+      "ok": "case_rows",
+      "fail": "hits"
+     },
+     "hidden": true
+    },
+    {
+     "id": "case_rows",
+     "b": "kh.call",
+     "name": "Open the Case Rows",
+     "args": {
+      "op": "expand",
+      "space": "@bound",
+      "scope": "",
+      "from": "Case Memory"
+     },
+     "next": {
+      "ok": "ret_case",
+      "fail": "hits"
+     }
+    },
+    {
+     "id": "ret_case",
+     "b": "end.return",
+     "name": "Return the Case",
+     "args": {
+      "lead": "Rows of a solved chain like this task, read fresh. Open a row with expand <id> if a detail is needed."
+     },
+     "next": {}
+    },
+    {
+     "id": "hits",
+     "b": "data.merge",
+     "name": "All Hits",
+     "args": {
+      "from": "Keys in the Task, Meaning: Knowledge, Meaning: Findings, Meaning: Lessons",
+      "pick": "all, best match first"
+     },
+     "next": {
+      "ok": "group",
+      "fail": "group"
+     },
+     "hidden": true
+    },
+    {
+     "id": "group",
+     "b": "kh.call",
+     "name": "Group the Hits",
+     "args": {
+      "op": "group",
+      "space": "@bound",
+      "scope": "",
+      "like": "map"
+     },
+     "next": {
+      "ok": "found",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "found",
+     "b": "logic.decide",
+     "name": "Anything Found?",
+     "args": {
+      "cond": "(steps[\"Group the Hits\"][\"status\"] == \"missing\").all()",
+      "then": "missing",
+      "else": "found"
+     },
+     "next": {
+      "ok": "g_any",
+      "fail": "several"
+     },
+     "hidden": true
+    },
+    {
+     "id": "g_any",
+     "b": "logic.decide",
+     "name": "Graph Rows Only?",
+     "args": {
+      "cond": "(steps[\"Read RAGStoraged\"].height + steps[\"Graph Pointer\"].height + steps[\"Lessons of the Task and Actions\"].height) > 0",
+      "then": "graph",
+      "else": "nothing"
+     },
+     "next": {
+      "ok": "fmt",
+      "fail": "nothing"
+     },
+     "hidden": true
+    },
+    {
+     "id": "nothing",
+     "b": "end.stop",
+     "name": "Nothing Found",
+     "args": {
+      "outcome": "quiet",
+      "message": "nothing in what you can see; ask the user. KH has no row on this task in what you can read: do not guess."
+     },
+     "next": {}
+    },
+    {
+     "id": "several",
+     "b": "logic.decide",
+     "name": "Several Candidates?",
+     "args": {
+      "cond": "(steps[\"Group the Hits\"][\"status\"] == \"ambiguous\").all()",
+      "then": "ambiguous",
+      "else": "one topic"
+     },
+     "next": {
+      "ok": "fmt_cands",
+      "fail": "w_about"
+     },
+     "hidden": true
+    },
+    {
+     "id": "fmt_cands",
+     "b": "text.format",
+     "name": "Format the Candidates",
+     "args": {
+      "from": "Group the Hits",
+      "head": "CANDIDATES (several topics match this task):",
+      "row": "- {text}"
+     },
+     "next": {
+      "ok": "ret_cands",
+      "fail": "ret_cands"
+     }
+    },
+    {
+     "id": "ret_cands",
+     "b": "end.return",
+     "name": "Return the Candidates",
+     "args": {
+      "lead": "Several candidates match this task. Ask the user which one before acting."
+     },
+     "next": {}
+    },
+    {
+     "id": "w_about",
+     "b": "kh.call",
+     "name": "What the Task Is About",
+     "args": {
+      "op": "walk",
+      "space": "@bound",
+      "scope": "",
+      "facet": "what"
+     },
+     "next": {
+      "ok": "w_parts",
+      "fail": "w_parts"
+     },
+     "hidden": true
+    },
+    {
+     "id": "w_parts",
+     "b": "kh.call",
+     "name": "Topic and Parts",
+     "args": {
+      "op": "walk",
+      "space": "@bound",
+      "scope": "",
+      "facet": "parts"
+     },
+     "next": {
+      "ok": "w_what",
+      "fail": "w_what"
+     },
+     "hidden": true
+    },
+    {
+     "id": "w_what",
+     "b": "kh.call",
+     "name": "What",
+     "args": {
+      "op": "walk",
+      "space": "@bound",
+      "scope": "",
+      "facet": "what"
+     },
+     "next": {
+      "ok": "w_where",
+      "fail": "w_where"
+     },
+     "hidden": true
+    },
+    {
+     "id": "w_where",
+     "b": "kh.call",
+     "name": "Where",
+     "args": {
+      "op": "walk",
+      "space": "@bound",
+      "scope": "",
+      "facet": "where"
+     },
+     "next": {
+      "ok": "w_who",
+      "fail": "w_who"
+     },
+     "hidden": true
+    },
+    {
+     "id": "w_who",
+     "b": "kh.call",
+     "name": "Who",
+     "args": {
+      "op": "walk",
+      "space": "@bound",
+      "scope": "",
+      "facet": "who"
+     },
+     "next": {
+      "ok": "w_hist",
+      "fail": "w_hist"
+     },
+     "hidden": true
+    },
+    {
+     "id": "w_hist",
+     "b": "kh.call",
+     "name": "History",
+     "args": {
+      "op": "walk",
+      "space": "@bound",
+      "scope": "",
+      "facet": "history"
+     },
+     "next": {
+      "ok": "w_less",
+      "fail": "w_less"
+     },
+     "hidden": true
+    },
+    {
+     "id": "w_less",
+     "b": "kh.call",
+     "name": "Lessons",
+     "args": {
+      "op": "walk",
+      "space": "@bound",
+      "scope": "",
+      "facet": "lessons"
+     },
+     "next": {
+      "ok": "shared",
+      "fail": "shared"
+     },
+     "hidden": true
+    },
+    {
+     "id": "shared",
+     "b": "kh.call",
+     "name": "Shared Lessons",
+     "args": {
+      "op": "search",
+      "space": "lesson-learned",
+      "scope": "knowledges",
+      "limit": 3,
+      "floor": 0.45
+     },
+     "next": {
+      "ok": "w_sol",
+      "fail": "w_sol"
+     },
+     "hidden": true
+    },
+    {
+     "id": "w_sol",
+     "b": "kh.call",
+     "name": "Solution",
+     "args": {
+      "op": "walk",
+      "space": "@bound",
+      "scope": "",
+      "facet": "solution"
+     },
+     "next": {
+      "ok": "w_imp",
+      "fail": "w_imp"
+     },
+     "hidden": true
+    },
+    {
+     "id": "w_imp",
+     "b": "kh.call",
+     "name": "Impact",
+     "args": {
+      "op": "walk",
+      "space": "@bound",
+      "scope": "",
+      "facet": "impact"
+     },
+     "next": {
+      "ok": "w_con",
+      "fail": "w_con"
+     },
+     "hidden": true
+    },
+    {
+     "id": "w_con",
+     "b": "kh.call",
+     "name": "Constraints",
+     "args": {
+      "op": "walk",
+      "space": "@bound",
+      "scope": "",
+      "facet": "constraints"
+     },
+     "next": {
+      "ok": "orch",
+      "fail": "orch"
+     },
+     "hidden": true
+    },
+    {
+     "id": "orch",
+     "b": "kh.call",
+     "name": "Orchestrator Rules",
+     "args": {
+      "op": "rows",
+      "space": "orchestrator",
+      "scope": "rules",
+      "where": "pl.col(\"enabled\")"
+     },
+     "next": {
+      "ok": "best",
+      "fail": "best"
+     },
+     "hidden": true
+    },
+    {
+     "id": "best",
+     "b": "data.merge",
+     "name": "Best Matches",
+     "args": {
+      "from": "Meaning: Knowledge, Meaning: Findings, Meaning: Lessons, Keys in the Task",
+      "pick": "5, best match first"
+     },
+     "next": {
+      "ok": "linked",
+      "fail": "linked"
+     },
+     "hidden": true
+    },
+    {
+     "id": "linked",
+     "b": "kh.call",
+     "name": "Learned Links",
+     "args": {
+      "op": "walk",
+      "space": "@bound",
+      "scope": "",
+      "facet": "linked"
+     },
+     "next": {
+      "ok": "fmt",
+      "fail": "fmt"
+     },
+     "hidden": true
+    },
+    {
+     "id": "fmt",
+     "b": "text.format",
+     "name": "Format the Map",
+     "args": {
+      "mode": "map",
+      "space": "@bound",
+      "extra": "Read RAGStoraged, Graph Pointer",
+      "lessons": "Lessons of the Task and Actions"
+     },
+     "next": {
+      "ok": "ret",
+      "fail": "@fail"
+     }
+    },
+    {
+     "id": "ret",
+     "b": "end.return",
+     "name": "Return the Map",
+     "args": {
+      "lead": "Open with kh_expand(id) the rows you use. The map shows only the rows closest to the task: when the task has several steps, checks or rules, or asks for everything known, ALSO open each '+N ... under <id>' line with kh_expand(<id>), kh_expand('~more') for the next rows by meaning, before you answer; stop when a page adds nothing new."
+     },
+     "next": {}
+    }
+   ],
+   "grid": [
+    [
+     "@start",
+     "Mask Secrets",
+     "Find the Space",
+     "Keys in the Task",
+     "Meaning: Any Row",
+     "Meaning: Knowledge",
+     "Meaning: Findings",
+     "Meaning: Lessons",
+     "Lessons of the Task and Actions"
+    ],
+    [
+     "Graph Outside KH?",
+     "Read RAGStoraged",
+     "Graph Pointer",
+     "Graph Rows Only?"
+    ],
+    [
+     "Case Memory",
+     "Case Verified?",
+     "Open the Case Rows",
+     "Return the Case"
+    ],
+    [
+     "All Hits",
+     "Group the Hits",
+     "Anything Found?",
+     "Nothing Found",
+     [
+      "@fail",
+      5
+     ]
+    ],
+    [
+     [
+      "Several Candidates?",
+      2
+     ],
+     "Format the Candidates",
+     "Return the Candidates",
+     [
+      "@end",
+      5
+     ]
+    ],
+    [
+     "What the Task Is About",
+     "Topic and Parts",
+     "What",
+     "Where",
+     "Who",
+     "History",
+     "Lessons",
+     "Shared Lessons"
+    ],
+    [
+     "Solution",
+     "Impact",
+     "Constraints",
+     "Orchestrator Rules",
+     "Best Matches",
+     "Learned Links",
+     "Format the Map",
+     "Return the Map"
+    ]
+   ],
+   "answer": {
+    "row": "{text}",
+    "part": 9000
+   },
+   "description": "The task map: keys + meaning, grouped on links, walked <= 2 steps (never through a hub), best matches and learned links first; at most 4,000 characters of pointers on what the caller can read.",
+   "first": "mask",
+   "id": "task.full-retrieve",
+   "kind": "task",
+   "owner": "seed",
+   "version": 1,
+   "enabled": true,
+   "seeded": true,
+   "edited": false,
+   "updated_by": "seed",
+   "updated_at": "2026-11-18T16:20:25Z"
+  },
+  {
+   "name": "Plan the actions",
+   "desc": "Entry layer: the LLM sends the actions it detected in the prompt; none sent means talk with user. Plans for each action, then the task map when there is a specific task.",
+   "triggers": [
+    {
+     "type": "event",
+     "event": "kh.agent_call"
+    }
+   ],
+   "input": {
+    "actions": "the actions detected in the prompt (empty = talk with user)",
+    "text": "the prompt",
+    "space": "the space (optional: the session's bound one)"
+   },
+   "steps": [
+    {
+     "id": "any",
+     "b": "logic.decide",
+     "name": "Any Action Sent?",
+     "args": {
+      "cond": "pl.Series(input.get(\"actions\") or [], dtype=pl.String).len() == 0",
+      "then": "talk with user",
+      "else": "has actions"
+     },
+     "next": {
+      "ok": "talk",
+      "fail": "plans"
+     },
+     "hidden": true
+    },
+    {
+     "id": "talk",
+     "b": "policy.plan",
+     "name": "Talk With User Plan",
+     "args": {
+      "action": "talk with user"
+     },
+     "next": {
+      "ok": "comm",
+      "fail": "comm"
+     }
+    },
+    {
+     "id": "comm",
+     "b": "kh.call",
+     "name": "Communication Rules",
+     "args": {
+      "op": "rows",
+      "space": "ai-communication",
+      "scope": "knowledges",
+      "where": "(pl.col(\"id\") == \"vec_comm_index\") | pl.col(\"rule\").str.contains(\"^[0-8]-\")",
+      "order": "position",
+      "limit": 20
+     },
+     "next": {
+      "ok": "ret_talk",
+      "fail": "ret_talk"
+     }
+    },
+    {
+     "id": "ret_talk",
+     "b": "end.return",
+     "name": "Return the Talk Plan",
+     "args": {
+      "lead": "Talk with the user: follow the plan and the communication rules."
+     },
+     "next": {}
+    },
+    {
+     "id": "plans",
+     "b": "kh.call",
+     "name": "Action Plans",
+     "args": {
+      "op": "plans",
+      "space": "@bound",
+      "scope": ""
+     },
+     "next": {
+      "ok": "common",
+      "fail": "common"
+     }
+    },
+    {
+     "id": "common",
+     "b": "kh.call",
+     "name": "Common Action Plans",
+     "args": {
+      "op": "plans",
+      "space": "orchestrator",
+      "scope": ""
+     },
+     "next": {
+      "ok": "lessons",
+      "fail": "lessons"
+     },
+     "hidden": true
+    },
+    {
+     "id": "lessons",
+     "b": "kh.call",
+     "name": "Lessons of the Actions",
+     "args": {
+      "op": "search",
+      "space": "@bound",
+      "scope": "lesson-learns",
+      "text": "${input.actions}",
+      "limit": 3,
+      "floor": 0.45
+     },
+     "next": {
+      "ok": "specific",
+      "fail": "specific"
+     }
+    },
+    {
+     "id": "specific",
+     "b": "logic.decide",
+     "name": "Specific Task?",
+     "args": {
+      "cond": "pl.Series([input.get(\"text\") or \"\"]).str.len_chars().sum() > 0",
+      "then": "specific",
+      "else": "general only"
+     },
+     "next": {
+      "ok": "ctx",
+      "fail": "ret"
+     },
+     "hidden": true
+    },
+    {
+     "id": "ctx",
+     "b": "flow.call",
+     "name": "Task Context",
+     "args": {
+      "flow": "task.full-retrieve"
+     },
+     "next": {
+      "ok": "ret",
+      "fail": "ret"
+     }
+    },
+    {
+     "id": "ret",
+     "b": "end.return",
+     "name": "Return Plans and Map",
+     "args": {
+      "lead": "Plans for each action, then the task map. Follow the plans; act on the map."
+     },
+     "next": {}
+    }
+   ],
+   "grid": [
+    [
+     "@start",
+     "Any Action Sent?",
+     "Talk With User Plan",
+     "Communication Rules",
+     "Return the Talk Plan"
+    ],
+    [
+     [
+      "Action Plans",
+      1
+     ],
+     "Common Action Plans",
+     "Lessons of the Actions",
+     "Specific Task?"
+    ],
+    [
+     [
+      "Return Plans and Map",
+      3
+     ],
+     "Task Context"
+    ],
+    [
+     [
+      "@end",
+      3
+     ],
+     [
+      "@fail",
+      4
+     ]
+    ]
+   ],
+   "answer": {
+    "row": "{text}",
+    "part": 9000
+   },
+   "description": "Entry layer: the LLM sends the actions it detected in the prompt; none sent means talk with user. Plans for each action, then the task map when there is a specific task.",
+   "first": "any",
+   "id": "task.plan-actions",
+   "kind": "task",
+   "owner": "seed",
+   "version": 1,
+   "enabled": true,
+   "seeded": true,
+   "edited": false,
+   "updated_by": "seed",
+   "updated_at": "2026-11-18T16:20:25Z"
+  },
+  {
+   "name": "Save structured (shared core)",
+   "desc": "The one place the save rules live: check the bundle, match it to what exists, save nodes and links with the access of their sources. Run by the other save flows; input {space, bundle}.",
+   "triggers": [],
+   "input": {
+    "space": "the space to save into",
+    "bundle": "{nodes, edges}",
+    "lessons_status": "optional: the status every lesson node gets (a retro: proposed)"
+   },
+   "steps": [
+    {
+     "id": "check",
+     "b": "kh.call",
+     "name": "Check the Bundle",
+     "args": {
+      "op": "check",
+      "space": "@input",
+      "scope": "",
+      "lessons_status": "${input.lessons_status}"
+     },
+     "next": {
+      "ok": "failed",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "failed",
+     "b": "logic.decide",
+     "name": "Anything Failed?",
+     "args": {
+      "cond": "steps[\"Check the Bundle\"].height > 0",
+      "then": "some fail",
+      "else": "all pass"
+     },
+     "next": {
+      "ok": "reasons",
+      "fail": "resolve"
+     },
+     "hidden": true
+    },
+    {
+     "id": "reasons",
+     "b": "end.stop",
+     "name": "Send Back the Reasons",
+     "args": {
+      "outcome": "failed",
+      "items": true,
+      "message": "Some nodes break the save rules: ${steps.check.fields.reasons}. Fix them with the reasons given and hand the bundle in again; nothing was saved."
+     },
+     "next": {}
+    },
+    {
+     "id": "resolve",
+     "b": "kh.call",
+     "name": "Match to Existing",
+     "args": {
+      "op": "resolve",
+      "space": "@input",
+      "scope": "",
+      "lessons_status": "${input.lessons_status}"
+     },
+     "next": {
+      "ok": "upsert",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "upsert",
+     "b": "kh.call",
+     "name": "Save Nodes and Links",
+     "args": {
+      "op": "upsert",
+      "space": "@input",
+      "scope": "",
+      "lessons_status": "${input.lessons_status}"
+     },
+     "next": {
+      "ok": "report",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "report",
+     "b": "text.note",
+     "name": "Save Report",
+     "args": {
+      "text": "${steps.upsert.fields.text}"
+     },
+     "next": {
+      "ok": "ret",
+      "fail": "ret"
+     }
+    },
+    {
+     "id": "ret",
+     "b": "end.return",
+     "name": "Return the Report",
+     "args": {
+      "lead": ""
+     },
+     "next": {}
+    }
+   ],
+   "grid": [
+    [
+     "@start",
+     "Check the Bundle",
+     "Anything Failed?",
+     "Send Back the Reasons"
+    ],
+    [
+     [
+      "Match to Existing",
+      2
+     ],
+     "Save Nodes and Links",
+     "Save Report",
+     "Return the Report"
+    ],
+    [
+     [
+      "@end",
+      4
+     ],
+     [
+      "@fail",
+      5
+     ]
+    ]
+   ],
+   "answer": {
+    "row": "{text}",
+    "part": 9000
+   },
+   "description": "The one place the save rules live: check the bundle, match it to what exists, save nodes and links with the access of their sources. Run by the other save flows; input {space, bundle}.",
+   "first": "check",
+   "id": "save.structured",
+   "kind": "task",
+   "owner": "seed",
+   "version": 1,
+   "enabled": true,
+   "seeded": true,
+   "edited": false,
+   "updated_by": "seed",
+   "updated_at": "2026-11-18T16:20:25Z"
+  },
+  {
+   "name": "Save a retro (S2)",
+   "desc": "Turns a finished task (the newest case of this session, or input.case_id) into findings, fixes and lessons linked to the rows it used, and records what its map missed as gap events. Lessons start proposed.",
+   "triggers": [
+    {
+     "type": "event",
+     "event": "kh.agent_call"
+    }
+   ],
+   "input": {
+    "space": "the space (empty: the session's bound one)",
+    "case_id": "optional: the case to look back on"
+   },
+   "steps": [
+    {
+     "id": "space",
+     "b": "kh.call",
+     "name": "Find the Space",
+     "args": {
+      "op": "spaces",
+      "space": "@bound",
+      "scope": ""
+     },
+     "next": {
+      "ok": "case",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "case",
+     "b": "kh.call",
+     "name": "Read the Task Chain",
+     "args": {
+      "op": "rows",
+      "space": "@named",
+      "scope": "cases",
+      "where": "(pl.lit(input.get(\"case_id\") or \"\") == pl.col(\"id\")) | ((pl.lit(input.get(\"case_id\") or \"\") == \"\") & (pl.col(\"actor\") == caller[\"actor\"]))",
+      "order": "-ts",
+      "limit": 1
+     },
+     "next": {
+      "ok": "any",
+      "fail": "nocase"
+     }
+    },
+    {
+     "id": "any",
+     "b": "logic.decide",
+     "name": "Any Case?",
+     "args": {
+      "cond": "steps[\"Read the Task Chain\"].height > 0",
+      "then": "yes",
+      "else": "no"
+     },
+     "next": {
+      "ok": "rows",
+      "fail": "nocase"
+     },
+     "hidden": true
+    },
+    {
+     "id": "nocase",
+     "b": "end.stop",
+     "name": "No Case",
+     "args": {
+      "outcome": "quiet",
+      "message": "No case to look back on"
+     },
+     "next": {}
+    },
+    {
+     "id": "rows",
+     "b": "kh.call",
+     "name": "Open the Rows Used",
+     "args": {
+      "op": "expand",
+      "space": "@named",
+      "scope": "",
+      "from": "Read the Task Chain"
+     },
+     "next": {
+      "ok": "lessons",
+      "fail": "lessons"
+     }
+    },
+    {
+     "id": "lessons",
+     "b": "agent.task",
+     "name": "Write the Lessons",
+     "args": {
+      "task": "Look back on case ${steps.case.items.0.qid} (task: ${steps.case.items.0.text}). From the chain and its rows, write the finding (symptom + cause), the fix and the lesson (the rule for next time) as nodes linked to the rows of the chain. Quote the core word for word from a src row; do not reword. Lessons start as proposed.",
+      "guide": "Node: {type, name, summary (one line), where, keys, core (<= 3 quotes), src: [{row: <qid>, quote}]}; edges: [[from, kind, to]] with ids of the bundle or rows of the chain.",
+      "shape": "{\"nodes\": [], \"edges\": []}"
+     },
+     "next": {
+      "ok": "save",
+      "fail": "@fail"
+     }
+    },
+    {
+     "id": "save",
+     "b": "flow.call",
+     "name": "Save Structured",
+     "args": {
+      "flow": "save.structured",
+      "input": {
+       "space": "${steps.space.fields.best_space}",
+       "bundle": "${steps.lessons.items.0}",
+       "lessons_status": "proposed"
+      }
+     },
+     "next": {
+      "ok": "missed",
+      "fail": "@fail"
+     }
+    },
+    {
+     "id": "missed",
+     "b": "agent.task",
+     "name": "What the Map Missed",
+     "args": {
+      "task": "List what the map of case ${steps.case.items.0.qid} did not show but the work needed: the rows you opened later, or the raw row that held a fact. An empty list is fine.",
+      "guide": "Each gap: {found: <the map's leading row id>, holder: <the row that held it> | src_row: <the raw row>, why}",
+      "shape": "{\"gaps\": []}"
+     },
+     "next": {
+      "ok": "gaps",
+      "fail": "@fail"
+     }
+    },
+    {
+     "id": "gaps",
+     "b": "kh.call",
+     "name": "Record the Gaps",
+     "args": {
+      "op": "write",
+      "space": "@named",
+      "scope": "events",
+      "each": "gaps",
+      "kind": "gap",
+      "task": "${steps.case.items.0.text}",
+      "from": "What the Map Missed"
+     },
+     "next": {
+      "ok": "ret",
+      "fail": "ret"
+     },
+     "hidden": true
+    },
+    {
+     "id": "ret",
+     "b": "end.return",
+     "name": "Return the Report",
+     "args": {
+      "lead": "Retro saved: lessons proposed (trusted once a human approves or a later task confirms them), gaps queued for the distiller."
+     },
+     "next": {}
+    }
+   ],
+   "grid": [
+    [
+     "@start",
+     "Find the Space",
+     "Read the Task Chain",
+     "Any Case?",
+     "No Case"
+    ],
+    [
+     [
+      "Open the Rows Used",
+      3
+     ],
+     "Write the Lessons",
+     "Save Structured",
+     "What the Map Missed"
+    ],
+    [
+     [
+      "Record the Gaps",
+      4
+     ],
+     "Return the Report",
+     "@end"
+    ],
+    [
+     [
+      "@fail",
+      4
+     ]
+    ]
+   ],
+   "answer": {
+    "row": "{text}",
+    "part": 9000
+   },
+   "description": "Turns a finished task (the newest case of this session, or input.case_id) into findings, fixes and lessons linked to the rows it used, and records what its map missed as gap events. Lessons start proposed.",
+   "first": "space",
+   "id": "save.retro",
+   "kind": "task",
+   "owner": "seed",
+   "version": 1,
+   "enabled": true,
+   "seeded": true,
+   "edited": false,
+   "updated_by": "seed",
+   "updated_at": "2026-11-18T16:20:25Z"
+  },
+  {
+   "name": "Distil at night (S3)",
+   "desc": "The distiller (maintainers): open gaps become learned links (the gap closes in the same call) or new nodes; then the learned-link growth guards (remove contradicted, decay, consolidate to the parent, evict over the cap, flag strict promotion), levels and extractive summaries, and a Quality Report row in the space's logs. KH does not fire the 02:00 trigger yet: run it by name.",
+   "triggers": [
+    {
+     "type": "event",
+     "event": "kh.daily_0200"
+    },
+    {
+     "type": "event",
+     "event": "kh.agent_call"
+    }
+   ],
+   "input": {
+    "space": "the space to distil"
+   },
+   "steps": [
+    {
+     "id": "gaps",
+     "b": "kh.call",
+     "name": "Open Gaps",
+     "args": {
+      "op": "gaps",
+      "space": "@input",
+      "scope": ""
+     },
+     "next": {
+      "ok": "any",
+      "fail": "housekeep"
+     }
+    },
+    {
+     "id": "any",
+     "b": "logic.decide",
+     "name": "Any Open Gaps?",
+     "args": {
+      "cond": "steps[\"Open Gaps\"].height > 0",
+      "then": "yes",
+      "else": "no"
+     },
+     "next": {
+      "ok": "ask",
+      "fail": "housekeep"
+     },
+     "hidden": true
+    },
+    {
+     "id": "ask",
+     "b": "agent.task",
+     "name": "Gaps to Learned Links",
+     "args": {
+      "task": "For each open gap, name the row that holds the missing fact and link it learned from the map's leading row (from = found[0], to = the holder). Cut a new node only when no row holds it (quote its core from the src row). Gaps:\n${steps.gaps.fields.list}",
+      "guide": "links: [{gap_id, from, to}]; new_nodes: nodes of the write core (type, name, summary, where, keys, core <= 3 quotes, src [{row, quote}]).",
+      "shape": "{\"links\": [], \"new_nodes\": []}"
+     },
+     "next": {
+      "ok": "learn",
+      "fail": "housekeep"
+     }
+    },
+    {
+     "id": "learn",
+     "b": "kh.call",
+     "name": "Learn the Links",
+     "args": {
+      "op": "learn",
+      "space": "@input",
+      "scope": "",
+      "from": "Gaps to Learned Links"
+     },
+     "next": {
+      "ok": "newnodes",
+      "fail": "newnodes"
+     }
+    },
+    {
+     "id": "newnodes",
+     "b": "logic.decide",
+     "name": "Any New Nodes?",
+     "args": {
+      "cond": "steps[\"Gaps to Learned Links\"][\"new_nodes\"].list.len().sum() > 0",
+      "then": "yes",
+      "else": "no"
+     },
+     "next": {
+      "ok": "save_new",
+      "fail": "housekeep"
+     },
+     "hidden": true
+    },
+    {
+     "id": "save_new",
+     "b": "flow.call",
+     "name": "Save the New Nodes",
+     "args": {
+      "flow": "save.structured",
+      "input": {
+       "space": "${input.space}",
+       "bundle": {
+        "nodes": "${steps.ask.items.0.new_nodes}",
+        "edges": []
+       }
+      }
+     },
+     "next": {
+      "ok": "housekeep",
+      "fail": "housekeep"
+     }
+    },
+    {
+     "id": "housekeep",
+     "b": "kh.call",
+     "name": "Learned Link Guards",
+     "args": {
+      "op": "housekeep",
+      "space": "@input",
+      "scope": ""
+     },
+     "next": {
+      "ok": "levels",
+      "fail": "levels"
+     }
+    },
+    {
+     "id": "levels",
+     "b": "kh.call",
+     "name": "Levels and Summaries",
+     "args": {
+      "op": "levels",
+      "space": "@input",
+      "scope": ""
+     },
+     "next": {
+      "ok": "stale",
+      "fail": "report"
+     }
+    },
+    {
+     "id": "stale",
+     "b": "logic.decide",
+     "name": "Summaries Left Stale?",
+     "args": {
+      "cond": "(steps[\"Levels and Summaries\"][\"stale_after\"] > 0).all()",
+      "then": "yes",
+      "else": "no"
+     },
+     "next": {
+      "ok": "refresh",
+      "fail": "report"
+     },
+     "hidden": true
+    },
+    {
+     "id": "refresh",
+     "b": "agent.task",
+     "name": "Refresh Summaries",
+     "args": {
+      "task": "Rebuild the summary node of every feature or module whose rows changed: extractive quotes and child counts only, never paraphrased, never quoting a row of narrower access.",
+      "shape": "{\"nodes\": [], \"edges\": []}"
+     },
+     "next": {
+      "ok": "save_sum",
+      "fail": "report"
+     }
+    },
+    {
+     "id": "save_sum",
+     "b": "flow.call",
+     "name": "Save the Summaries",
+     "args": {
+      "flow": "save.structured",
+      "input": {
+       "space": "${input.space}",
+       "bundle": "${steps.refresh.items.0}"
+      }
+     },
+     "next": {
+      "ok": "report",
+      "fail": "report"
+     }
+    },
+    {
+     "id": "report",
+     "b": "text.note",
+     "name": "Quality Report",
+     "args": {
+      "text": "QUALITY REPORT ${input.space}: open gaps ${steps.gaps.fields.count}; learned links ${steps.learn.fields.linked}, gaps closed ${steps.learn.fields.closed}; ${steps.housekeep.fields.text}; ${steps.levels.fields.text}"
+     },
+     "next": {
+      "ok": "write",
+      "fail": "write"
+     }
+    },
+    {
+     "id": "write",
+     "b": "kh.call",
+     "name": "Write the Report",
+     "args": {
+      "op": "write",
+      "space": "@input",
+      "scope": "logs",
+      "text": "${steps.report.fields.text}",
+      "fields": {
+       "topic": "distiller",
+       "subject": "Quality Report"
+      }
+     },
+     "next": {
+      "ok": "done",
+      "fail": "done"
+     },
+     "hidden": true
+    },
+    {
+     "id": "done",
+     "b": "end.return",
+     "name": "Done",
+     "args": {
+      "lead": "Night run done."
+     },
+     "next": {}
+    }
+   ],
+   "grid": [
+    [
+     "@start",
+     "Open Gaps",
+     "Any Open Gaps?",
+     "Gaps to Learned Links",
+     "Learn the Links"
+    ],
+    [
+     [
+      "Any New Nodes?",
+      4
+     ],
+     "Save the New Nodes"
+    ],
+    [
+     [
+      "Learned Link Guards",
+      1
+     ],
+     "Levels and Summaries",
+     "Summaries Left Stale?",
+     "Refresh Summaries",
+     "Save the Summaries"
+    ],
+    [
+     [
+      "Quality Report",
+      1
+     ],
+     "Write the Report",
+     "Done",
+     "@end"
+    ],
+    [
+     [
+      "@fail",
+      4
+     ]
+    ]
+   ],
+   "answer": {
+    "row": "{text}",
+    "part": 9000
+   },
+   "description": "The distiller (maintainers): open gaps become learned links (the gap closes in the same call) or new nodes; then the learned-link growth guards (remove contradicted, decay, consolidate to the parent, evict over the cap, flag strict promotion), levels and extractive summaries, and a Quality Report row in the space's logs. KH does not fire the 02:00 trigger yet: run it by name.",
+   "first": "gaps",
+   "id": "sys.distill-nightly",
+   "kind": "task",
+   "owner": "seed",
+   "version": 1,
+   "enabled": true,
+   "seeded": true,
+   "edited": false,
+   "updated_by": "seed",
+   "updated_at": "2026-11-18T16:20:25Z"
+  },
+  {
+   "name": "Save a spec (S1)",
+   "desc": "A person hands in a spec: the raw text is kept as the source, the agent outlines and splits it into nodes, KH checks and matches them, the person approves a preview, then the shared core saves it.",
+   "triggers": [
+    {
+     "type": "event",
+     "event": "kh.agent_call"
+    },
+    {
+     "type": "prompt",
+     "space": "",
+     "examples": [
+      "save this spec to KH",
+      "put this functional spec into KH",
+      "store this specification in the space",
+      "import this requirements document with its modules, features and steps",
+      "here is the functional specification of the feature, save it"
+     ],
+     "not": [
+      "save this lesson",
+      "save this lesson to KH",
+      "remember this lesson",
+      "store what we learned as a lesson",
+      "save this finding",
+      "save this decision",
+      "save this note to KH",
+      "log what I did",
+      "save a work log",
+      "log this work to KH",
+      "switch to KH AUTO mode",
+      "turn KH auto on"
+     ]
+    }
+   ],
+   "input": {
+    "text": "the spec text",
+    "space": "the space (optional: the session's bound one)"
+   },
+   "steps": [
+    {
+     "id": "mask",
+     "b": "text.mask",
+     "name": "Mask Secrets",
+     "args": {},
+     "next": {
+      "ok": "space",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "space",
+     "b": "kh.call",
+     "name": "Find the Space",
+     "args": {
+      "op": "spaces",
+      "space": "@bound",
+      "scope": ""
+     },
+     "next": {
+      "ok": "raw",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "raw",
+     "b": "kh.call",
+     "name": "Save the Raw Spec",
+     "args": {
+      "op": "write",
+      "space": "@named",
+      "scope": "knowledges",
+      "text": "${input.text}",
+      "fields": {
+       "kind": "spec-source",
+       "subject": "spec source"
+      }
+     },
+     "next": {
+      "ok": "skeleton",
+      "fail": "@fail"
+     }
+    },
+    {
+     "id": "skeleton",
+     "b": "kh.call",
+     "name": "Space Skeleton",
+     "args": {
+      "op": "rows",
+      "space": "@named",
+      "scope": "feature-graph",
+      "limit": 60
+     },
+     "next": {
+      "ok": "book",
+      "fail": "book"
+     },
+     "hidden": true
+    },
+    {
+     "id": "book",
+     "b": "kh.call",
+     "name": "Space Address Book",
+     "args": {
+      "op": "rows",
+      "space": "@named",
+      "scope": "index",
+      "limit": 60
+     },
+     "next": {
+      "ok": "outline",
+      "fail": "outline"
+     },
+     "hidden": true
+    },
+    {
+     "id": "outline",
+     "b": "agent.task",
+     "name": "Outline the Spec",
+     "args": {
+      "task": "Pass 1, outline: list the modules and features the spec defines; match each to a row of the space or mark it new. The raw spec is row ${steps.raw.fields.new_row_id}.",
+      "guide": "[{name, type module|feature, parent, same_as id|null, source span}]",
+      "shape": "{\"outline\": []}"
+     },
+     "next": {
+      "ok": "split",
+      "fail": "@fail"
+     }
+    },
+    {
+     "id": "split",
+     "b": "agent.task",
+     "name": "Split Each Feature",
+     "args": {
+      "task": "Pass 2, for each feature of the outline: its steps, UI texts, APIs, tables, settings, rules and owners as nodes with links; quote rules word for word from the raw spec row ${steps.raw.fields.new_row_id}.",
+      "guide": "Node: {type, name, summary, where, keys, core <= 3 quotes, src [{row, quote}]}; edges [[from, kind, to]].",
+      "shape": "{\"nodes\": [], \"edges\": []}"
+     },
+     "next": {
+      "ok": "check",
+      "fail": "@fail"
+     }
+    },
+    {
+     "id": "check",
+     "b": "kh.call",
+     "name": "Check the Bundle",
+     "args": {
+      "op": "check",
+      "space": "@named",
+      "scope": ""
+     },
+     "next": {
+      "ok": "resolve",
+      "fail": "@fail"
+     }
+    },
+    {
+     "id": "resolve",
+     "b": "kh.call",
+     "name": "Match to Existing",
+     "args": {
+      "op": "resolve",
+      "space": "@named",
+      "scope": ""
+     },
+     "next": {
+      "ok": "preview",
+      "fail": "@fail"
+     }
+    },
+    {
+     "id": "preview",
+     "b": "agent.task",
+     "name": "Preview to the User",
+     "args": {
+      "task": "Show the person a preview: how many nodes are new, how many update a row, which matches are unsure, which nodes failed the check. Ask them to save.",
+      "shape": "{\"approved\": false, \"note\": \"\"}"
+     },
+     "next": {
+      "ok": "ok",
+      "fail": "@fail"
+     }
+    },
+    {
+     "id": "ok",
+     "b": "logic.decide",
+     "name": "User Approved?",
+     "args": {
+      "cond": "steps[\"Preview to the User\"][\"approved\"].cast(pl.String).is_in([\"true\", \"True\", \"1\"]).all()",
+      "then": "save",
+      "else": "cancel"
+     },
+     "next": {
+      "ok": "save",
+      "fail": "cancel"
+     },
+     "hidden": true
+    },
+    {
+     "id": "save",
+     "b": "flow.call",
+     "name": "Save Structured",
+     "args": {
+      "flow": "save.structured",
+      "input": {
+       "space": "${steps.space.fields.best_space}",
+       "bundle": "${steps.split.items.0}"
+      }
+     },
+     "next": {
+      "ok": "ret",
+      "fail": "@fail"
+     }
+    },
+    {
+     "id": "ret",
+     "b": "end.return",
+     "name": "Return the Report",
+     "args": {
+      "lead": "The spec is saved: the raw spec plus nodes and links."
+     },
+     "next": {}
+    },
+    {
+     "id": "cancel",
+     "b": "end.stop",
+     "name": "Cancelled",
+     "args": {
+      "outcome": "quiet",
+      "message": "Nothing saved except the raw spec"
+     },
+     "next": {}
+    }
+   ],
+   "grid": [
+    [
+     "@start",
+     "Mask Secrets",
+     "Find the Space",
+     "Save the Raw Spec",
+     "Space Skeleton"
+    ],
+    [
+     "Space Address Book",
+     "Outline the Spec",
+     "Split Each Feature",
+     "Check the Bundle"
+    ],
+    [
+     "Match to Existing",
+     "Preview to the User",
+     "User Approved?",
+     "Save Structured",
+     "Return the Report"
+    ],
+    [
+     [
+      "Cancelled",
+      2
+     ],
+     [
+      "@end",
+      4
+     ]
+    ],
+    [
+     [
+      "@fail",
+      4
+     ]
+    ]
+   ],
+   "answer": {
+    "row": "{text}",
+    "part": 9000
+   },
+   "description": "A person hands in a spec: the raw text is kept as the source, the agent outlines and splits it into nodes, KH checks and matches them, the person approves a preview, then the shared core saves it.",
+   "first": "mask",
+   "id": "save.spec",
+   "kind": "task",
+   "owner": "seed",
+   "version": 1,
+   "enabled": true,
+   "seeded": true,
+   "edited": false,
+   "updated_by": "seed",
+   "updated_at": "2026-11-18T16:20:25Z"
+  },
+  {
+   "name": "Save a work log",
+   "desc": "Writes a work log row into the hot log window of its space, then moves the oldest hot log rows over the limit into the logs of the space each belongs to (ids kept, never lost). kh_log (POST /vector/add scope log) runs it after storing the row; an agent can run it by name.",
+   "triggers": [
+    {
+     "type": "event",
+     "event": "kh.agent_call"
+    }
+   ],
+   "input": {
+    "text": "the work log",
+    "space": "the space (empty: the session's bound one)",
+    "fields": "optional metadata (topic, subject, ts)",
+    "row_id": "set by kh_log: the row is stored"
+   },
+   "steps": [
+    {
+     "id": "mask",
+     "b": "text.mask",
+     "name": "Mask Secrets",
+     "args": {},
+     "next": {
+      "ok": "written",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "written",
+     "b": "logic.decide",
+     "name": "Written Already?",
+     "args": {
+      "cond": "(input.get(\"row_id\") or \"\") != \"\"",
+      "then": "yes",
+      "else": "no"
+     },
+     "next": {
+      "ok": "hot",
+      "fail": "write"
+     },
+     "hidden": true
+    },
+    {
+     "id": "write",
+     "b": "kh.call",
+     "name": "Write the Log",
+     "args": {
+      "op": "write",
+      "space": "@bound",
+      "scope": "logs",
+      "text": "${input.text}",
+      "fields": "${input.fields}"
+     },
+     "next": {
+      "ok": "hot",
+      "fail": "@fail"
+     },
+     "hidden": true
+    },
+    {
+     "id": "hot",
+     "b": "kh.call",
+     "name": "Hot Log Rows",
+     "args": {
+      "op": "hot rows",
+      "space": "",
+      "scope": "hotlog"
+     },
+     "next": {
+      "ok": "pol",
+      "fail": "move"
+     },
+     "hidden": true
+    },
+    {
+     "id": "pol",
+     "b": "data.compute",
+     "name": "Window Policy",
+     "args": {
+      "columns": "live = ~((pl.col(\"max_age_days\") > 0) & (pl.col(\"ts\") > 0) & ((pl.col(\"now\") - pl.col(\"ts\")) / 86400 > pl.col(\"max_age_days\")))\nlive_ts = pl.when(pl.col(\"live\")).then(pl.col(\"ts\")).otherwise(None)\nslot_pos = pl.col(\"live_ts\").rank(\"ordinal\", descending=True).over(\"space\")\nslot_newest = pl.col(\"live_ts\").max().over(\"space\")\nslot_rank = pl.col(\"slot_newest\").rank(\"dense\", descending=True)"
+     },
+     "next": {
+      "ok": "out",
+      "fail": "move"
+     },
+     "hidden": true
+    },
+    {
+     "id": "out",
+     "b": "data.filter",
+     "name": "Over the Window",
+     "args": {
+      "cond": "(pl.col(\"policy_on\") == True) & ((pl.col(\"live\") == False) | ((pl.col(\"max_per_slot\") > 0) & (pl.col(\"slot_pos\") > pl.col(\"max_per_slot\"))) | ((pl.col(\"slots\") > 0) & (pl.col(\"slot_rank\") > pl.col(\"slots\"))))"
+     },
+     "next": {
+      "ok": "spill",
+      "fail": "move"
+     },
+     "hidden": true
+    },
+    {
+     "id": "spill",
+     "b": "kh.call",
+     "name": "Spill to Space Logs",
+     "args": {
+      "op": "spill",
+      "space": "",
+      "scope": "hotlog"
+     },
+     "next": {
+      "ok": "move",
+      "fail": "move"
+     },
+     "hidden": true
+    },
+    {
+     "id": "move",
+     "b": "kh.call",
+     "name": "Move Overflow",
+     "args": {
+      "op": "move overflow",
+      "space": "",
+      "scope": "hotlog",
+      "limit": 100
+     },
+     "next": {
+      "ok": "ret",
+      "fail": "ret"
+     },
+     "hidden": true
+    },
+    {
+     "id": "ret",
+     "b": "text.note",
+     "name": "Return",
+     "args": {
+      "text": "log row ${input.row_id}${steps.write.fields.new_row_id} saved; moved ${steps.move.fields.moved} hot log rows to the logs of their space"
+     },
+     "next": {
+      "ok": "@end",
+      "fail": "@end"
+     }
+    }
+   ],
+   "grid": [
+    [
+     "@start",
+     "Mask Secrets",
+     "Written Already?",
+     "Write the Log",
+     "Hot Log Rows",
+     "Window Policy",
+     "Over the Window",
+     "Spill to Space Logs",
+     "Move Overflow",
+     "Return",
+     "@end"
+    ],
+    [
+     [
+      "@fail",
+      3
+     ]
+    ]
+   ],
+   "answer": {
+    "row": "{text}",
+    "part": 9000
+   },
+   "description": "Writes a work log row into the hot log window of its space, then moves the oldest hot log rows over the limit into the logs of the space each belongs to (ids kept, never lost). kh_log (POST /vector/add scope log) runs it after storing the row; an agent can run it by name.",
+   "first": "mask",
+   "id": "save.log",
+   "kind": "task",
+   "owner": "seed",
+   "version": 1,
+   "enabled": true,
+   "seeded": true,
+   "edited": false,
+   "updated_by": "seed",
+   "updated_at": "2026-11-18T16:20:25Z"
+  }
+ ]
+}

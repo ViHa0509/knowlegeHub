@@ -1,0 +1,109 @@
+{
+ "project": "<project>",
+ "layout": "legacy",
+ "kind": "project",
+ "precedence": "policies: project > personal > common; a locked common rule always wins",
+ "scopes": [
+  {
+   "scope": "about",
+   "store": {
+    "scope": "about",
+    "row": "about__<project>"
+   },
+   "job": "What the project is: description, created date, source control (repos), ticket control (Jira, Trello), environments, where the code graph is stored and how to query it (a pointer only), people and their roles, aliases. One row, edited in place.",
+   "write": "kh_save(kind='about') or PUT /projects/{id}/about; never a second About row",
+   "read_when": "choosing the project (after the hot log); summarised in the turn context",
+   "save_kind": "about"
+  },
+  {
+   "scope": "policies",
+   "store": {
+    "route": "POST /kernel/rules/add",
+    "tier": "<project id>"
+   },
+   "job": "The project's mandatory rules. They win over the person's own and the common rules (locked common rules excepted).",
+   "write": "kh_kernel_rule(tier='<project id>')",
+   "read_when": "injected once when the session binds or switches to the project",
+   "save_kind": null
+  },
+  {
+   "scope": "feature_graph",
+   "store": {
+    "route": "the project graph (feature nodes)"
+   },
+   "job": "Business features, not code: overview nodes from module to component to step; each node points at the knowledge rows that spec it. The project's source of truth for what exists.",
+   "write": "feature graph routes (design vec_a4327b343e51)",
+   "read_when": "when a step names a feature, and in the task map (kh_task_full_retrieve)",
+   "save_kind": null
+  },
+  {
+   "scope": "knowledge",
+   "store": {
+    "scope": "knowledge"
+   },
+   "job": "Detailed spec chunks per feature node (metadata.node) and facts.",
+   "write": "kh_save(kind='fact'|'how-to'|'reference'|'decision')",
+   "read_when": "the task map (kh_task_full_retrieve), after lessons",
+   "save_kind": "fact"
+  },
+  {
+   "scope": "log",
+   "store": {
+    "scope": "log"
+   },
+   "job": "Work logs of the project (through the hot log).",
+   "write": "kh_log",
+   "read_when": "questions about time, history or status",
+   "save_kind": null
+  },
+  {
+   "scope": "findings",
+   "store": {
+    "scope": "findings"
+   },
+   "job": "Open problems only: no concrete solution yet. A solved one moves to lessons.",
+   "write": "POST /vector/add scope findings; solved: POST /findings/resolve {project, id, solution}",
+   "read_when": "the turn context of the project",
+   "save_kind": null
+  },
+  {
+   "scope": "lessons",
+   "store": {
+    "scope": "lesson"
+   },
+   "job": "Solved findings with their solution, the corrections the person makes ('not like that, like this') and the lessons distilled from the work logs.",
+   "write": "kh_save(kind='lesson'|'feedback') or POST /findings/resolve",
+   "read_when": "every prompt and every task map (kh_task_full_retrieve), by meaning, before knowledge",
+   "save_kind": "lesson"
+  }
+ ],
+ "save_kinds": {
+  "fact": {
+   "scope": "knowledge"
+  },
+  "how-to": {
+   "scope": "knowledge"
+  },
+  "reference": {
+   "scope": "knowledge"
+  },
+  "decision": {
+   "scope": "knowledge"
+  },
+  "lesson": {
+   "scope": "lesson"
+  },
+  "feedback": {
+   "scope": "lesson"
+  },
+  "about": {
+   "method": "PUT",
+   "path": "/projects/{project}/about",
+   "body": [
+    "text"
+   ]
+  }
+ },
+ "legacy": "HOW THIS PROJECT WAS RUN BEFORE (layout legacy, made before 2026-11-03): its data was not moved. Policy rows may sit in kh_policy_<id> (read by /policy routes) besides kernel rules; lessons learned from work logs are distilled dk_* rows in knowledge (topic distilled); findings may hold resolved ones next to open ones (status field); the project card (knowledge, topic project-card) and entity cards (scope entity) still hold facts and people; a code graph, if any, is in kh_src_<id> and the project graph. New writes follow the seven scopes (GET /projects/<id>/layout).",
+ "about": null
+}

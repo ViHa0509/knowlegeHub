@@ -1,0 +1,215 @@
+{
+ "types": [
+  {
+   "version": 2,
+   "name": "Project",
+   "description": "A product or customer project: what it is, its rules, knowledge, findings, lessons, logs, events, feature graph and personas.",
+   "visibility": "private",
+   "allow_dynamic_scopes": true,
+   "tech_visible": true,
+   "access": [
+    "owner.read",
+    "owner.write",
+    "member.read",
+    "member.write"
+   ],
+   "scopes": [
+    {
+     "scope": "about",
+     "job": "What the project is: description, created date, source control (repos), ticket control (Jira, Trello), environments, where the code graph is stored and how to query it (a pointer only), people and their roles, aliases. One row, edited in place.",
+     "store": "sqlite",
+     "custom": [],
+     "events": []
+    },
+    {
+     "scope": "policies",
+     "job": "The project's mandatory rules. They win over the person's own and the common rules (locked common rules excepted).",
+     "store": "sqlite",
+     "custom": [],
+     "events": []
+    },
+    {
+     "scope": "knowledges",
+     "job": "Detailed spec chunks per feature node (metadata.node) and facts.",
+     "store": "vector",
+     "custom": [],
+     "events": []
+    },
+    {
+     "scope": "findings",
+     "job": "Open problems only: no concrete solution yet. A solved one moves to lessons.",
+     "store": "vector",
+     "custom": [],
+     "events": []
+    },
+    {
+     "scope": "lesson-learns",
+     "job": "Solved findings with their solution, the corrections the person makes ('not like that, like this') and the lessons distilled from the work logs.",
+     "store": "vector",
+     "custom": [],
+     "events": []
+    },
+    {
+     "scope": "logs",
+     "job": "Work logs of the project (through the hot log).",
+     "store": "event",
+     "custom": [],
+     "events": []
+    },
+    {
+     "scope": "events",
+     "job": "what happened in the space, one row per event (append-only)",
+     "store": "event",
+     "custom": [],
+     "events": []
+    },
+    {
+     "scope": "feature-graph",
+     "job": "Business features, not code: overview nodes from module to component to step; each node points at the knowledge rows that spec it. The project's source of truth for what exists.",
+     "store": "graph",
+     "custom": [],
+     "events": []
+    },
+    {
+     "scope": "personas",
+     "job": "the roles agents and people take in this project",
+     "store": "sqlite",
+     "custom": [],
+     "events": []
+    }
+   ],
+   "kind_map": {
+    "structural": "feature-graph",
+    "finding": "findings",
+    "ticket": "findings",
+    "fix": "lesson-learns",
+    "lesson": "lesson-learns",
+    "decision": "knowledges",
+    "fact": "knowledges",
+    "policy": "policies",
+    "person": "members",
+    "role": "members"
+   },
+   "save_kinds": {
+    "fact": {
+     "scope": "knowledge"
+    },
+    "how-to": {
+     "scope": "knowledge"
+    },
+    "reference": {
+     "scope": "knowledge"
+    },
+    "decision": {
+     "scope": "knowledge"
+    },
+    "lesson": {
+     "scope": "lesson"
+    },
+    "feedback": {
+     "scope": "lesson"
+    },
+    "about": {
+     "method": "PUT",
+     "path": "/projects/{project}/about",
+     "body": [
+      "text"
+     ]
+    }
+   },
+   "id": "project",
+   "seeded": true,
+   "edited": false,
+   "updated_by": "kh-seed",
+   "updated_at": "2026-11-18T16:20:25Z",
+   "projects_made": [
+    "kh-tools",
+    "lesson-learned",
+    "market"
+   ]
+  },
+  {
+   "version": 2,
+   "name": "Profile",
+   "description": "One per person: persona, personal rules, lessons, relationships and diary. Owner only.",
+   "visibility": "private",
+   "allow_dynamic_scopes": false,
+   "tech_visible": true,
+   "access": [
+    "owner.read",
+    "owner.write"
+   ],
+   "scopes": [
+    {
+     "scope": "about",
+     "job": "persona: who this person or agent is, traits, how they work",
+     "store": "sqlite",
+     "custom": [],
+     "events": []
+    },
+    {
+     "scope": "rules",
+     "job": "the person's own rules, tagged",
+     "store": "sqlite",
+     "custom": [],
+     "events": []
+    },
+    {
+     "scope": "untagged-rules",
+     "job": "rules the person gave that carry no tags yet",
+     "store": "sqlite",
+     "custom": [],
+     "events": []
+    },
+    {
+     "scope": "lesson-learns",
+     "job": "verified errors with their solution (scope 'lesson', as before)",
+     "store": "vector",
+     "custom": [],
+     "events": []
+    },
+    {
+     "scope": "relationships",
+     "job": "people and agents the person works with, and how",
+     "store": "graph",
+     "custom": [],
+     "events": []
+    },
+    {
+     "scope": "logs",
+     "job": "personal diary",
+     "store": "event",
+     "custom": [],
+     "events": []
+    }
+   ],
+   "kind_map": {
+    "fix": "lesson-learns",
+    "lesson": "lesson-learns",
+    "person": "members",
+    "role": "members"
+   },
+   "save_kinds": {
+    "lesson": {
+     "scope": "lesson"
+    },
+    "feedback": {
+     "scope": "lesson"
+    },
+    "about": {
+     "method": "PUT",
+     "path": "/projects/{project}/about",
+     "body": [
+      "text"
+     ]
+    }
+   },
+   "id": "profile",
+   "seeded": true,
+   "edited": false,
+   "updated_by": "kh-seed",
+   "updated_at": "2026-11-18T16:20:25Z",
+   "projects_made": []
+  }
+ ]
+}

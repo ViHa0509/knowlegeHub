@@ -53,7 +53,7 @@ ROUTE_GROUPS = [
     "orchestrator", "projects_routes", "policy", "policy_actions", "routing", "feedback", "messages",
     "artifacts", "gallery", "revisions", "hooks", "personalization", "entities", "turn", "step", "distill",
     "promote", "kernel", "usage", "sync", "home", "learnback", "codegraph", "caps", "session_project",
-    "downloads", "eventing", "auth_routes",
+    "downloads", "eventing", "auth_routes", "spaces", "flows",
 ]
 _CRON_SWITCH = {"feedback": "FEEDBACK_CRON", "messages": "MESSAGE_CRON", "caps": "CAPS_CRONS"}
 LOADED_GROUPS: list = []

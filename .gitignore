@@ -28,3 +28,6 @@ Thumbs.db
 
 # Production spec: kept local, never published
 docs/spec/
+
+# KH 7.1 reference captures (real KH content; local only)
+docs/ref71/

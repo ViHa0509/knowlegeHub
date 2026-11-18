@@ -1,0 +1,285 @@
+{
+ "rev": "684b0e3a3a12",
+ "min_helper": "1.32.0",
+ "tools": [
+  {
+   "name": "kh_flows",
+   "description": "Find KH flows for a task, best first (id, what it does, its input). Use it when the turn context gave no TASK FLOW pack and the task has several steps.",
+   "input_schema": {
+    "type": "object",
+    "properties": {
+     "query": {
+      "type": "string",
+      "description": "the task"
+     },
+     "k": {
+      "type": "integer",
+      "default": 5
+     }
+    },
+    "required": [
+     "query"
+    ]
+   },
+   "call": {
+    "method": "GET",
+    "path": "/flows",
+    "query": {
+     "q": "query",
+     "k": "k"
+    }
+   }
+  },
+  {
+   "name": "kh_flow",
+   "description": "Run one KH flow by id; answers one pack with everything it looked up.",
+   "input_schema": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "string"
+     },
+     "input": {
+      "type": "object",
+      "default": {}
+     }
+    },
+    "required": [
+     "id"
+    ]
+   },
+   "call": {
+    "method": "POST",
+    "path": "/flows/{id}/run",
+    "body": {
+     "input": "input"
+    }
+   }
+  },
+  {
+   "name": "kh_map",
+   "description": "The task map of a space: at most 5,000 characters of pointers (best match, what, where, who, history) on what you can read. text = the task in a few words. space = a space id, default the session's bound space. Then open a pointer with kh_expand, look up a name, code or path with kh_find.",
+   "input_schema": {
+    "type": "object",
+    "properties": {
+     "text": {
+      "type": "string",
+      "description": "the task"
+     },
+     "space": {
+      "type": "string",
+      "default": "@bound",
+      "description": "a space id; @bound = the session's"
+     }
+    },
+    "required": [
+     "text"
+    ]
+   },
+   "call": {
+    "method": "POST",
+    "path": "/spaces/{space}/map",
+    "body": {
+     "text": "text"
+    },
+    "bound": [
+     "space"
+    ]
+   }
+  },
+  {
+   "name": "kh_expand",
+   "description": "Open one row of a map: its text (or one section), its links and history. id = a pointer of the map (short id) or a qualified id space/scope/id.",
+   "input_schema": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "string",
+      "description": "the row id from the map"
+     },
+     "section": {
+      "type": "string",
+      "description": "optional: one section of the row"
+     },
+     "space": {
+      "type": "string",
+      "default": "@bound",
+      "description": "only for a short id; default the session's"
+     }
+    },
+    "required": [
+     "id"
+    ]
+   },
+   "call": {
+    "method": "GET",
+    "path": "/spaces/{space}/rows/{id}",
+    "query": {
+     "section": "section"
+    },
+    "bound": [
+     "space"
+    ],
+    "space_from": "id"
+   }
+  },
+  {
+   "name": "kh_find",
+   "description": "Find the rows a key points to: a name, code, path or id as written (exact, not by meaning).",
+   "input_schema": {
+    "type": "object",
+    "properties": {
+     "key": {
+      "type": "string",
+      "description": "the name, code or path"
+     },
+     "space": {
+      "type": "string",
+      "default": "@bound",
+      "description": "a space id; @bound = the session's"
+     }
+    },
+    "required": [
+     "key"
+    ]
+   },
+   "call": {
+    "method": "GET",
+    "path": "/spaces/{space}/index",
+    "query": {
+     "key": "key"
+    },
+    "bound": [
+     "space"
+    ]
+   }
+  },
+  {
+   "name": "kh_walk",
+   "description": "Follow the links of one row: the rows reached in 1 or 2 hops. id = a qualified id space/scope/id; links = optional link kinds, comma separated.",
+   "input_schema": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "string",
+      "description": "qualified id of the row to start from"
+     },
+     "depth": {
+      "type": "integer",
+      "default": 1,
+      "description": "1 or 2"
+     },
+     "links": {
+      "type": "string",
+      "description": "optional: link kinds, comma separated"
+     },
+     "space": {
+      "type": "string",
+      "default": "@bound",
+      "description": "default: the id's own space"
+     }
+    },
+    "required": [
+     "id"
+    ]
+   },
+   "call": {
+    "method": "GET",
+    "path": "/spaces/{space}/links/walk",
+    "query": {
+     "from": "id",
+     "depth": "depth",
+     "links": "links"
+    },
+    "bound": [
+     "space"
+    ],
+    "space_from": "id"
+   }
+  },
+  {
+   "name": "kh_flow_answer",
+   "description": "Answer a KH flow run that waits for you (status waiting): run_id from that answer; answer = what its ASK wants, in the ANSWER SHAPE given (a JSON object when the shape is one, else text). Answers the next ask or the result; a refused shape comes back with the reason.",
+   "input_schema": {
+    "type": "object",
+    "properties": {
+     "run_id": {
+      "type": "string"
+     },
+     "answer": {
+      "description": "a JSON object in the asked shape, or text"
+     }
+    },
+    "required": [
+     "run_id",
+     "answer"
+    ]
+   },
+   "call": {
+    "method": "POST",
+    "path": "/flows/runs/{run_id}/answer",
+    "body": {
+     "answer": "answer"
+    }
+   }
+  },
+  {
+   "name": "kh_project_status",
+   "description": "Project status: Where a project stands: About, latest work logs and open findings, in one pack.",
+   "input_schema": {
+    "type": "object",
+    "properties": {
+     "text": {
+      "type": "string",
+      "description": "the prompt"
+     },
+     "project": {
+      "type": "string",
+      "description": "the project (optional: the session's bound one)"
+     }
+    },
+    "required": [
+     "text"
+    ]
+   },
+   "call": {
+    "method": "POST",
+    "path": "/flows/task.project-status/run",
+    "body": {
+     "input": "*"
+    }
+   },
+   "flow": "task.project-status",
+   "version": 1
+  }
+ ],
+ "hooks": {
+  "SessionStart": {
+   "flow": "sys.on_session_start",
+   "version": 1,
+   "run": "/hooks/SessionStart/run"
+  },
+  "UserPromptSubmit": {
+   "flow": "sys.on_prompt_submit",
+   "version": 1,
+   "run": "/hooks/UserPromptSubmit/run"
+  },
+  "PreToolUse": {
+   "flow": "sys.on_pre_tool_use",
+   "version": 1,
+   "run": "/hooks/PreToolUse/run"
+  },
+  "Stop": {
+   "flow": "sys.on_stop",
+   "version": 1,
+   "run": "/hooks/Stop/run"
+  }
+ },
+ "flows_on": false,
+ "tool_flows": {},
+ "context": [
+  "git_branch",
+  "cwd",
+  "user"
+ ]
+}

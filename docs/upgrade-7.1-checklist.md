@@ -35,6 +35,9 @@ The 7.1 OpenAPI page answers 500 (see item 12), so the route list below comes fr
 
 - [ ] `app.spaces.*` (21 modules): every project gets a v2 frame of scopes, access rules and a kind map;
       old data stays in place.
+- [~] Built 2026-11-18 (legacy frame, read side): `/spaces`, `/spaces/match`, `scopes`, `access`, `index`, `rows/{row}`,
+      `scopes/{s}/rows[/{row}]`, `scopes/{s}/search`, `map`, `links/walk`, `/projects/{id}/layout|about`. Still missing:
+      the v2 frame, adopt/backfill/gaps/cases/learned links, `levels`, `nodes`, `graph-store`.
 - [ ] Routes: `/spaces`, `/spaces/match`, `/spaces/served`, `/spaces/{id}/access|adopt|backfill|cases|gaps|
       keep-missing|levels|nodes|nodes/check|nodes/resolve|scopes|index|map`, `/spaces/{id}/gaps/{g}/close`,
       `/spaces/{id}/links/fade|group|housekeep|learned|learned/reject|tree|walk`,
@@ -52,6 +55,9 @@ The 7.1 OpenAPI page answers 500 (see item 12), so the route list below comes fr
       `/flows/runs/{run}/answer`, `/flows/match`, `/flows/nodes`, `/flows/options`, `/flows/expr/check`,
       `/flows/events`, `/flows/events/{id}/fire`, `/flows/scope-events/runs`, `/spaces/{id}/events/runs`,
       `/hooks/{id}/run`.
+- [~] Built 2026-11-18: `/flows` (list, `?q=` search), `/flows/{id}`, `/flows/{id}/run`, `/flows/runs[/{run}]`,
+      `/flows/runs/{run}/answer` (409), `/flows/match`, `/hooks/{id}/run`, `/helper/manifest`, `/project-types`;
+      Python runners for task.full-retrieve and the four hook flows. Still missing: the generic step engine.
 - [ ] Seed flows (`app.flows.seeds`, `seeds_v2`): `task.full-retrieve` (the task map with LESSONS first),
       `save.spec`, `save.structured`, `save.log`, `save.retro`, plus hook flows.
 - [ ] Flow asks that wait for the agent ("IS WAITING FOR YOUR ANSWER") and the answer shape.
