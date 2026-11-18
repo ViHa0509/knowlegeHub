@@ -16,10 +16,12 @@ from app import vector_store as vs
 from app.ctx_util import short
 from app.spaces import frame as F
 
-MAP_FLOOR = config._float("KH_MAP_FLOOR", 0.55)
-MAP_K = config._int("KH_MAP_K", 8)
-MAP_MAX_CHARS = config._int("KH_MAP_MAX_CHARS", 4000)
-LESSON_FLOOR = config._float("KH_MAP_LESSON_FLOOR", 0.5)
+# Set from app/thresholds.py per embedding model (KH 7.1 /thresholds); these are the bge-m3 code values.
+MAP_FLOOR = 0.45  # rows at or above are listed
+MAP_MISSING_FLOOR = 0.58  # no key hit and no row at or above: status missing
+MAP_K = 10
+MAP_BUDGET = 5000  # characters of POST /spaces/{space}/map
+MAP_MAX_CHARS = 4000  # characters of the map inside task.full-retrieve
 LESSON_PER_ACTION = config._int("KH_MAP_LESSONS_PER_ACTION", 2)
 FACETS = ("what", "where", "solution", "history", "constraints", "who", "lessons", "impact")
 
@@ -80,10 +82,11 @@ def _visible(meta: dict, rid: str) -> bool:
         return True
 
 
-def meaning(space: str, text: str, model=None, vec=None, scopes=F.CONTENT_SCOPES, k: int = MAP_K,
+def meaning(space: str, text: str, model=None, vec=None, scopes=F.CONTENT_SCOPES, k: Optional[int] = None,
             where: Optional[dict] = None) -> tuple[list[dict], int, int]:
     """Rows close in meaning in the space: (rows best first, rows searched, branches with rows)."""
     vec = vec if vec is not None else _encode(model, text)
+    k = k or MAP_K
     hits: dict[str, dict] = {}
     searched = branches = 0
     for name in scopes:
@@ -173,10 +176,10 @@ def _line_flat(r: dict) -> str:
     return f"[{r['id']}{sc}] {short(r['name'], 80)} | {r['space']}/{r['scope']} {kind} | {short(r['summary'], 150)}"
 
 
-def build_map(space: str, text: str, model=None, max_chars: int = MAP_MAX_CHARS) -> dict:
+def build_map(space: str, text: str, model=None, max_chars: Optional[int] = None) -> dict:
     """{space, task, status, text, ids, best, count} for POST /spaces/{space}/map."""
     vec = _encode(model, text)
-    rows, searched, branches = meaning(space, text, vec=vec)
+    rows, searched, branches = meaning(space, text, vec=vec, k=MAP_K)
     keyed = keys_in(space, text)
     key_rows = []
     for k in keyed:
@@ -185,14 +188,17 @@ def build_map(space: str, text: str, model=None, max_chars: int = MAP_MAX_CHARS)
             r["score"] = 1.0
             key_rows.append(r)
     above = [r for r in rows if r["score"] >= MAP_FLOOR]
+    strong = bool(key_rows) or any(r["score"] >= MAP_MISSING_FLOOR for r in above)
     seen = set()
     best = []
     for r in key_rows + above:
         if r["qid"] not in seen:
             seen.add(r["qid"])
             best.append(r)
-    hit_branches = len({r["scope"] for r in best})
-    status = "ok" if best else "missing"
+    hit_branches = len({r["scope"] for r in best}) if strong else 0
+    status = "ok" if strong else "missing"
+    if not strong:
+        best, seen = [], set()
     lines: list[str] = []
     if status == "missing":
         lines.append(MISSING)
@@ -224,6 +230,7 @@ def build_map(space: str, text: str, model=None, max_chars: int = MAP_MAX_CHARS)
     remember_more(space, cut)
     lines.append(RULE)
     body = "\n".join(lines)
+    max_chars = max_chars or MAP_BUDGET
     if len(body) > max_chars:
         body = body[:max_chars - 3] + "..."
     return {"space": space, "task": text, "status": status, "text": body, "count": len(best),
@@ -233,6 +240,17 @@ def build_map(space: str, text: str, model=None, max_chars: int = MAP_MAX_CHARS)
 # ---------------------------------------------------------------------------
 # LESSONS of a task and its hidden actions
 # ---------------------------------------------------------------------------
+
+
+def lesson_floor() -> float:
+    """KH_MAP_LESSON_FLOOR when set, else the turn lesson floor of the embedding model (app/thresholds.py)."""
+    from app import ctx_config as C
+
+    v = config._env("KH_MAP_LESSON_FLOOR")
+    try:
+        return float(v) if v else float(C.TURN_LESSON_FLOOR)
+    except ValueError:
+        return float(C.TURN_LESSON_FLOOR)
 
 
 def _lesson_sources(space: Optional[str]) -> list[tuple[str, str, str, Optional[dict]]]:
@@ -263,7 +281,7 @@ def lessons(text: str, actions: list[str], space: Optional[str], model=None) -> 
         for sp, sc, label, where in sources:
             rows, _n, _b = meaning(sp, q, vec=vec, scopes=(sc,), k=LESSON_PER_ACTION + 2, where=where)
             for r in rows:
-                if r["score"] >= LESSON_FLOOR:
+                if r["score"] >= lesson_floor():
                     found.append((r, label))
             if len(found) >= LESSON_PER_ACTION:
                 break

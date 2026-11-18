@@ -276,7 +276,7 @@ def attach(app: FastAPI) -> None:
     async def spaces_map(request: Request, space: str, body: MapBody):
         sid = _need_space(space)
         return await asyncio.to_thread(M.build_map, sid, body.text, U.model_of(request),
-                                       body.max_chars or M.MAP_MAX_CHARS)
+                                       body.max_chars)
 
     @app.get("/spaces/{space}/links/walk", tags=["spaces"])
     def spaces_walk(space: str, start: str = Query(..., alias="from"), depth: int = Query(1, ge=1, le=2),

@@ -16,7 +16,7 @@ The 7.1 OpenAPI page answers 500 (see item 12), so the route list below comes fr
       language and Prod plan texts dropped "in English". The rebuild contract is English-only with
       bge-small-en-v1.5 (384 dims). A 7.1 build means changing `docs/rebuild-contract.md`, CLAUDE.md, the
       kernel rule `kh_english`, and the embedder default (`KH_EMBEDDING_MODEL`, `app/config.py`).
-- [ ] **Calibrated thresholds.** Step floor 0.68 and turn-lesson floor 0.6 were calibrated for
+- [x] **Calibrated thresholds** (2026-11-18: `app/thresholds.py` with the bge-m3 values the 7.1 build answers). Step floor 0.68 and turn-lesson floor 0.6 were calibrated for
       bge-small; 7.1 has a `thresholds` module and `/thresholds` routes. Re-calibrate for bge-m3.
 - [ ] **Spec source.** Decide whether 7.x behaviour may be read from the original repo, or only observed
       from a running 7.1 (black box). The current repo premise is "no original code".

@@ -209,6 +209,9 @@
     {"route": "GET /flows/{flow_id}", "kind": "authenticated"},
     {"route": "POST /flows/{flow_id}/run", "kind": "authenticated"},
     {"route": "POST /hooks/{hook_id}/run", "kind": "authenticated"},
+    {"route": "GET /thresholds", "kind": "authenticated"},
+    {"route": "PUT /thresholds", "kind": "maintainer"},
+    {"route": "DELETE /thresholds/{name}", "kind": "maintainer"},
     {"route": "* /v1/{ns}/{rest:path}", "kind": "ns"}
   ]
 }

@@ -111,13 +111,15 @@ def search(query: str, k: int, model) -> list[dict]:
     return scored[:max(1, k)]
 
 
-TASK_FLOW_FLOOR = config._float("KH_TASK_FLOW_FLOOR", 0.45)
+TASK_FLOW_FLOOR = config._float("KH_TASK_FLOW_FLOOR", 0.45)  # the default flow (task.full-retrieve)
+FLOW_MATCH_FLOOR = 0.66  # KH_FLOW_MATCH_FLOOR (app/thresholds.py): any other flow
 
 
 def nearest_task_flow(text: str, model) -> Optional[dict]:
     """The flow the prompt hook names (TASK FLOW line), or None."""
     for r in search(text, 3, model):
-        if r["refused"] or r["score"] < TASK_FLOW_FLOOR or not _prompt_trigger(get(r["id"]) or {}):
+        floor = TASK_FLOW_FLOOR if r["default"] else FLOW_MATCH_FLOOR
+        if r["refused"] or r["score"] < floor or not _prompt_trigger(get(r["id"]) or {}):
             continue
         return {"id": r["id"], "score": r["score"], "default": r["default"]}
     return None

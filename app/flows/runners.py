@@ -12,6 +12,7 @@ from typing import Any, Callable, Optional
 from app import ctx_util as U
 
 Runner = Callable[[dict, Any], dict]
+HOOK_PACK_CHARS = 9800  # KH_HOOK_PACK_CHARS (app/thresholds.py)
 
 
 def _trace(*steps: tuple[str, str, bool, str]) -> list[dict]:
@@ -62,7 +63,7 @@ def full_retrieve(inp: dict, model) -> dict:
     if les["lines"]:
         parts += [M.LESSONS_HEAD] + les["lines"] + [""]
     if space:
-        mp = M.build_map(space, text, model)
+        mp = M.build_map(space, text, model, M.MAP_MAX_CHARS)
         parts.append(mp["text"])
         status = mp["status"]
     else:
@@ -96,14 +97,13 @@ def full_retrieve(inp: dict, model) -> dict:
 
 def on_session_start(inp: dict, model) -> dict:
     from app.kernel import render_blocks, render_part
-    from app import ctx_config as C
 
     try:
         part = int(inp.get("part") or 1)
     except (TypeError, ValueError):
         part = 1
     blocks = render_blocks(_bound_space(), U.personal_tier(), True)
-    text, n = render_part(blocks, part, C.KERNEL_PART_MAX)
+    text, n = render_part(blocks, part, HOOK_PACK_CHARS)
     return {"status": "done", "outcome": "done", "message": "", "text": text, "parts": n,
             "trace": _trace(("kernel", "Load Kernel", True, "ok"), ("ret", "Return", True, "end"))}
 

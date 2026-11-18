@@ -95,12 +95,22 @@ def sample_pct() -> float:
     return _param("KH_DISTILL_SAMPLE_PCT", config._float("KH_DISTILL_SAMPLE_PCT", 10))
 
 
+def _threshold(name: str, default: float) -> float:
+    """Per-model value from app/thresholds.py (env > stored > code); the default if that fails."""
+    try:
+        from app import thresholds
+
+        return float(thresholds.value(name))
+    except Exception:  # noqa: BLE001
+        return config._float(name, default)
+
+
 def confirm_floor() -> float:
-    return _param("KH_DISTILL_CONFIRM", config._float("KH_DISTILL_CONFIRM", 0.85))
+    return _param("KH_DISTILL_CONFIRM", _threshold("KH_DISTILL_CONFIRM", 0.85))
 
 
 def same_floor() -> float:
-    return config._float("KH_DISTILL_SAME", 0.95)
+    return _threshold("KH_DISTILL_SAME", 0.95)
 
 
 def log_chars() -> int:
