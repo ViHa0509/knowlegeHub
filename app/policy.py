@@ -67,7 +67,20 @@ def add(body: PolicyAdd, model) -> dict:
     meta = {"policy_id": policy_id, "project": pid, "scope": scope, "intent": body.intent, "body": body.body,
             "priority": int(body.priority), "tags": tags, "updated_at": U.now_iso()}
     vec = model.encode(text, normalize_embeddings=True)
+    old = None
+    try:
+        got = vs.get_ids_vt(_coll(pid, True), [policy_id])
+        old = ((got[0].get("metadata") or {}).get("body")) if got else None
+    except Exception:  # noqa: BLE001
+        pass
     vs.upsert_one(_coll(pid, True), policy_id, vec, text, meta)
+    try:
+        from app import audit
+
+        audit.record("rule.policy.add" if old is None else "rule.policy.update", pid,
+                     audit.policy_target(pid, body.intent, policy_id), old, body.body)
+    except Exception:  # noqa: BLE001
+        pass
     return {"status": "ok", "policy_id": policy_id, "project": pid, "scope": scope}
 
 
@@ -137,5 +150,21 @@ def attach(app: FastAPI) -> None:
         h = _coll(pid, False)
         if h is None:
             raise HTTPException(status_code=404, detail="no policy collection for this project")
+        old = None
+        try:
+            got = vs.get_ids_vt(h, [body.policy_id])
+            m = (got[0].get("metadata") or {}) if got else {}
+            old = m.get("body")
+            intent = m.get("intent") or ""
+        except Exception:  # noqa: BLE001
+            intent = ""
         deleted = vs.delete_vt([body.policy_id], h)
+        if deleted:
+            try:
+                from app import audit
+
+                audit.record("rule.policy.delete", pid, audit.policy_target(pid, intent, body.policy_id),
+                             old if old is not None else "", None)
+            except Exception:  # noqa: BLE001
+                pass
         return {"deleted": len(deleted), "policy_id": body.policy_id}

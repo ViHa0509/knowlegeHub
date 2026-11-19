@@ -98,7 +98,9 @@ class AnswerBody(BaseModel):
 
 
 def attach(app: FastAPI) -> None:
-    from app.flows import runners, store
+    from app.flows import config_routes, runners, store
+
+    config_routes.attach(app)  # before /flows/{flow_id}: /flows/events, /flows/nodes, /flows/scope-events/runs
 
     @app.get("/helper/manifest", tags=["flows"])
     def helper_manifest():
@@ -106,18 +108,11 @@ def attach(app: FastAPI) -> None:
 
     @app.get("/project-types", tags=["flows"])
     def project_types():
-        try:
-            return json.loads(_TYPES.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            return {"types": []}
+        return {"types": config_routes.types_merged()}
 
     @app.get("/project-types/{type_id}", tags=["flows"])
     def project_type(type_id: str):
-        try:
-            types = json.loads(_TYPES.read_text(encoding="utf-8")).get("types") or []
-        except (OSError, ValueError):
-            types = []
-        for t in types:
+        for t in config_routes.types_merged():
             if str(t.get("name", "")).lower() == type_id.lower() or str(t.get("id", "")) == type_id:
                 return t
         raise HTTPException(status_code=404, detail=f"no such project type ('{type_id}')")

@@ -106,6 +106,34 @@ def _write_check(tier: str) -> None:
     U.need(tier, "project.write")
 
 
+def _audit(project: str, action: str, slot: str, before, after) -> None:
+    try:
+        from app import audit
+
+        verb = "add" if before is None else ("delete" if after is None else "update")
+        audit.record(f"rule.policy.{verb}", project, audit.policy_target(project, action, slot), before, after)
+    except Exception:  # noqa: BLE001  (an audit failure never fails the change)
+        pass
+
+
+def _old_rule(tier: str, action: str, sub_action: str):
+    try:
+        for r in store.tier_rules(action, tier):
+            if r["sub_action"] == sub_action:
+                return r["content"]
+    except Exception:  # noqa: BLE001
+        pass
+    return None
+
+
+def _old_action(tier: str, action: str):
+    try:
+        a = store.get_action(action, tier)
+        return a["description"] if a else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def _actions_payload(project: Optional[str]) -> dict:
     tier = canon(project)
     _read_check(tier)
@@ -180,7 +208,9 @@ def attach(app: FastAPI) -> None:
         refusal = lint.gate(errors, warnings, body.model_dump())
         if refusal is not None:
             return refusal
+        old = _old_action(tier, body.action)
         row = store.set_action(tier, body.action, body.description, body.source_policy or "", body.priority)
+        _audit(tier, body.action, "(action)", old, body.description)
         return {**row, "warnings": warnings}
 
     @app.post("/policy/rule/set", tags=["policy"])
@@ -193,14 +223,20 @@ def attach(app: FastAPI) -> None:
         refusal = lint.gate(errors, warnings, body.model_dump())
         if refusal is not None:
             return refusal
+        old = _old_rule(tier, body.action, body.sub_action)
         row = store.set_rule(tier, body.action, body.sub_action, body.content, body.seq, body.clauses or "")
+        _audit(tier, body.action, body.sub_action, old, body.content)
         return {**row, "warnings": warnings}
 
     @app.post("/policy/rule/delete", tags=["policy"])
     def policy_rule_delete(body: RuleDelete):
         tier = _tier(body.project)
         _write_check(tier)
-        return {"deleted": store.delete_rule(tier, body.action, body.sub_action)}
+        old = _old_rule(tier, body.action, body.sub_action)
+        n = store.delete_rule(tier, body.action, body.sub_action)
+        if n:
+            _audit(tier, body.action, body.sub_action, old if old is not None else "", None)
+        return {"deleted": n}
 
     @app.post("/policy/action/delete", tags=["policy"])
     def policy_action_delete(body: ActionDelete):
@@ -212,7 +248,11 @@ def attach(app: FastAPI) -> None:
                 "error": "ACTION-HAS-RULES", "action": body.action, "project": tier,
                 "sub_actions": [r["sub_action"] for r in rules],
                 "hint": "delete the rules first, or resend with cascade=true"})
-        return store.delete_action(tier, body.action, body.cascade)
+        old = _old_action(tier, body.action)
+        out = store.delete_action(tier, body.action, body.cascade)
+        if out.get("deleted"):
+            _audit(tier, body.action, "(action)", old if old is not None else "", None)
+        return out
 
     @app.post("/policy/actions/bulk", tags=["policy"])
     def policy_actions_bulk(body: Bulk):

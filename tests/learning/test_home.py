@@ -34,7 +34,7 @@ def test_page_and_config(client):
     assert r.status_code == 200 and r.headers["cache-control"] == "no-store"
     assert r.headers["content-type"].startswith("text/html") and "<html" in r.text.lower()
     c = client.get("/home/config").json()
-    assert c == {"auth": False, "client_id": "kh-cli", "base": None, "kh_version": c["kh_version"],
+    assert c == {"auth": False, "client_id": "kh-cli", "base": "http://testserver", "kh_version": c["kh_version"],
                  "emb_model": "kh-hash-384"}
 
 

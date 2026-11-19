@@ -15,7 +15,7 @@ import secrets
 import uuid
 from typing import Any, Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
@@ -338,11 +338,11 @@ def attach(app: FastAPI) -> None:
         return _asset(os.path.join("fonts", name), "font/woff2", cache="public, max-age=604800")
 
     @app.get("/home/config", tags=["home"])
-    def home_config():
+    def home_config(request: Request):
         from app.embeddings import get_embedder
 
         iss = _issuer()
-        return {"auth": bool(iss), "client_id": _client_id(), "base": iss, "kh_version": config.KH_VERSION,
+        return {"auth": bool(iss), "client_id": _client_id(), "base": iss or str(request.base_url).rstrip("/"), "kh_version": config.KH_VERSION,
                 "emb_model": getattr(get_embedder(), "name", config.EMBEDDING_MODEL)}
 
     @app.post("/home/login/start", tags=["home"])
@@ -368,11 +368,26 @@ def attach(app: FastAPI) -> None:
 
     @app.post("/home/items/delete", tags=["home"])
     def home_items_delete(body: ItemsDelete):
-        return delete_items(body.project, body.part, body.ids)
+        out = delete_items(body.project, body.part, body.ids)
+        try:
+            from app import audit
+
+            audit.record("home.items.delete", body.project, f"{body.project}|{body.part}", ids=out.get("ids"),
+                         deleted=out.get("deleted"))
+        except Exception:  # noqa: BLE001  (an audit failure never fails the change)
+            pass
+        return out
 
     @app.post("/home/parts/delete", tags=["home"])
     def home_parts_delete(body: PartDelete):
-        return delete_part(body.project, body.part, body.confirm)
+        out = delete_part(body.project, body.part, body.confirm)
+        try:
+            from app import audit
+
+            audit.record("home.part.delete", body.project, f"{body.project}|{body.part}", deleted=out.get("deleted"))
+        except Exception:  # noqa: BLE001  (an audit failure never fails the change)
+            pass
+        return out
 
     @app.get("/home/members", tags=["home"])
     def home_members(project: str):

@@ -191,9 +191,24 @@ def attach(app: FastAPI) -> None:
             who = getattr(p, "email", "") or ""
         except Exception:  # noqa: BLE001
             pass
-        return set_value(body.name, body.value, body.model if body.model in CODE else None, who)
+        out = set_value(body.name, body.value, body.model if body.model in CODE else None, who)
+        try:
+            from app import audit
+
+            audit.record("threshold.set", None, f"{out['model']}|{body.name}", None, out["value"])
+        except Exception:  # noqa: BLE001  (an audit failure never fails the change)
+            pass
+        return out
 
     @app.delete("/thresholds/{name}", tags=["thresholds"])
     def thresholds_delete(name: str, model: Optional[str] = None):
         U.need_maintainer()
-        return clear(name, model if model in CODE else None)
+        out = clear(name, model if model in CODE else None)
+        try:
+            from app import audit
+
+            audit.record("threshold.clear", None, f"{model if model in CODE else model_name()}|{name}",
+                         cleared=out.get("cleared"))
+        except Exception:  # noqa: BLE001  (an audit failure never fails the change)
+            pass
+        return out

@@ -97,7 +97,15 @@ def resolve(body: ResolveBody, model) -> dict:
 def attach(app: FastAPI) -> None:
     @app.post("/findings/resolve", tags=["findings"])
     def findings_resolve(request: Request, body: ResolveBody):
-        return resolve(body, U.model_of(request))
+        out = resolve(body, U.model_of(request))
+        try:
+            from app import audit
+
+            audit.record("finding.resolve", out.get("project"), f"{out.get('project')}|{out.get('finding')}",
+                         lesson_id=out.get("lesson_id"))
+        except Exception:  # noqa: BLE001  (an audit failure never fails the change)
+            pass
+        return out
 
     attach_guard_tools(app)
 

@@ -25,7 +25,7 @@ The 7.1 OpenAPI page answers 500 (see item 12), so the route list below comes fr
 
 - [ ] bge-m3 adapter as the default model, `paraphrase-multilingual-MiniLM-L12-v2` also shipped
       (`app/embeddings/*`; 7.1 ships both under `_internal/models`).
-- [ ] `app.embedding_admin`: `/home/embedding`, `/home/embedding/models`, `.../models/{id}/bench|check|delete`,
+- [~] `app.embedding_admin` (2026-11-19: `GET /home/embedding` read only; every write route answers 501): `/home/embedding`, `/home/embedding/models`, `.../models/{id}/bench|check|delete`,
       `/home/embedding/upload|convert|retry|rollback`, `/home/embedding/maintenance/off`, and a maintenance
       gate middleware that holds requests during a model switch.
 - [ ] `app.embed_server`: `/embed`, `/embed/info` (embedding as a service).
@@ -68,8 +68,8 @@ The 7.1 OpenAPI page answers 500 (see item 12), so the route list below comes fr
       own lessons, project lessons and a TASK FLOW line, and reads `input.context` (git branch, cwd, user)
       sent by kh-helper 1.33.0 for per-branch variants (`app.spaces.variants`).
 - [ ] `app.policy_actions.api` split; `GET /helper/manifest` (what the server asks of the helper).
-- [ ] `app.revisions.api`, `app.audit` (`/home/audit`, `/home/audit/export`), `app.log_ids`,
-      `/home/retention/logs`, `/home/review`, `/home/review/apply`, `/home/rules/history`.
+- [~] `app.revisions.api`, `app.audit` (`/home/audit`, `/home/audit/export`), `app.log_ids`,
+      `/home/retention/logs`, `/home/review`, `/home/review/apply`, `/home/rules/history`. (2026-11-19: audit, retention, review, rules history done; revisions api and log_ids open.)
 - [x] `/findings/resolve` (finding to lesson), `/personalization/guard_tools` (2026-11-18). `/step/outcome(s)`: 404 on the 7.1 build too.
 
 ## 5. Messages and people
@@ -98,9 +98,9 @@ The 7.1 OpenAPI page answers 500 (see item 12), so the route list below comes fr
 
 ## 9. Home UI
 
-- [ ] `app/static`: `flows.css`, `flows.js`, `theme.css`, fonts (Inter, Poppins, Patrick Hand, Dancing Script,
+- [x] `app/static`: `flows.css`, `flows.js`, `theme.css`, fonts (Inter, Poppins, Patrick Hand, Dancing Script,
       Delius); theme picker (kawaii scrapbook default, aura starry night, dark slate); `/home/fonts/{f}`;
-      `app.gallery` (`/gallery/designs/`); `app.downloads`.
+      `app.gallery` (`/gallery/designs/`); `app.downloads`. (2026-11-19: page and assets copied from the 7.1 build; flow editor routes `/flows/events|nodes|expr/check|scope-events/runs`, `PUT/DELETE /flows/{id}`, `PUT/DELETE /project-types/{id}`, space gaps and learned links (empty); gallery and downloads unchanged from v6.5.)
 
 ## 10. Auth and catalogue
 

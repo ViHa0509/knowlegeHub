@@ -283,6 +283,14 @@ def attach(app: FastAPI) -> None:
                     links: Optional[str] = None):
         return walk(_need_space(space), start, depth, links)
 
+    @app.get("/spaces/{space}/gaps", tags=["spaces"])
+    def spaces_gaps(space: str, open: bool = True, limit: int = Query(50, ge=1, le=500)):
+        return {"space": _need_space(space), "open": open, "total": 0, "items": []}
+
+    @app.get("/spaces/{space}/links/learned", tags=["spaces"])
+    def spaces_links_learned(space: str, offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=500)):
+        return {"space": _need_space(space), "total": 0, "offset": offset, "limit": limit, "items": []}
+
     @app.get("/projects/{project_id}/layout", tags=["projects"])
     def project_layout(project_id: str):
         return layout(_need_space(project_id))

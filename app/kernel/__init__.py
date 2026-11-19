@@ -30,6 +30,17 @@ __all__ = ["attach", "start", "render_blocks", "render_part", "guards_for", "pre
 # ---------------------------------------------------------------------------
 
 
+def _audit_rule(tier: str, slot: str, before, after) -> None:
+    """Audit one kernel rule change: target = slot, project = 'every project' for the common tier."""
+    try:
+        from app import audit
+
+        verb = "add" if before is None else ("delete" if after is None else "update")
+        audit.record(f"rule.kernel.{verb}", audit.EVERY if tier == R.COMMON else tier, slot, before, after)
+    except Exception:  # noqa: BLE001  (an audit failure never fails the change)
+        pass
+
+
 def resolve_tier(tier: Optional[str]) -> Optional[str]:
     if tier is None:
         return None
@@ -223,7 +234,11 @@ def attach(app: FastAPI) -> None:
     def kernel_rules_add(body: dict = Body(...)):
         try:
             b = _rule_body(body)
-            return R.add(b, U.is_maintainer(), U.email())
+            plan = R.check(b, U.is_maintainer(), U.email())
+            old = R.get(plan["tier"], plan["slot"])
+            out = R.store_plan(plan)
+            _audit_rule(plan["tier"], plan["slot"], old["content"] if old else None, plan["content"])
+            return out
         except R.KernelError as e:
             return _refusal(e)
 
@@ -233,7 +248,10 @@ def attach(app: FastAPI) -> None:
         if row is None:
             return {"deleted": 0}
         _need_write(row["tier"])
-        return {"deleted": R.delete(body.id)}
+        n = R.delete(body.id)
+        if n:
+            _audit_rule(row["tier"], row["slot"], row.get("content") or "", None)
+        return {"deleted": n}
 
     @app.get("/kernel/resolved", tags=["kernel"])
     def kernel_resolved(project: Optional[str] = None, personal: Optional[str] = None):

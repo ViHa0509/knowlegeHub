@@ -22,22 +22,156 @@ def _iso(dt: datetime) -> str:
     return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def _seed_flows() -> list[dict]:
+    try:
+        return list(json.loads(SEED.read_text(encoding="utf-8")).get("flows") or [])
+    except (OSError, ValueError):
+        return []
+
+
+def edits() -> dict[str, dict]:
+    """Stored flow edits by id (table kh_flow_def); a failing read means no edits."""
+    out: dict[str, dict] = {}
+    try:
+        with sqldb.connect() as c:
+            _ensure_def(c)
+            for r in c.execute("SELECT id, body FROM kh_flow_def").fetchall():
+                try:
+                    out[r["id"]] = json.loads(r["body"] or "{}")
+                except ValueError:
+                    continue
+    except Exception:  # noqa: BLE001
+        return {}
+    return out
+
+
 def flows() -> list[dict]:
     with _lock:
-        if "flows" not in _cache:
-            try:
-                data = json.loads(SEED.read_text(encoding="utf-8"))
-                _cache["flows"] = list(data.get("flows") or [])
-            except (OSError, ValueError):
-                _cache["flows"] = []
-            raw = json.dumps(_cache["flows"], sort_keys=True).encode()
-            _cache["rev"] = hashlib.sha1(raw).hexdigest()[:12]
-        return _cache["flows"]
+        if "flows" in _cache:
+            return _cache["flows"]
+    seed = _seed_flows()
+    ed = edits()
+    merged = []
+    for f in seed:
+        e = ed.pop(f["id"], None)
+        if e is None:
+            merged.append(f)
+        elif not e.get("deleted"):
+            merged.append(e)
+    merged.extend(e for e in ed.values() if not e.get("deleted") and e.get("id"))
+    raw = json.dumps(merged, sort_keys=True).encode()
+    with _lock:
+        _cache["flows"] = merged
+        _cache["rev"] = hashlib.sha1(raw).hexdigest()[:12]
+        return merged
+
+
+def invalidate() -> None:
+    """Drop the merged flow list and the cached search vectors (after a save or delete)."""
+    with _lock:
+        _cache.clear()
 
 
 def rev() -> str:
-    flows()
-    return _cache["rev"]
+    fl = flows()
+    with _lock:
+        if "rev" not in _cache:
+            _cache["rev"] = hashlib.sha1(json.dumps(fl, sort_keys=True).encode()).hexdigest()[:12]
+        return _cache["rev"]
+
+
+def seed_flow(flow_id: str) -> Optional[dict]:
+    for f in _seed_flows():
+        if f.get("id") == flow_id:
+            return f
+    return None
+
+
+_DEF_SQLITE = ("CREATE TABLE IF NOT EXISTS kh_flow_def (id TEXT PRIMARY KEY, body TEXT, updated TEXT, actor TEXT)")
+_DEF_HANA = ("CREATE COLUMN TABLE kh_flow_def (id NVARCHAR(200) PRIMARY KEY, body NCLOB, updated NVARCHAR(32), "
+             "actor NVARCHAR(200))")
+_TYPE_SQLITE = ("CREATE TABLE IF NOT EXISTS kh_project_type (id TEXT PRIMARY KEY, body TEXT, updated TEXT, "
+                "actor TEXT)")
+_TYPE_HANA = ("CREATE COLUMN TABLE kh_project_type (id NVARCHAR(200) PRIMARY KEY, body NCLOB, "
+              "updated NVARCHAR(32), actor NVARCHAR(200))")
+
+
+def _ensure_def(c) -> None:
+    sqldb.create_table(c, "kh_flow_def", _DEF_SQLITE, _DEF_HANA)
+
+
+def _ensure_type(c) -> None:
+    sqldb.create_table(c, "kh_project_type", _TYPE_SQLITE, _TYPE_HANA)
+
+
+def _put(table: str, ensure, key: str, body: dict, actor: str) -> None:
+    with sqldb.connect() as c:
+        ensure(c)
+        sqldb.upsert(c, table, "id", {"id": key, "body": json.dumps(body, ensure_ascii=False),
+                                      "updated": _iso(datetime.now(timezone.utc)), "actor": actor})
+
+
+def save_flow(flow_id: str, body: dict, actor: str) -> dict:
+    """Store an edited (or new) flow over the seed; the version goes up by one."""
+    prev = get(flow_id)
+    f = dict(body)
+    f["id"] = flow_id
+    f["version"] = int((prev or {}).get("version") or 0) + 1
+    _put("kh_flow_def", _ensure_def, flow_id, f, actor)
+    invalidate()
+    return f
+
+
+def delete_flow(flow_id: str, actor: str) -> str:
+    """Drop the edit: a seed flow returns to its seed version ('reset'), a new flow goes ('deleted')."""
+    seed = seed_flow(flow_id)
+    if seed is not None:
+        if seed.get("kind") == "system":
+            return "system"
+        with sqldb.connect() as c:
+            _ensure_def(c)
+            had = c.execute("SELECT id FROM kh_flow_def WHERE id = ?", (flow_id,)).fetchone()
+            c.execute("DELETE FROM kh_flow_def WHERE id = ?", (flow_id,))
+        invalidate()
+        return "reset" if had else "missing"
+    with sqldb.connect() as c:
+        _ensure_def(c)
+        had = c.execute("SELECT id FROM kh_flow_def WHERE id = ?", (flow_id,)).fetchone()
+        c.execute("DELETE FROM kh_flow_def WHERE id = ?", (flow_id,))
+    invalidate()
+    return "deleted" if had else "missing"
+
+
+def type_edits() -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    try:
+        with sqldb.connect() as c:
+            _ensure_type(c)
+            for r in c.execute("SELECT id, body FROM kh_project_type").fetchall():
+                try:
+                    out[r["id"]] = json.loads(r["body"] or "{}")
+                except ValueError:
+                    continue
+    except Exception:  # noqa: BLE001
+        return {}
+    return out
+
+
+def save_type(type_id: str, body: dict, actor: str) -> dict:
+    t = dict(body)
+    t["id"] = type_id
+    _put("kh_project_type", _ensure_type, type_id, t, actor)
+    return t
+
+
+def delete_type(type_id: str, seed_ids: set[str]) -> str:
+    with sqldb.connect() as c:
+        _ensure_type(c)
+        had = c.execute("SELECT id FROM kh_project_type WHERE id = ?", (type_id,)).fetchone()
+        c.execute("DELETE FROM kh_project_type WHERE id = ?", (type_id,))
+    if not had:
+        return "missing"
+    return "reset" if type_id in seed_ids else "deleted"
 
 
 def get(flow_id: str) -> Optional[dict]:
