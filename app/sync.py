@@ -426,13 +426,32 @@ def connect(key: str) -> dict:
     if same and cos < PROBE_MIN:  # the original KH embeds another probe sentence: compare stored rows instead
         manifest = _peer_manifest(url, key)
         cos, by = _rows_cosine(url, key, manifest), "rows"
+    hs = _handshake(h, mine, cos)
     if not same or cos < PROBE_MIN:
         raise HTTPException(status_code=409, detail={
             "error": "incompatible", "giver": {k: h.get(k) for k in ("protocol", "model", "dim")},
-            "receiver": {k: mine[k] for k in ("protocol", "model", "dim")}, "probe_cosine": round(cos, 6)})
+            "receiver": {k: mine[k] for k in ("protocol", "model", "dim")}, "probe_cosine": round(cos, 6),
+            "handshake": hs})
     manifest = manifest or _peer_manifest(url, key)
+    from app import auth
+
+    maint = _is_maintainer()
     return {"giver": url, "kid": kid, "protocol": PROTOCOL, "model": mine["model"], "probe_cosine": round(cos, 6),
-            "verified_by": by, "manifest": manifest}
+            "verified_by": by, "manifest": manifest,
+            # The KH 7.1 home page reads these names.
+            "source": url, "handshake": hs, "projects": manifest.get("projects") or [],
+            "limits": manifest.get("limits") or {}, "as": "maintainer" if maint else "reader",
+            "verified": {"kid": kid, "label": (manifest.get("key") or {}).get("label")},
+            "members_here": bool(auth.enabled() and maint)}
+
+
+def _handshake(h: dict, mine: dict, cos: float) -> dict:
+    """The connect handshake in the KH 7.1 shape (`checks`, `cosine`, `source`, `local`)."""
+    src = {"protocol": h.get("protocol"), "emb_model": h.get("model"), "emb_dim": h.get("dim")}
+    loc = {"protocol": PROTOCOL, "emb_model": mine["model"], "emb_dim": mine["dim"]}
+    return {"checks": {"protocol": src["protocol"] == PROTOCOL, "emb_model": src["emb_model"] == loc["emb_model"],
+                       "emb_dim": src["emb_dim"] == loc["emb_dim"], "probe": cos >= PROBE_MIN},
+            "cosine": round(cos, 6), "source": src, "local": loc}
 
 
 ROWS_CHECK_MAX_CHARS = 1500
@@ -482,8 +501,33 @@ def get_job(job_id: str) -> dict | None:
         r = c.execute("SELECT * FROM sync_jobs WHERE id=?", (job_id,)).fetchone()
     if r is None:
         return None
-    return {"id": r["id"], "source": r["source"], "state": r["state"], "created_by": r["created_by"],
-            "started": r["started"], "finished": r["finished"], "doc": json.loads(r["doc"] or "{}")}
+    doc = json.loads(r["doc"] or "{}")
+    job = {"id": r["id"], "source": r["source"], "state": r["state"], "created_by": r["created_by"],
+           "started": r["started"], "finished": r["finished"], "doc": doc}
+    job.update(_job_view(doc, r["state"]))
+    return job
+
+
+def _job_view(doc: dict, state: str) -> dict:
+    """The fields the KH 7.1 home page reads from a job (plan, report, progress...), derived from `doc`."""
+    plan = doc.get("plan") or []
+    projects = doc.get("projects") or {}
+    report = {pid: dict(pd.get("parts") or {}) for pid, pd in projects.items() if isinstance(pd, dict)}
+    for parts in report.values():
+        for part, t in list(parts.items()):
+            parts[part] = dict(t, skipped_newer=t.get("kept", 0))
+    total = sum(s.get("source_total") or 0 for s in plan)
+    scanned = sum(s.get("scanned") or 0 for s in plan)
+    pct = 100 if state == "done" else (min(99, round(100 * scanned / total)) if total else 0)
+    errors = [f"{pid}: {pd['error']}" for pid, pd in projects.items() if isinstance(pd, dict) and pd.get("error")]
+    err = "; ".join(([doc["error"]] if doc.get("error") else []) + errors) or None
+    return {"projects": [s.get("project") for s in (doc.get("selection") or [])] or list(projects),
+            "dry_run": bool(doc.get("dry_run")), "since": doc.get("since"), "until": doc.get("until"),
+            "include_undated": doc.get("include_undated", True), "error": err, "plan": plan, "report": report,
+            "registry": {pid: pd.get("registry") for pid, pd in projects.items()
+                         if isinstance(pd, dict) and pd.get("registry")},
+            "members": {}, "reader_grants": doc.get("reader_grants") or [],
+            "progress": {"percent": pct, "scanned": scanned, "total": total}}
 
 
 def list_jobs() -> list[dict]:
@@ -509,7 +553,8 @@ def _email() -> str | None:
 def run_pull(job_id: str, key: str, selection: list[dict], since=None, until=None, include_undated=True,
              dry_run=False, email=None, maintainer=True) -> dict:
     url, kid, _s = parse_key(key)
-    doc: dict = {"projects": {}, "dry_run": dry_run, "since": since, "until": until}
+    doc: dict = {"projects": {}, "dry_run": dry_run, "since": since, "until": until,
+                 "include_undated": include_undated, "selection": selection, "plan": []}
     last_progress = 0.0
 
     def progress(state):
@@ -552,6 +597,10 @@ def run_pull(job_id: str, key: str, selection: list[dict], since=None, until=Non
             # KH 7.1 sends limits.parts = [] (all parts) and lists the hot window only in the project's counts.
             if not sel.get("parts") and "hotlog" not in parts and ((entries[pid].get("counts") or {}).get("hotlog")):
                 parts = parts + ["hotlog"]
+            counts = entries[pid].get("counts") or entries[pid].get("parts") or {}
+            steps = {part: {"project": pid, "part": part, "source_total": int(counts.get(part) or 0), "scanned": 0,
+                            "matched": 0} for part in parts}
+            doc["plan"].extend(steps.values())
             for part in parts:
                 tot = {"created": 0, "unchanged": 0, "kept": 0, "updated": 0, "pages": 0}
                 offset = 0
@@ -563,6 +612,9 @@ def run_pull(job_id: str, key: str, selection: list[dict], since=None, until=Non
                                   "since": since, "until": until, "include_undated": include_undated})
                     for k, v in merge_rows(pid, part, page.get("rows") or [], dry_run).items():
                         tot[k] += v
+                    n = len(page.get("rows") or [])
+                    steps[part]["scanned"] += n
+                    steps[part]["matched"] += n
                     tot["pages"] += 1
                     offset = page.get("next_offset")
                     doc["projects"].setdefault(pid, pdoc)["parts"][part] = tot
@@ -576,6 +628,7 @@ def run_pull(job_id: str, key: str, selection: list[dict], since=None, until=Non
                                  {"email": email, "project": pid, "source": url, "kid": kid, "job_id": job_id,
                                   "granted_at": _now()})
                 _grant_cache.pop(email, None)
+                doc.setdefault("reader_grants", []).append(pid)
     except _Cancelled:
         state = "cancelled"
     except Exception as e:  # noqa: BLE001
@@ -608,7 +661,7 @@ def start_pull(key: str, selection: list[dict], since=None, until=None, include_
         run_pull(*args)
     else:
         threading.Thread(target=run_pull, args=args, daemon=True, name=f"sync-{job_id}").start()
-    return {"job_id": job_id, "state": "queued" if not wait else get_job(job_id)["state"]}
+    return {"job_id": job_id, "id": job_id, "state": "queued" if not wait else get_job(job_id)["state"]}
 
 
 # ---------------------------------------------------------------------------
@@ -832,7 +885,9 @@ def attach(app: FastAPI) -> None:
     def sync_pull(body: PullRequest):
         if not body.selection:
             raise HTTPException(status_code=422, detail="selection must name at least one project")
-        r = start_pull(body.key, body.selection, body.since, body.until, body.include_undated, body.dry_run)
+        # The KH 7.1 page sends "" for an empty date field.
+        r = start_pull(body.key, body.selection, body.since or None, body.until or None, body.include_undated,
+                       body.dry_run)
         return JSONResponse(r, status_code=202)
 
     @app.get("/sync/jobs", tags=["sync"])

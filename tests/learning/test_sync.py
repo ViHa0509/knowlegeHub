@@ -100,6 +100,10 @@ def test_connect_and_pull_from_self(client, giver, monkeypatch):
     c = client.post("/sync/connect", json={"key": key}).json()
     assert c["protocol"] == 2 and c["probe_cosine"] >= 0.999 and c["giver"] == "http://testserver"
     assert [p["id"] for p in c["manifest"]["projects"]] == [giver["project"]]
+    # the KH 7.1 home page reads these
+    assert c["source"] == "http://testserver" and c["projects"] == c["manifest"]["projects"]
+    assert c["handshake"]["checks"] == {"protocol": True, "emb_model": True, "emb_dim": True, "probe": True}
+    assert c["as"] == "maintainer" and c["members_here"] is False and isinstance(c["limits"], dict)
     assert client.post("/sync/pull", json={"key": key, "selection": []}).status_code == 422
     # giver and receiver are the same KH here: every row merges as unchanged (merge rules: test_merge_rules)
     out = sync.start_pull(key, [{"project": giver["project"], "parts": ["knowledge"]},
@@ -108,6 +112,11 @@ def test_connect_and_pull_from_self(client, giver, monkeypatch):
     job = client.get(f"/sync/jobs/{out['job_id']}").json()
     k = job["doc"]["projects"][giver["project"]]["parts"]["knowledge"]
     assert k["created"] == 0 and k["unchanged"] == 2 and k["pages"] == 1
+    assert job["projects"] == [giver["project"], "orchestrator"] and job["progress"]["percent"] == 100
+    assert job["plan"] == [{"project": giver["project"], "part": "knowledge", "source_total": 2, "scanned": 2,
+                            "matched": 2}]
+    assert job["report"][giver["project"]]["knowledge"]["unchanged"] == 2
+    assert job["registry"] == {giver["project"]: "merged"} and "not offered" in job["error"]
     assert job["doc"]["projects"]["orchestrator"] == {"error": "not offered by the giver"}
     assert job["doc"]["projects"][giver["project"]]["registry"] == "merged"
     assert out["job_id"] in [j["id"] for j in client.get("/sync/jobs").json()["jobs"]]
