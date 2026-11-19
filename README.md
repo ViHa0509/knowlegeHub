@@ -1,10 +1,12 @@
-# Knowledge Hub v6.5
+# Knowledge Hub v7.1 (in progress)
 
 A shared memory and context engine for AI coding agents such as Claude Code.
 
 Knowledge Hub (KH) stores what agents and people learn while they work: knowledge, work logs, findings, policies and lessons. Each item belongs to a project. On every user message, KH hands the agent a compact, permission-checked context block. The server runs **no LLM to answer requests**. It does deterministic storage, permissions and retrieval, and the calling agent does all the reasoning.
 
 It started as a demo for my team: the goal is to help people work together better by managing and sharing context, so teammates and their AI coding agents build on each other's work instead of starting from zero. It was built from a written design specification, which is kept private and not published in this repository.
+
+The code base implements KH v6.5 in full and is being upgraded to KH 7.1. It reports version `v7.1.0-dev`. The 7.1 parts built so far are listed under [KH 7.1 upgrade](#kh-71-upgrade). What is still missing is in [Status and limits](#status-and-limits) and in [`docs/upgrade-7.1-checklist.md`](docs/upgrade-7.1-checklist.md).
 
 ## Features
 
@@ -41,6 +43,8 @@ It started as a demo for my team: the goal is to help people work together bette
   | outbox | signed webhooks |
   | lifecycle | export, import, purge |
 
+- **Home page (`/home`).** A browser page for maintainers with these tabs: projects, lessons and review, sync, embedding, audit, flow config and space data.
+- **Sync between KH instances.** One KH (the giver) makes a `khsync1.` key, and another KH (the receiver) connects with it and pulls the projects and parts you choose. Rows already present are matched rather than copied twice.
 - **Two storage backends behind one storage layer.** SQLite for local work and demos, SAP HANA Cloud for a shared team instance. Every table has DDL for both, and the layer is designed to extend to PostgreSQL (pgvector).
 
 ## Architecture
@@ -60,7 +64,7 @@ flowchart LR
         PP["Projects, messages,<br/>sessions"]
         LL["Learning loop<br/>distill · learn-back · promote"]
         V1["/v1 capability modules"]
-        EM["Embedder<br/>bge-small-en-v1.5 (384-dim)"]
+        EM["Embedder<br/>bge-small-en-v1.5 (384-dim)<br/>or bge-m3 (1024-dim)"]
     end
     DB[("SQLite (local)<br/>or HANA Cloud (team)<br/>relational · vectors · graph")]
     KC["Identity service<br/>(optional, sign-in on)"]
@@ -80,6 +84,28 @@ A typical user turn:
 3. **Agent work.** The agent picks an action, fetches its plan, and calls `/context/step` for each step. Writes go through `/vector/add` into the owning project.
 4. **Before a tool runs.** The PreToolUse hook checks tool guards.
 5. **End of the turn.** The Stop hook queues a background job that summarizes the turn into one work log.
+
+## KH 7.1 upgrade
+
+The 7.1 parts built so far:
+
+- **Home UI.** The 7.1 home page is served at `/home` (`app/static/`: `home.html`, `flows.js`, `theme.css`, `flows.css` and fonts under the SIL Open Font License). The rebuild has every route its tabs call.
+- **Spaces.** These read routes are built: `/spaces`, `/spaces/match`, scopes, access, index and rows. Open gaps and learned links answer the 7.1 shapes with no items.
+- **Flows.**
+  - Routes: `/flows` and `/flows/{id}`, `/flows/{id}/run` and the runs list, the event and node catalogs, an expression check, and saving or deleting flows and project types.
+  - Built-in flows, each run by its own Python runner: `task.full-retrieve`, hook flows, `save.log` and `save.knowledge`.
+  - The helper manifest (`/helper/manifest`).
+- **Audit.**
+  - Changes to rules, policies, thresholds, flows, project types and review decisions are recorded, as are deletes on `/home`.
+  - Routes: `/home/audit`, `/home/audit/export` and `/home/rules/history`.
+- **Score thresholds per embedding model** (`/thresholds`), including the bge-m3 values.
+- **Messages and findings.** `/messages/send`, `/messages/sent`, `/findings/resolve` and `/personalization/guard_tools`.
+- **Sync protocol 2.**
+  - The receiver understands KH 7.1 giver keys and answers in the shape the 7.1 page reads.
+  - `/sync/dump` and `/sync/import` copy data through a file.
+- **Embedding tab.** It is read only: it shows the active model, and every write answers 501. To change models, start KH with another `KH_EMBEDDING_MODEL` and its own `KH_HOOKS_DB`.
+
+Every place the rebuild differs from 7.1 is listed in [`docs/deviations.md`](docs/deviations.md).
 
 ## Quick start
 
@@ -101,6 +127,7 @@ KH_EMBEDDER=hash .venv/Scripts/python -m uvicorn main:app --port 8000
 
 Then open:
 
+- `http://localhost:8000/home` for the home page
 - `http://localhost:8000/docs` for the interactive API reference
 - `http://localhost:8000/health` for a health check
 
@@ -116,6 +143,16 @@ curl -X POST localhost:8000/vector/query -H "Content-Type: application/json" \
 
 The `hash` embedder only matches shared words, so its scores stay low. For real semantic search, and for `/context/step` packs (which drop items scoring below 0.68), install the optional `sentence-transformers` and `torch` packages and use the default `KH_EMBEDDER=local`.
 
+To run with the KH 7.1 model (bge-m3, 1024 dimensions) on its own database, for example one synced from another KH:
+
+```bash
+KH_EMBEDDING_MODEL=bge-m3 KH_HOOKS_DB=./hooks-m3.db .venv/Scripts/python -m uvicorn main:app --port 8000
+```
+
+Each database stays tied to one model, because stored vectors are not converted. bge-m3 needs several GB of memory.
+
+To copy data from another KH: on the giving KH, create a key under **Sync > Give**. On this KH, paste it under **Sync > Receive**, click **Connect**, tick the projects you want and start the sync. Both KHs must use the same embedding model.
+
 ## Configuration
 
 All settings come from environment variables. The main ones:
@@ -128,6 +165,9 @@ All settings come from environment variables. The main ones:
 | `GRAPH_BACKEND` | `sqlite` | Graph store: `sqlite` or `hana` |
 | `KH_HOOKS_DB` | `./hooks.db` | SQLite file for local storage |
 | `KH_EMBEDDER` | `local` | `local` (bge-small-en-v1.5), `remote`, `auto` or `hash` (deterministic, no model) |
+| `KH_EMBEDDING_MODEL` | `bge-small-en-v1.5` | Model for the `local` embedder; `bge-m3` is the KH 7.1 model |
+| `KH_SPACES`, `KH_FLOWS` | on | The 7.1 spaces and flows (what the helper manifest reports) |
+| `KH_LOG_RETENTION_DAYS` | `0` (off) | Delete log rows older than this many days (Home > retention) |
 | `KH_AUTH_ISSUER` | unset | Issuer URL of an optional identity service. When unset, sign-in is off (open mode, the default) |
 | `HANA_HOST`, `HANA_PORT`, `HANA_USERNAME`, `HANA_PASSWORD`, `HANA_SCHEMA` | unset | HANA Cloud connection |
 | `KH_FEEDBACK_CRON`, `KH_MESSAGE_CRON`, `KH_CAPS_CRONS` | on | Background jobs |
@@ -135,7 +175,7 @@ All settings come from environment variables. The main ones:
 
 The full list, with exact defaults, is in [`app/config.py`](app/config.py).
 
-KH is **English-only**. Clients translate everything before sending it, so stored text and embeddings stay consistent.
+KH is **English-only**. Clients translate everything before sending it, so stored text and embeddings stay consistent. KH 7.1 is multilingual with bge-m3. Whether the rebuild follows it is still open (see the upgrade checklist).
 
 ## Project layout
 
@@ -148,11 +188,16 @@ app/                    server modules (one route group per module)
   vector_*.py, sqldb.py      vector and relational storage (SQLite / HANA)
   distill.py, learnback.py, promote.py   learning loop
   caps/                      /v1 capability modules
+  spaces/, flows/            KH 7.1 spaces and flows
+  audit.py, home_admin.py    audit log, home page admin routes
+  sync.py                    sync between KH instances
+  static/                    the KH 7.1 home page
 worker/kh_worker/       nightly LLM jobs (distil, promote, daily)
 tools/kh-helper/        client: kh CLI, hooks, MCP server, work log
 seeds/                  seed kernel rules, actions and tags
 tests/                  pytest suites per area
-docs/                   build contract, deviations, integration notes
+docs/                   build contract, deviations, integration notes, 7.1 upgrade checklist
+openspec/               OpenSpec changes (proposal, design, tasks)
 .claude/skills/         project skills for Claude Code
 ```
 
@@ -170,8 +215,9 @@ See [`tools/kh-helper/README.md`](tools/kh-helper/README.md) for details.
 ## Development
 
 ```bash
-.venv/Scripts/python -m pytest -q                      # full suite (~2 min, no network)
+.venv/Scripts/python -m pytest -q                      # full suite (~4.5 min, no network)
 .venv/Scripts/python -m pytest -q tests/caps           # one area
+.venv/Scripts/python tools/route_coverage.py           # every route the design lists exists
 ```
 
 Tests use the deterministic `hash` embedder, temporary SQLite stores and fake LLMs. They need no network, model download or database server.
@@ -181,12 +227,19 @@ Before changing code, read [`docs/rebuild-contract.md`](docs/rebuild-contract.md
 ## Status and limits
 
 - This is a demo for team use, not a hardened product. Where the design leaves a value open, the choice made is listed in [`docs/deviations.md`](docs/deviations.md).
-- Not yet built:
+- Not yet built for KH 7.1:
+  - the general flow engine (a saved flow runs only when a Python runner exists for it);
+  - the spaces v2 project frame, with gap tracking and learned links;
+  - switching the embedding model from the home page, and the `/embed` service;
+  - the revisions API and log ids;
+  - copying member lists during sync;
+  - kh-helper 1.33.0 and the Windows installer.
+- Not yet built (earlier):
   - a PostgreSQL (pgvector) storage backend;
   - five roadmap `/v1` modules (people, daily, outcomes, learn, improve);
   - the Windows offline installer for `kh-helper`;
   - half of the kernel tag vocabulary (151 of 299 tags are seeded).
-- Not covered by tests: sync with a second KH instance, account provisioning in an identity service, and event delivery to a sidecar. These need live services.
+- Not covered by tests: sync with a second, separate KH instance (the tests sync a KH with itself), account provisioning in an identity service, and event delivery to a sidecar. These need live services.
 
 ## License
 

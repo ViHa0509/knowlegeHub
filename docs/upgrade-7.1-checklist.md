@@ -91,7 +91,7 @@ The 7.1 OpenAPI page answers 500 (see item 12), so the route list below comes fr
 
 ## 8. Sync (protocol 2)
 
-- [ ] The receiver half already accepts 7.1 shapes (uncommitted `app/sync.py` change, see deviations).
+- [~] The receiver accepts 7.1 giver shapes, and connect/pull/jobs answer what the 7.1 Sync tab reads (2026-11-19, see deviations).
       `/sync/dump` and `/sync/import` built 2026-11-18. Still missing: the member transfer on pull (`members_here`, owners and
       levels per project), `parts.default` / `parts.optional` in the connect answer, and personal-project pull
       (7.1 offers and accepts the signed-in person's own personal project).
