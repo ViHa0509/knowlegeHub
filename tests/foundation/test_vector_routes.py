@@ -6,7 +6,7 @@ from app import vector_store as vs
 def test_health_and_version(client):
     assert client.get("/health").json() == {"status": "ok", "model": "kh-hash-384"}
     v = client.get("/version").json()
-    assert v["version"] == "v6.5" and v["source"] in ("file:VERSION", "default")
+    assert v["version"] == "v7.1.0-dev" and v["source"] in ("file:VERSION", "default")
 
 
 def test_id_is_vec_sha256_prefix(client):
@@ -74,7 +74,7 @@ def test_metadata_stamps_and_disagree(client):
     m = row["metadata"]
     assert m["knowledge_type"] == "quick" and m["scope"] == "knowledge" and m["project"] == "stampp"
     assert m["actor"] == "cli-1" and m["source_text"] == "stamp me"
-    assert m["emb_dim"] == 384 and m["emb_ver"] == "v6.5" and m["emb_model"]
+    assert m["emb_dim"] == 384 and m["emb_ver"] == "v7.1.0-dev" and m["emb_model"]
     bad = client.post("/vector/add", json={"text": "x", "project": "a", "metadata": {"project": "b"}})
     assert bad.status_code == 422
     assert bad.json()["detail"] == "project 'a' and metadata.project 'b' disagree; give one"

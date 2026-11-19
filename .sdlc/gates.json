@@ -1,0 +1,25 @@
+{
+  "gates": [
+    {
+      "name": "all-tests",
+      "kind": "unit",
+      "on": [
+        "commit"
+      ],
+      "cmd": ".venv/Scripts/python -m pytest -q"
+    },
+    {
+      "name": "route-coverage-against-the-spec",
+      "kind": "unit",
+      "on": [
+        "commit"
+      ],
+      "cmd": ".venv/Scripts/python tools/route_coverage.py"
+    }
+  ],
+  "protected": [],
+  "secrets": {
+    "allow": [],
+    "ignore_paths": []
+  }
+}

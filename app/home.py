@@ -299,6 +299,15 @@ class LessonDecide(BaseModel):
     reason: str = ""
 
 
+def _asset(rel: str, media: str, cache: str = "no-cache"):
+    from fastapi.responses import FileResponse
+
+    path = os.path.join(os.path.dirname(STATIC), rel)
+    if not os.path.isfile(path):
+        raise HTTPException(status_code=404, detail="not found")
+    return FileResponse(path, media_type=media, headers={"Cache-Control": cache})
+
+
 def attach(app: FastAPI) -> None:
     @app.get("/home", response_class=HTMLResponse, tags=["home"])
     def home_page():
@@ -308,6 +317,25 @@ def attach(app: FastAPI) -> None:
         except OSError:
             raise HTTPException(status_code=404, detail="home page missing")
         return HTMLResponse(html, headers={"Cache-Control": "no-store"})
+
+    # KH 7.1 page assets (copied from the 7.1 build, see docs/deviations.md): stylesheet, flows editor, fonts.
+    @app.get("/home/theme.css", include_in_schema=False)
+    def home_theme_css():
+        return _asset("theme.css", "text/css")
+
+    @app.get("/home/flows.css", include_in_schema=False)
+    def home_flows_css():
+        return _asset("flows.css", "text/css")
+
+    @app.get("/home/flows.js", include_in_schema=False)
+    def home_flows_js():
+        return _asset("flows.js", "application/javascript")
+
+    @app.get("/home/fonts/{name}", include_in_schema=False)
+    def home_font(name: str):
+        if not name.endswith(".woff2") or "/" in name or "\\" in name or name.startswith("."):
+            raise HTTPException(status_code=404, detail="no such font")
+        return _asset(os.path.join("fonts", name), "font/woff2", cache="public, max-age=604800")
 
     @app.get("/home/config", tags=["home"])
     def home_config():

@@ -3,323 +3,1198 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Knowledge Hub</title>
+<title>KH Home</title>
 <style>
-  :root { --bg:#f6f7f9; --card:#fff; --ink:#1d2330; --muted:#667085; --line:#e3e6eb; --accent:#2f5bd3; --bad:#b42318; }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg:#13161c; --card:#1c2029; --ink:#e7e9ee; --muted:#98a1b3; --line:#2b313d; --accent:#7ea2ff; --bad:#ff8a80; }
-  }
-  * { box-sizing: border-box; }
-  body { margin:0; font:14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; background:var(--bg); color:var(--ink); }
-  header { display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--line); background:var(--card); flex-wrap:wrap; }
-  header h1 { font-size:16px; margin:0; }
-  header .who { margin-left:auto; color:var(--muted); }
-  nav { display:flex; gap:4px; padding:8px 16px; flex-wrap:wrap; }
-  nav button, .sub button { border:1px solid var(--line); background:var(--card); color:var(--ink); padding:6px 12px; border-radius:6px; cursor:pointer; }
-  nav button.on, .sub button.on { border-color:var(--accent); color:var(--accent); }
-  main { padding:8px 16px 32px; max-width:1200px; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:12px; margin:8px 0; }
-  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:8px; }
-  .muted { color:var(--muted); }
-  .err { color:var(--bad); }
-  input, select, textarea { font:inherit; padding:5px 8px; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--ink); }
-  textarea { width:100%; min-height:70px; }
-  button.act { border:1px solid var(--accent); background:var(--accent); color:#fff; padding:5px 10px; border-radius:6px; cursor:pointer; }
-  table { width:100%; border-collapse:collapse; }
-  td, th { text-align:left; padding:4px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
-  .hidden { display:none; }
-  code { font-family:ui-monospace, Consolas, monospace; font-size:12px; word-break:break-all; }
+/* Style: "frosted blue glass" login tokens (KH project designer, design 30 / style 09): light blue, glass cards */
+:root{
+  --bg1:#eaf3fd; --bg2:#d4e6fa;
+  --page:#eaf3fd; --card:rgba(255,255,255,.72); --border:rgba(255,255,255,.75); --ink:#1d2b4a; --muted:#6b7a99;
+  --vio:#1f6fe5; --vio2:#4a90f5; --vio-l:#e1edfd;
+  --mint:#e3f6ec; --mint-d:#16a35a; --butter:#fff3d6; --butter-d:#e0a019; --rose:#fde4ea; --rose-d:#ec5f7e; --lav:#e8f1fd;
+  --sky:#e4efff; --sky-d:#1f6fe5; --cyan:#2fc7d6; --navy:#0b1f4b;
+  --sh:0 8px 24px rgba(31,111,229,.08);
+}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:linear-gradient(160deg,var(--bg1),var(--bg2)) fixed;color:var(--ink);font-family:'Inter','Segoe UI',system-ui,sans-serif;font-size:13px}
+.app{display:grid;grid-template-columns:220px 1fr;gap:18px;max-width:1360px;margin:0 auto;padding:18px}
+.card{background:var(--card);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);border:1px solid var(--border);border-radius:18px;box-shadow:var(--sh)}
+aside.side{padding:20px 14px;display:flex;flex-direction:column;gap:4px;height:calc(100vh - 36px);position:sticky;top:18px}
+.logo{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:700;color:var(--vio);margin:0 6px 20px}
+.logo i,.g3d{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:#fff;font-style:normal;background:linear-gradient(145deg,var(--vio2),var(--vio));box-shadow:inset 0 2px 0 rgba(255,255,255,.4),0 6px 12px rgba(31,111,229,.30)}
+.side a{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;color:var(--ink);text-decoration:none;font-weight:500;cursor:pointer}
+.side a .g3d{width:28px;height:28px;border-radius:8px;font-size:13px}
+.side a.on{background:var(--vio-l);color:var(--vio)}
+body.kc-wide .app{max-width:none}
+.side .nl{display:flex;flex-direction:column;min-width:0;line-height:1.2}.side .nl b{font-weight:600}.side .nl small{font-size:10px;color:var(--muted);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.side .cnt{margin-left:auto;font-size:10px;background:var(--vio);color:#fff;border-radius:99px;padding:1px 7px}
+.up{margin-top:auto;background:linear-gradient(160deg,var(--vio-l),var(--vio-l));border-radius:16px;padding:16px;font-size:11px;color:var(--muted)}
+.up b{color:var(--ink);display:block;font-size:12px;margin-bottom:4px}
+.btn{font:inherit;font-weight:600;border:0;border-radius:12px;padding:10px 18px;color:#fff;cursor:pointer;background:linear-gradient(135deg,var(--vio2),var(--vio));box-shadow:0 8px 16px rgba(31,111,229,.28)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.g{background:var(--surface);color:var(--ink);border:1px solid var(--border);box-shadow:none}
+.btn.s{padding:6px 12px;font-size:12px;border-radius:10px}
+.btn.r{background:var(--surface);color:var(--rose-d);border:1px solid var(--rose);box-shadow:none}
+.top{display:flex;gap:14px;align-items:center;margin-bottom:16px}
+.greet{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px;flex-wrap:wrap}
+.greet h1{margin:0;font-size:22px}.greet p{margin:2px 0 0;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+.stat{display:flex;gap:12px;align-items:center;padding:16px;border-radius:16px;border:1px solid rgba(255,255,255,.6)}
+.tile{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;font-size:22px;color:#fff;flex:none;box-shadow:inset 0 3px 0 rgba(255,255,255,.45),inset 0 -3px 0 rgba(0,0,0,.1),0 8px 14px rgba(0,0,0,.1)}
+.stat small{color:var(--muted)}.stat b{display:block;font-size:22px;line-height:1.15;word-break:break-all}.stat em{font-style:normal;font-size:10px;color:var(--muted)}
+.box{padding:18px;margin-bottom:16px}
+.box h2{margin:0 0 4px;font-size:15px;display:flex;align-items:center;gap:8px}
+.box .sub{color:var(--muted);margin:0 0 12px}
+.step{width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;font-size:11px;color:#fff;background:linear-gradient(135deg,var(--vio2),var(--vio))}
+textarea,input[type=text],input[type=number],input[type=date],input[type=url]{font:inherit;border:1px solid var(--border);border-radius:10px;padding:9px 12px;outline:none;background:var(--surface);color:var(--ink);width:100%}
+textarea:focus,input:focus{border-color:var(--vio2);box-shadow:0 0 0 3px var(--vio-l)}
+textarea{min-height:70px;font-family:ui-monospace,Consolas,monospace;font-size:12px;resize:vertical}
+label.f{display:block;font-weight:500;margin-bottom:12px}label.f span{display:block;margin-bottom:5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.chip{font-size:10px;padding:3px 10px;border-radius:6px;background:var(--lav);color:var(--vio);width:max-content;font-weight:500}
+.pill{font-size:10px;padding:3px 12px;border-radius:6px;font-weight:600;width:max-content;display:inline-block}
+.ok,.done,.active{background:var(--mint);color:var(--mint-d)}
+.running,.pending{background:var(--sky);color:var(--sky-d)}
+.warn,.cancelled,.interrupted,.expired{background:var(--butter);color:var(--butter-d)}
+.bad,.failed,.revoked{background:var(--rose);color:var(--rose-d)}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;color:var(--muted);font-weight:500;font-size:11px;padding:8px 6px;border-bottom:1px solid var(--border)}
+td{padding:9px 6px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.ck{width:20px;height:20px;border-radius:50%;border:1.6px solid var(--edge);cursor:pointer;display:grid;place-items:center;color:#fff;font-size:11px;transition:.2s;flex:none}
+.ck.on{background:var(--vio);border-color:var(--vio)}.ck.on::after{content:"✓"}
+.part{font:inherit;font-size:11px;border:1px solid var(--border);background:var(--surface);color:var(--muted);border-radius:8px;padding:4px 9px;cursor:pointer;margin:2px}
+.part.on{background:var(--vio-l);border-color:var(--vio2);color:var(--vio);font-weight:600}
+.part:disabled{opacity:.4;cursor:default}
+.part b{font-weight:600;margin-left:3px}
+.prog{height:10px;background:var(--lav);border-radius:99px;overflow:hidden;margin:8px 0 4px}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--vio2),var(--vio));border-radius:99px;transition:width .5s}
+.prog.fin i{background:linear-gradient(90deg,var(--mint-d),var(--mint-d))}
+.prog.err i{background:linear-gradient(90deg,var(--rose-d),var(--rose-d))}
+.prog.mini{height:6px;margin:4px 0}
+.job{padding:14px;border:1px solid var(--border);border-radius:14px;margin-bottom:10px;cursor:pointer;background:var(--surface);transition:.15s}
+.job:hover{border-color:var(--vio2)}.job.sel{border-color:var(--vio);box-shadow:0 0 0 3px var(--vio-l)}
+.keybox{font-family:ui-monospace,Consolas,monospace;font-size:12px;background:var(--lav);border:1px dashed var(--vio2);border-radius:12px;padding:12px;word-break:break-all}
+.note{padding:12px 14px;border-radius:12px;background:var(--butter);color:var(--butter-d);margin-bottom:14px}
+.note.i{background:var(--sky);color:var(--muted)}.note.e{background:var(--rose);color:var(--rose-d)}
+.muted{color:var(--muted)}.mono{font-family:ui-monospace,Consolas,monospace;font-size:12px}
+.hide{display:none!important}
+.login{max-width:460px;margin:12vh auto;padding:30px;text-align:center}
+.login .code{font-size:30px;font-weight:700;letter-spacing:4px;color:var(--vio);margin:14px 0;font-family:ui-monospace,Consolas,monospace}
+.user{display:flex;gap:10px;align-items:center;margin-left:auto}
+.toast{position:fixed;bottom:18px;right:18px;z-index:9;padding:12px 16px;border-radius:12px;background:var(--ink);color:#fff;box-shadow:var(--sh);max-width:420px}
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:3px;gap:2px;margin-bottom:14px;flex-wrap:wrap}
+.seg a{padding:7px 14px;border-radius:9px;cursor:pointer;color:var(--muted);font-weight:600;display:flex;gap:6px;align-items:center}
+.seg a.on{background:var(--vio-l);color:var(--vio)}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.pcard{padding:16px;display:flex;flex-direction:column;gap:8px}
+.pcard h3{margin:0;font-size:14px;display:flex;align-items:center;gap:8px}
+.pcard .desc{color:var(--muted);font-size:11px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:28px}
+.schip{font:inherit;font-size:11px;border:1px solid var(--border);background:var(--surface);border-radius:99px;padding:4px 10px;cursor:pointer;color:var(--ink);margin:2px}
+.schip b{color:var(--vio);margin-left:4px}.schip:hover{border-color:var(--vio2)}
+.schip.k{background:var(--vio-l)}.schip.l{background:var(--mint)}.schip.f{background:var(--butter)}.schip.g{background:var(--vio-l)}
+.ibtn{margin-left:auto;width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:var(--surface);cursor:pointer;color:var(--vio);font-weight:700}
+.vis{font-size:10px;padding:2px 8px;border-radius:6px;background:var(--lav);color:var(--muted)}
+.vis.semi-public{background:var(--sky);color:var(--sky-d)}.vis.public{background:var(--mint);color:var(--mint-d)}
+.modal{position:fixed;inset:0;background:rgba(15,30,60,.35);display:grid;place-items:center;z-index:8;padding:16px}
+.modal .card{background:var(--surface);width:min(980px,100%);max-height:88vh;display:flex;flex-direction:column;padding:0}
+.modal header{display:flex;gap:10px;align-items:center;padding:16px 18px;border-bottom:1px solid var(--edge)}
+.modal header h2{margin:0;font-size:15px}.modal .body{padding:14px 18px;overflow:auto}
+.modal footer{padding:12px 18px;border-top:1px solid var(--edge);display:flex;gap:8px;align-items:center}
+.xbtn{margin-left:auto;border:0;background:none;font-size:20px;cursor:pointer;color:var(--muted)}
+.irow{display:grid;grid-template-columns:120px 1fr 30px;gap:10px;padding:10px 0;border-bottom:1px solid var(--edge);align-items:start}
+.irow .t{font-family:ui-monospace,Consolas,monospace;font-size:11px;color:var(--muted)}
+.irow .tx{white-space:pre-wrap;word-break:break-word;font-size:12px;max-height:4.5em;overflow:hidden;cursor:pointer}
+.irow .tx.open{max-height:none}
+.irow .del{border:0;background:none;color:var(--rose-d);cursor:pointer;font-size:15px}
+.lcol{display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:start}
+.plist a{display:flex;padding:8px 10px;border-radius:10px;cursor:pointer;color:var(--ink);gap:8px}
+.plist a.on{background:var(--vio-l);color:var(--vio);font-weight:600}
+.lesson{padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--surface);margin-bottom:10px}
+.lesson h4{margin:0 0 6px;font-size:13px;display:flex;gap:8px;align-items:center}
+.lesson p{margin:0;white-space:pre-wrap;font-size:12px;color:var(--ink)}
+select{font:inherit;border:1px solid var(--border);border-radius:10px;padding:8px 10px;background:var(--surface)}
+input[type=datetime-local],input[type=time],input[type=email]{font:inherit;border:1px solid var(--border);border-radius:10px;padding:8px 10px;background:var(--surface)}
+.ritem{display:grid;grid-template-columns:1fr auto;gap:10px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--surface);margin-bottom:8px}
+.ritem.rej{opacity:.55;background:var(--rose)}
+.ritem h4{margin:0 0 4px;font-size:13px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.ritem p{margin:0;white-space:pre-wrap;font-size:12px;color:var(--ink)}
+.ritem .rside{display:flex;flex-direction:column;gap:6px;align-items:flex-end;min-width:190px}
+.tgl{display:inline-flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}
+.tgl button{font:inherit;font-size:11px;border:0;background:var(--surface);padding:5px 10px;cursor:pointer;color:var(--muted);font-weight:600}
+.tgl button.on{background:var(--vio);color:#fff}.tgl button.on.r{background:var(--rose-d)}.tgl button.on.sh{background:var(--mint-d)}
+.tgl button:disabled{opacity:.4;cursor:default}
+.ritem input[type=text],.ritem textarea{margin-top:6px}
+.banner{padding:14px 16px;border-radius:14px;background:var(--butter);color:var(--butter-d);margin-bottom:14px}
+.kv{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.kv div{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px}
+.kv small{color:var(--muted);display:block}.kv b{font-size:14px;word-break:break-all}
+.sugg{font-size:10px;color:var(--muted)}
+@media (max-width:1000px){.app{grid-template-columns:1fr}.side{height:auto!important;position:static!important;flex-direction:row;flex-wrap:wrap}.up{display:none}.stats{grid-template-columns:1fr 1fr}.grid2,.grid3,.lcol{grid-template-columns:1fr}.irow{grid-template-columns:1fr 30px}.irow .t{grid-column:1/-1}}
 </style>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/home/flows.css">
+<link rel="stylesheet" href="/home/theme.css">
+<script>/* the viewer's theme before the first paint: kawaii scrapbook unless they chose another */
+try { const t = localStorage.getItem("kh_home_theme"); document.documentElement.dataset.theme = ["aura", "slate"].includes(t) ? t : "kawaii"; }
+catch(e) { document.documentElement.dataset.theme = "kawaii"; }</script>
 </head>
 <body>
-<header>
-  <h1>Knowledge Hub</h1><span id="ver" class="muted"></span>
-  <span class="who" id="who"></span>
-  <button id="signin" class="act hidden">Sign in</button>
-  <button id="signout" class="hidden">Sign out</button>
-</header>
-<nav id="tabs">
-  <button data-tab="knowledge" class="maint">Knowledge</button>
-  <button data-tab="lessons" class="maint">Lesson learn</button>
-  <button data-tab="sync">Sync Knowledge</button>
-</nav>
-<main>
-  <div id="login" class="card hidden"></div>
-  <div id="msg" class="err"></div>
 
-  <section id="tab-knowledge" class="hidden">
-    <div class="card">
-      <input id="pfilter" placeholder="Filter projects"> <label><input type="checkbox" id="pshowpersonal"> personal projects</label>
-    </div>
-    <div id="pcards" class="grid"></div>
-    <div id="items" class="card hidden"></div>
-  </section>
+<div class="frame-sky" id="frameSky" aria-hidden="true"><i class="neb a"></i><i class="neb b"></i><i class="neb c"></i><span class="meteor"></span></div>
 
-  <section id="tab-lessons" class="hidden">
-    <div class="card" id="lbbox"></div>
-    <div class="card">
-      <select id="lproject"></select> <button id="lload">Show lessons</button>
-      <div id="llist"></div>
-      <h4>Add a lesson</h4>
-      <input id="ltitle" placeholder="Title" style="width:100%"><br><br>
-      <textarea id="ltext" placeholder="Text"></textarea><br>
-      <button class="act" id="ladd">Add</button>
-    </div>
-  </section>
+<div id="loginView" class="card login hide">
+  <span class="sky" id="loginSky"></span>
+  <div class="logo" style="justify-content:center"><i>K</i>KH Home</div>
+  <h2 style="margin:0 0 6px">Sign in</h2>
+  <p class="muted">Sign in with your KH account. Maintainers manage everything here; any KH user who holds a sync key may pull with it.</p>
+  <div id="loginStart"><button class="btn" onclick="login()">Sign in</button></div>
+  <div id="loginWait" class="hide">
+    <p class="muted">Open the sign-in page and confirm this code:</p>
+    <div class="code" id="userCode"></div>
+    <a class="btn" id="verifyLink" target="_blank" rel="noopener">Open the sign-in page</a>
+    <p class="muted" style="margin-top:14px">Waiting for you to confirm…</p>
+  </div>
+  <div id="loginErr" class="note e hide" style="margin-top:14px"></div>
+</div>
 
-  <section id="tab-sync" class="hidden">
-    <div class="sub">
-      <button data-sub="receive" class="on">Receive</button>
-      <button data-sub="give" class="maint">Give (keys)</button>
-      <button data-sub="jobs">Sync jobs</button>
-      <button data-sub="accounts" class="maint">New accounts</button>
+<div id="appView" class="app hide">
+  <aside class="card side">
+    <div class="logo"><i>K</i>KH Home</div>
+    <nav id="nav">
+      <a data-v="review" title="Learn back proposals to approve"><span class="g3d">✓</span><span class="nl"><b>Review</b><small>Learn back proposals to approve</small></span><span class="cnt hide" id="revCnt"></span></a>
+      <a data-v="embedding" title="The model that turns rows into vectors"><span class="g3d">◈</span><span class="nl"><b>Embedding</b><small>The model that turns rows into vectors</small></span><span class="cnt hide" id="embCnt"></span></a>
+      <a data-v="space" title="Templates a new space starts from"><span class="g3d">▤</span><span class="nl"><b>Space Config</b><small>Templates a new space starts from</small></span></a>
+      <a data-v="flows" title="What KH runs for an agent, step by step"><span class="g3d">⇶</span><span class="nl"><b>Flow Config</b><small>What KH runs for an agent, step by step</small></span></a>
+      <a data-v="spacedata" title="Read the rows of a space, scope by scope"><span class="g3d">▦</span><span class="nl"><b>Space Data</b><small>Read the rows of a space, scope by scope</small></span></a>
+      <a data-v="audit" title="Every change, newest first"><span class="g3d">☰</span><span class="nl"><b>Audit</b><small>Every change, newest first</small></span></a>
+      <a data-v="sync" title="Pull knowledge from another KH"><span class="g3d">⟳</span><span class="nl"><b>Sync Knowledge</b><small>Pull knowledge from another KH</small></span><span class="cnt hide" id="syncCnt"></span></a>
+    </nav>
+    <div class="up"><span class="sky" id="sideSky"></span><span class="uptx" id="sideHelp"></span></div>
+  </aside>
+
+  <header class="topbar">
+    <div class="top">
+      <div class="muted" id="hereInfo"></div>
+      <div class="themeBox"><button class="themeBtn" id="themeBtn" title="Change how /home looks (only for you, on this browser)"><i></i><span id="themeName">Theme</span> ▾</button>
+        <div class="themeMenu hide" id="themeMenu"></div></div>
+      <div class="user"><span class="g3d" style="border-radius:50%" id="avatar">?</span>
+        <div><b id="who"></b><div class="muted" style="font-size:11px" id="whoRole"></div></div>
+        <button class="btn g s" id="logoutBtn" onclick="logout()">Sign out</button></div>
     </div>
-    <div id="sub-receive" class="card">
-      <p>Paste a connection key from the giving KH.</p>
-      <input id="skey" style="width:100%" placeholder="khsync1...."><br><br>
-      <button class="act" id="sconnect">Connect</button>
-      <div id="smanifest"></div>
+  </header>
+
+  <main>
+    <div id="devNote" class="note i hide">Sign-in is off on this KH (development): you act as the local maintainer.</div>
+
+    <!-- KNOWLEDGE -->
+    <div id="v-knowledge" class="hide">
+      <div class="greet"><div><h1>Knowledge</h1><p>Every project and the parts it holds. Open a part to see its rows, newest first.</p></div>
+        <div class="row"><input type="text" id="kFilter" placeholder="Filter projects" style="width:220px" oninput="renderCards()">
+          <label class="row" style="font-size:12px"><input type="checkbox" id="kPersonal" onchange="renderCards()"> personal</label>
+          <button class="btn g s" onclick="loadProjects()">Refresh</button></div></div>
+      <div id="pgrid" class="pgrid"><p class="muted">Loading…</p></div>
     </div>
-    <div id="sub-give" class="card hidden">
-      <input id="klabel" placeholder="Label"> <input id="kdays" type="number" min="1" max="90" value="7" style="width:70px"> days
-      <input id="kprojects" placeholder="projects (comma, empty = all)"> <button class="act" id="kmake">Make key</button>
-      <div id="knew"></div><div id="klist"></div><div id="kgiven"></div>
+
+    <!-- LESSONS -->
+    <div id="v-lessons" class="hide">
+      <div class="greet"><div><h1>Lesson learn</h1><p>Lessons per project. Learn back distils them from worklogs and findings; proposed ones wait for you.</p></div></div>
+      <section class="card box" id="lbBox">
+        <h2>Learn back</h2>
+        <p class="sub" id="lbState">…</p>
+        <div style="margin-bottom:10px"><span style="font-weight:500">Projects</span> <span class="muted">- tick the ones to learn from</span>
+          <div id="lbProjects" style="margin-top:6px"></div></div>
+        <div class="row" style="margin-bottom:12px">
+          <button class="btn" id="lbNow" onclick="lbRunNow()">Start learn back now</button>
+          <span class="muted">or schedule:</span>
+          <select id="lbKind" onchange="lbKindChanged()"><option value="once">once at</option><option value="daily">every day at</option><option value="weekly">every week on</option></select>
+          <input type="datetime-local" id="lbAt">
+          <select id="lbDay" class="hide"><option value="mon">Monday</option><option value="tue">Tuesday</option><option value="wed">Wednesday</option><option value="thu">Thursday</option><option value="fri">Friday</option><option value="sat">Saturday</option><option value="sun">Sunday</option></select>
+          <input type="time" id="lbTime" class="hide" value="00:00">
+          <button class="btn g" id="lbAdd" onclick="lbSchedule()">Add schedule</button>
+        </div>
+        <div class="grid2" style="align-items:start">
+          <div><b>Schedules</b><table><tbody id="lbSched"></tbody></table></div>
+          <div><b>Recent runs</b><table><tbody id="lbRuns"></tbody></table></div>
+        </div>
+      </section>
+      <div class="lcol">
+        <section class="card box plist" id="lpList"></section>
+        <section class="card box"><div class="row" style="margin-bottom:10px"><h2 style="margin:0" id="lpTitle">Pick a project</h2>
+          <button class="btn s" style="margin-left:auto" id="lpAdd" onclick="addLessonDialog()" disabled>Add lesson</button></div>
+          <div id="lpRows"></div></section>
+      </div>
     </div>
-    <div id="sub-jobs" class="card hidden"></div>
-    <div id="sub-accounts" class="card hidden"></div>
-  </section>
-</main>
+
+    <!-- REVIEW -->
+    <div id="v-review" class="hide">
+      <div class="greet"><div><h1>Review</h1><p>What learn back proposed. Each item comes with the distiller's choice: <b>shared</b> (copied to <span id="rvShared">lesson-learned</span>, read by everyone) or <b>private</b> (stays in its project). Flip what is wrong, fix a word, then apply.</p></div>
+        <div class="row"><button class="btn g s" onclick="loadReview()">Refresh</button></div></div>
+      <section class="card box" style="position:sticky;top:8px;z-index:3">
+        <div class="row"><b id="rvSum">Loading…</b>
+          <button class="btn g s" onclick="rvAll('approve')">All approve</button>
+          <button class="btn g s" onclick="rvShareAll(false)">All private</button>
+          <button class="btn g s" onclick="rvReset()">Back to the distiller's choice</button>
+          <button class="btn" style="margin-left:auto" id="rvApply" onclick="applyReview()">Apply</button></div>
+      </section>
+      <div id="rvList"></div>
+    </div>
+
+    <!-- EMBEDDING -->
+    <div id="v-embedding" class="hide">
+      <div class="greet"><div><h1>Embedding</h1><p>Switch KH's embedding model. A new model is checked, compared, then every stored vector is computed again while KH is in maintenance.</p></div>
+        <div class="row"><button class="btn g s" onclick="loadEmbedding()">Refresh</button></div></div>
+      <div id="emMaint" class="banner hide"></div>
+      <section class="card box"><h2>Active model</h2><div class="kv" id="emActive"></div></section>
+      <section class="card box">
+        <h2><span class="step">1</span>Add a model</h2>
+        <p class="sub">A Hugging Face id (e.g. <span class="mono">BAAI/bge-m3</span>), the name of a folder already under the model root, an https link to a .zip of a sentence-transformers folder, or upload that .zip. KH loads it and checks it; a model that loads waits under Models.</p>
+        <div class="grid3">
+          <label class="f"><span>Model id, folder or link</span><input type="text" id="emSource" placeholder="BAAI/bge-m3"></label>
+          <label class="f"><span>Name (optional)</span><input type="text" id="emName" placeholder="taken from the id"></label>
+          <label class="f"><span>Query instruction (optional)</span><input type="text" id="emQi" placeholder="e.g. query: "></label>
+        </div>
+        <div class="row"><button class="btn" onclick="emAdd()">Add and check</button>
+          <span class="muted">or upload a .zip:</span><input type="file" id="emFile" accept=".zip"><button class="btn g" onclick="emUpload()">Upload and check</button></div>
+      </section>
+      <section class="card box">
+        <h2><span class="step">2</span>Models</h2>
+        <p class="sub"><b>Compare</b> tests a ready model against the active one on a sample of KH's own knowledge (does a row's title find the row: top-1, top-5) and on Vietnamese questions against English passages. Nothing is written.</p>
+        <table><thead><tr><th>Model</th><th>State</th><th>Dim</th><th>Size</th><th>Load</th><th>Compare: own top-1 / top-5 · vi→en top-1</th><th></th></tr></thead><tbody id="emModels"></tbody></table>
+      </section>
+      <section class="card box">
+        <h2><span class="step">3</span>Convert jobs</h2>
+        <p class="sub">Start convert on a ready model. KH answers every call with a maintenance notice until all rows are done; this page keeps working. Old vectors are backed up, so a finished switch can be rolled back.</p>
+        <div id="emJobs"></div>
+      </section>
+    </div>
+
+    <!-- SPACE CONFIG and FLOW CONFIG (app/static/flows.js, KH 7.0 K22: two tabs, no sub-tab strip) -->
+    <div id="v-space" class="hide"><div id="scRoot"><p class="muted">Loading…</p></div></div>
+    <div id="v-flows" class="hide"><div id="fbRoot"><p class="muted">Loading…</p></div></div>
+
+    <!-- SPACE DATA: read-only rows of a space, scope by scope (K27b fills it) -->
+    <div id="v-spacedata" class="hide"><div id="sdRoot"><p class="muted">Loading…</p></div></div>
+
+    <!-- AUDIT -->
+    <div id="v-audit" class="hide">
+      <div class="greet"><div><h1>Audit</h1><p>Who changed what: rows deleted, items approved or rejected, kernel and policy rules written, embedding switches. Click a rule change to see that rule's history.</p></div></div>
+      <section class="card box">
+        <div class="row" style="margin-bottom:10px">
+          <select id="auAction"><option value="">every change</option><option value="rule.">rules (kernel, policy)</option><option value="distill.">review decisions</option><option value="home.">deletes on /home</option><option value="embedding.">embedding</option><option value="retention.">retention</option></select>
+          <input type="text" id="auProject" placeholder="project" style="width:160px">
+          <input type="date" id="auSince" style="width:auto"><span class="muted">→</span><input type="date" id="auUntil" style="width:auto">
+          <button class="btn s" onclick="loadAudit(0)">Show</button>
+          <button class="btn g s" style="margin-left:auto" onclick="exportAudit('jsonl')">Export JSON lines</button>
+          <button class="btn g s" onclick="exportAudit('csv')">Export CSV</button></div>
+        <table><thead><tr><th>Time (UTC)</th><th>Who</th><th>Change</th><th>Project</th><th>Target</th><th>Detail</th></tr></thead><tbody id="auRows"></tbody></table>
+        <div class="row" style="margin-top:10px" id="auMore"></div>
+      </section>
+      <section class="card box">
+        <h2>Work log retention</h2>
+        <p class="sub">Work logs are kept forever unless a retention is set (KH_LOG_RETENTION_DAYS) or given here. Preview first; deleting cannot be undone. Audit rows are kept 365 days (KH_AUDIT_RETENTION_DAYS).</p>
+        <div class="row"><span>Older than</span><input type="number" id="rtDays" min="30" value="365" style="width:100px"><span>days</span>
+          <button class="btn g s" onclick="retention(true)">Preview</button><button class="btn r s" onclick="retention(false)">Delete</button></div>
+        <div id="rtOut" style="margin-top:10px"></div>
+      </section>
+    </div>
+
+    <!-- SYNC -->
+    <div id="v-sync" class="hide">
+    <div class="seg" id="seg">
+      <a data-s="receive">⇣ Receive</a><a data-s="give">⚿ Give (keys)</a>
+      <a data-s="jobs">▤ Sync jobs<span class="cnt hide" id="runCnt"></span></a><a data-s="accounts">☺ New accounts<span class="cnt hide" id="accCnt"></span></a>
+    </div>
+    <section class="stats">
+      <div class="stat" style="background:var(--lav)"><span class="tile" style="background:linear-gradient(145deg,var(--vio),var(--vio))">⚿</span><div><small>Active keys</small><b id="sKeys">–</b><em>keys this KH gave out</em></div></div>
+      <div class="stat" style="background:var(--sky)"><span class="tile" style="background:linear-gradient(145deg,var(--vio),var(--vio))">⟳</span><div><small>Running</small><b id="sRun">–</b><em>sync jobs in progress</em></div></div>
+      <div class="stat" style="background:var(--mint)"><span class="tile" style="background:linear-gradient(145deg,var(--mint-d),var(--mint-d))">✓</span><div><small>Rows copied</small><b id="sRows">–</b><em>created + updated, selected job</em></div></div>
+      <div class="stat" style="background:var(--butter)"><span class="tile" style="background:linear-gradient(145deg,var(--butter-d),var(--butter-d))">◈</span><div><small>Embedding</small><b id="sEmb" style="font-size:14px">–</b><em>must match on both KHs</em></div></div>
+    </section>
+
+    <!-- RECEIVE -->
+    <div id="v-receive">
+      <section class="card box">
+        <h2><span class="step">1</span>Connect with a key</h2>
+        <p class="sub">Paste the key the giving KH's maintainer made for you. The key names the giving KH; nothing else is needed.
+          Signed in as a member, the giving KH first checks the key against the keys it stores, and you get read access here to the projects you pull.</p>
+        <textarea id="keyIn" placeholder="khsync1.…"></textarea>
+        <div class="row" style="margin-top:10px"><button class="btn" id="connectBtn" onclick="connectKey()">Connect</button>
+          <span id="hs" class="row"></span></div>
+      </section>
+
+      <section class="card box hide" id="pickBox">
+        <h2><span class="step">2</span>Choose what to sync</h2>
+        <p class="sub">Tick projects, then the parts of each. "log" includes the giving KH's recent (hot window) log rows.
+          People: someone who already has an account here keeps it and is given access; someone new gets an account
+          (an initial password only for user/password accounts, never for SSO), listed under New accounts.</p>
+        <div id="limits" class="note i hide"></div>
+        <div class="row" style="margin-bottom:8px"><button class="btn g s" onclick="tickAll(true)">Select all</button>
+          <button class="btn g s" onclick="tickAll(false)">Clear</button><span class="muted" id="pickSum"></span></div>
+        <table><thead><tr><th style="width:30px"></th><th>Project</th><th>Here</th><th>Parts (rows on the giving KH)</th><th>People</th></tr></thead>
+          <tbody id="projRows"></tbody></table>
+      </section>
+
+      <section class="card box hide" id="optBox">
+        <h2><span class="step">3</span>Time range and start</h2>
+        <p class="sub">Only rows whose time falls in the range are sent. Leave both empty for everything.</p>
+        <div class="grid3">
+          <label class="f"><span>From (since)</span><input type="date" id="since"></label>
+          <label class="f"><span>To (until, inclusive)</span><input type="date" id="until"></label>
+          <div><span style="display:block;margin-bottom:5px;font-weight:500">Options</span>
+            <label class="row" style="margin-bottom:6px"><input type="checkbox" id="undated" checked> include rows without a date</label>
+            <label class="row"><input type="checkbox" id="dry"> dry run (count only, write nothing)</label></div>
+        </div>
+        <div class="row"><button class="btn" id="startBtn" onclick="startPull()">Start sync</button>
+          <span class="muted">Updates existing projects and rows, never replaces or deletes. A row newer here is kept.</span></div>
+      </section>
+    </div>
+
+    <!-- GIVE -->
+    <div id="v-give" class="hide">
+      <section class="card box">
+        <h2>Make a connection key</h2>
+        <p class="sub">Give the key to the maintainer of the receiving KH. It is shown once; this KH keeps only its hash.</p>
+        <div class="grid3">
+          <label class="f"><span>Label</span><input type="text" id="kLabel" placeholder="e.g. lab KH, October"></label>
+          <label class="f"><span>Valid for (days, max 90)</span><input type="number" id="kDays" value="7" min="1" max="90"></label>
+          <label class="f"><span>This KH's address, as the receiver reaches it</span><input type="url" id="kUrl"></label>
+        </div>
+        <div style="margin-bottom:12px"><span style="font-weight:500">Projects the receiver may see</span>
+          <span class="muted"> - none ticked means every project except personal ones; a personal project goes only when ticked</span>
+          <button class="btn s" style="margin-left:8px" onclick="tickAllLocal(true)" title="Every project, personal ones included: a backup of this whole KH">Tick all (backup)</button>
+          <button class="btn s" onclick="tickAllLocal(false)">Clear</button>
+          <div id="kProjects" style="margin-top:8px"></div></div>
+        <div style="margin-bottom:12px"><span style="font-weight:500">Parts the receiver may see</span>
+          <span class="muted"> - none ticked means every part</span>
+          <div id="kParts" style="margin-top:8px"></div></div>
+        <div class="grid3">
+          <label class="f"><span>Rows from (optional)</span><input type="date" id="kSince"></label>
+          <label class="f"><span>Rows until (optional)</span><input type="date" id="kUntil"></label>
+          <div><span style="display:block;margin-bottom:5px;font-weight:500">People</span>
+            <label class="row"><input type="checkbox" id="kMembers" checked> share each project's member list</label></div>
+        </div>
+        <button class="btn" onclick="makeKey()">Make key</button>
+        <div id="newKey" class="hide" style="margin-top:14px">
+          <div class="note">Copy this key now. It will not be shown again.</div>
+          <div class="keybox" id="newKeyText"></div>
+          <div class="row" style="margin-top:8px"><button class="btn s" onclick="copyKey()">Copy</button></div>
+        </div>
+      </section>
+      <section class="card box">
+        <h2>Pulls from this KH<span class="cnt hide" id="givenCnt" style="font-size:10px;background:var(--vio);color:#fff;border-radius:99px;padding:1px 7px"></span></h2>
+        <p class="sub">Receivers report their progress while they pull with one of this KH's keys.</p>
+        <div id="givenList"><p class="muted">Loading…</p></div>
+      </section>
+      <section class="card box">
+        <h2>Keys this KH gave</h2>
+        <table><thead><tr><th>Label</th><th>Key id</th><th>Projects</th><th>Shows</th><th>Made by</th><th>Expires</th><th>Last used</th><th>State</th><th></th></tr></thead>
+          <tbody id="keyRows"></tbody></table>
+      </section>
+    </div>
+
+    <!-- ACCOUNTS -->
+    <div id="v-accounts" class="hide">
+      <section class="card box">
+        <h2>Accounts created by sync</h2>
+        <p class="sub">People a sync brought in who sign in with a user name and password. Send each person their
+          initial password, then press "Sent" so this KH forgets it. SSO accounts need no password and are not listed.</p>
+        <table><thead><tr><th>E-mail</th><th>Projects</th><th>Initial password</th><th>Set at sign-in service</th><th>From</th><th>Created</th><th></th></tr></thead>
+          <tbody id="accRows"></tbody></table>
+      </section>
+      <section class="card box">
+        <h2>Read access from sync keys</h2>
+        <p class="sub">Members who pulled a project with a key the giving KH verified can read it here. Remove takes that back
+          (rows already copied stay).</p>
+        <table><thead><tr><th>E-mail</th><th>Project</th><th>From</th><th>Key id</th><th>Job</th><th>Since</th><th></th></tr></thead>
+          <tbody id="grantRows"></tbody></table>
+      </section>
+    </div>
+
+    <!-- JOBS -->
+    <div id="v-jobs" class="hide">
+      <div class="grid2" style="grid-template-columns:1fr 1.4fr;align-items:start">
+        <section class="card box"><h2>Sync jobs</h2><p class="sub">Jobs run on this KH, so you can close this page and come back.</p>
+          <div id="jobList"></div></section>
+        <section class="card box" id="jobDetail"><p class="muted">Pick a job to see its progress.</p></section>
+      </div>
+    </div>
+    </div><!-- /v-sync -->
+  </main>
+</div>
+<div id="modal" class="modal hide" onclick="if(event.target===this)closeModal()"><div class="card"><header><h2 id="mTitle"></h2><span id="mSub" class="muted"></span>
+  <button class="xbtn" onclick="closeModal()">×</button></header><div class="body" id="mBody"></div><footer id="mFoot"></footer></div></div>
+<div id="toast" class="toast hide"></div>
+
 <script>
-(function () {
-  "use strict";
-  var cfg = null, me = null, store = window.localStorage;
-  function $(id) { return document.getElementById(id); }
-  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
-    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
-  function msg(t) { $("msg").textContent = t || ""; }
+const PARTS = ["knowledge","log","findings","entity","chunk","personalization","policy","src"];
+const DEFAULT_ON = ["knowledge","log","findings","entity","chunk","personalization"];
+let cfg = {}, conn = null, pick = {}, people = {}, jobs = [], selJob = null, timer = null, isMaint = true, givenTimer = null;
 
-  function api(method, path, body, retried) {
-    var h = {"Content-Type": "application/json"};
-    var tok = store.getItem("kh_access");
-    if (tok) h.Authorization = "Bearer " + tok;
-    return fetch(path, {method: method, headers: h, body: body ? JSON.stringify(body) : undefined}).then(function (r) {
-      if (r.status === 401 && !retried && store.getItem("kh_refresh")) {
-        return api("POST", "/home/login/refresh", {refresh_token: store.getItem("kh_refresh")}, true).then(function (t) {
-          if (t.state === "ok") { store.setItem("kh_access", t.access_token); store.setItem("kh_refresh", t.refresh_token || ""); }
-          return api(method, path, body, true);
-        });
-      }
-      return r.json().catch(function () { return {}; }).then(function (d) {
-        if (!r.ok) { var e = new Error((d && (d.detail && (d.detail.error || d.detail))) || ("HTTP " + r.status)); e.status = r.status; throw e; }
-        return d;
-      });
-    });
-  }
+const store = {
+  get(k){ try { return localStorage.getItem("kh_home_"+k) } catch(e){ return null } },
+  set(k,v){ try { v==null ? localStorage.removeItem("kh_home_"+k) : localStorage.setItem("kh_home_"+k,v) } catch(e){} }
+};
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt = n => Number(n||0).toLocaleString("en-US");
+const when = t => t ? t.replace("T"," ").replace("Z","") : "–";
+function toast(msg, ms=3500){ const t=$("toast"); t.textContent=msg; t.classList.remove("hide"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.add("hide"),ms); }
 
-  function showTab(name) {
-    document.querySelectorAll("#tabs button").forEach(function (b) { b.classList.toggle("on", b.dataset.tab === name); });
-    ["knowledge", "lessons", "sync"].forEach(function (t) { $("tab-" + t).classList.toggle("hidden", t !== name); });
-    if (name === "knowledge") loadProjects();
-    if (name === "lessons") loadLessonsTab();
-    if (name === "sync") showSub("receive");
-  }
-  function showSub(name) {
-    document.querySelectorAll(".sub button").forEach(function (b) { b.classList.toggle("on", b.dataset.sub === name); });
-    ["receive", "give", "jobs", "accounts"].forEach(function (s) { $("sub-" + s).classList.toggle("hidden", s !== name); });
-    if (name === "give") loadKeys();
-    if (name === "jobs") loadJobs();
-    if (name === "accounts") loadAccounts();
-  }
+async function api(method, path, body, retry=true){
+  const h = {"Accept":"application/json"};
+  if (body !== undefined) h["Content-Type"] = "application/json";
+  const tok = store.get("access");
+  if (cfg.auth && tok) h["Authorization"] = "Bearer " + tok;
+  if (api.checkAs) h["X-KH-Check-As"] = api.checkAs;   // Space Data 'Check as' (KH honours it only with sign-in off)
+  const r = await fetch(path, {method, headers:h, body: body===undefined ? undefined : JSON.stringify(body)});
+  if (r.status === 401 && cfg.auth && retry && await refresh()) return api(method, path, body, false);
+  const txt = await r.text(); let data = null; try { data = txt ? JSON.parse(txt) : null } catch(e){ data = {detail: txt} }
+  if (r.status === 401 && cfg.auth) { showLogin(); throw new Error("Please sign in again."); }
+  if (!r.ok) { const d = data && data.detail; throw Object.assign(new Error(typeof d === "string" ? d : (d && d.detail) || JSON.stringify(d) || r.statusText), {status:r.status, data}); }
+  return data;
+}
+async function refresh(){
+  const rt = store.get("refresh"); if (!rt) return false;
+  try { const r = await fetch("/home/login/refresh",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({refresh_token:rt})});
+    if (!r.ok) return false; const d = await r.json(); store.set("access",d.access_token); if (d.refresh_token) store.set("refresh",d.refresh_token); return true;
+  } catch(e){ return false }
+}
 
-  // ---- sign-in ----
-  function startLogin() {
-    api("POST", "/home/login/start").then(function (d) {
-      $("login").classList.remove("hidden");
-      $("login").innerHTML = "Open <a target=_blank href='" + esc(d.verification_uri_complete || d.verification_uri) +
-        "'>" + esc(d.verification_uri) + "</a> and enter code <b>" + esc(d.user_code) + "</b>.";
-      var iv = (d.interval || 5) * 1000;
-      var poll = function () {
-        api("POST", "/home/login/poll", {device_code: d.device_code, code_verifier: d.code_verifier}).then(function (t) {
-          if (t.state === "ok") {
-            store.setItem("kh_access", t.access_token); store.setItem("kh_refresh", t.refresh_token || "");
-            $("login").classList.add("hidden"); boot();
-          } else if (t.state === "pending") { setTimeout(poll, iv); }
-          else { $("login").textContent = "Sign-in failed: " + (t.error || ""); }
-        }).catch(function (e) { msg(e.message); });
-      };
-      setTimeout(poll, iv);
-    }).catch(function (e) { msg(e.message); });
-  }
+// ── sign-in ──
+function showLogin(){ $("loginSky").innerHTML = slotArt(5, "login"); $("appView").classList.add("hide"); $("loginView").classList.remove("hide"); $("loginStart").classList.remove("hide"); $("loginWait").classList.add("hide"); }
+async function login(){
+  $("loginErr").classList.add("hide");
+  try {
+    const d = await (await fetch("/home/login/start",{method:"POST"})).json();
+    if (!d.device_code) throw new Error(d.detail || "sign-in could not start");
+    $("userCode").textContent = d.user_code; $("verifyLink").href = d.verification_uri_complete || d.verification_uri;
+    $("loginStart").classList.add("hide"); $("loginWait").classList.remove("hide");
+    window.open(d.verification_uri_complete || d.verification_uri, "_blank", "noopener");
+    const until = Date.now() + (d.expires_in||600)*1000, every = Math.max(d.interval||5, 3)*1000;
+    while (Date.now() < until) {
+      await new Promise(r => setTimeout(r, every));
+      const p = await (await fetch("/home/login/poll",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({device_code:d.device_code, code_verifier:d.code_verifier})})).json();
+      if (p.state === "ok") { store.set("access",p.access_token); store.set("refresh",p.refresh_token); return enter(); }
+      if (p.state === "failed") throw new Error("Sign-in was not completed (" + p.error + ").");
+    }
+    throw new Error("The sign-in code expired.");
+  } catch(e){ $("loginErr").textContent = e.message; $("loginErr").classList.remove("hide"); $("loginStart").classList.remove("hide"); $("loginWait").classList.add("hide"); }
+}
+function logout(){ store.set("access",null); store.set("refresh",null); if (cfg.auth) showLogin(); else toast("Sign-in is off on this KH."); }
 
-  // ---- knowledge ----
-  function loadProjects() {
-    api("GET", "/home/projects").then(function (d) {
-      var f = $("pfilter").value.toLowerCase(), pers = $("pshowpersonal").checked;
-      $("pcards").innerHTML = d.projects.filter(function (p) {
-        return (pers || !p.personal) && p.id.toLowerCase().indexOf(f) >= 0;
-      }).map(function (p) {
-        var parts = Object.keys(p.parts).map(function (k) {
-          return "<a href='#' data-p='" + esc(p.id) + "' data-part='" + k + "'>" + k + "</a> " + p.parts[k]; }).join(" &middot; ");
-        return "<div class='card'><b>" + esc(p.id) + "</b> <span class=muted>" + esc(p.visibility || "") + "</span><br>" +
-          "<span class=muted>" + esc(p.descriptor) + "</span><br>" + parts + "<br><span class=muted>graph: " + esc(p.graph) + "</span></div>";
-      }).join("");
-    }).catch(function (e) { msg(e.message); });
+async function enter(){
+  let me;
+  try { me = await api("GET","/sync/me"); }
+  catch(e){
+    if (e.status === 403) { showLogin(); $("loginErr").textContent = "This account is not a registered KH user here."; $("loginErr").classList.remove("hide"); store.set("access",null); store.set("refresh",null); }
+    return;
   }
-  function loadItems(project, part, offset) {
-    api("GET", "/home/items?project=" + encodeURIComponent(project) + "&part=" + part + "&offset=" + (offset || 0) + "&limit=50").then(function (d) {
-      var box = $("items"); box.classList.remove("hidden");
-      box.innerHTML = "<b>" + esc(project) + " / " + esc(part) + "</b> " + d.total + " rows" + (d.sorted ? "" : " (store order)") +
-        " <button id='idel'>Delete selected</button><table><tr><th></th><th>time</th><th>text</th><th>meta</th></tr>" +
-        d.items.map(function (r) {
-          return "<tr><td><input type=checkbox value='" + esc(r.id) + "'></td><td>" + esc(r.time || "") + "</td><td>" +
-            esc(r.text) + (r.length > 600 ? " ..." : "") + "<br><code>" + esc(r.id) + "</code></td><td class=muted>" +
-            esc(JSON.stringify(r.meta)) + "</td></tr>"; }).join("") + "</table>";
-      $("idel").onclick = function () {
-        var ids = Array.prototype.map.call(box.querySelectorAll("input:checked"), function (i) { return i.value; });
-        if (!ids.length || !confirm("Delete " + ids.length + " rows?")) return;
-        api("POST", "/home/items/delete", {project: project, part: part, ids: ids}).then(function () { loadItems(project, part, offset); });
-      };
-    }).catch(function (e) { msg(e.message); });
-  }
+  $("loginView").classList.add("hide"); $("appView").classList.remove("hide");
+  isMaint = me.maintainer !== false;
+  // A member syncs on a key's reader role: Receive and their own jobs only.
+  document.querySelectorAll('#nav a[data-v="knowledge"], #nav a[data-v="lessons"], #nav a[data-v="review"], #nav a[data-v="embedding"], #nav a[data-v="audit"], #seg a[data-s="give"], #seg a[data-s="accounts"]')
+    .forEach(a => a.classList.toggle("hide", !isMaint));
+  $("sKeys").closest(".stat").classList.toggle("hide", !isMaint);
+  $("who").textContent = me.email; $("whoRole").textContent = me.role; $("avatar").textContent = (me.email||"?").slice(0,2).toUpperCase();
+  $("devNote").classList.toggle("hide", cfg.auth); $("logoutBtn").classList.toggle("hide", !cfg.auth);
+  $("hereInfo").innerHTML = "This KH: <b>" + esc(cfg.base) + "</b> · " + esc(cfg.kh_version);
+  $("sEmb").textContent = cfg.emb_model; $("kUrl").value = cfg.base;
+  const want = location.hash.slice(1).split("/");
+  if (SUBS.includes(want[0])) { want[1] = want[0]; want[0] = "sync"; }
+  // KH 7.0 (K22): Knowledge and Lesson learn left the nav, Tools folded into Flow Config: an old link lands on Flow Config.
+  if (HIDDEN_VIEWS.includes(want[0])) { want[0] = "flows"; want[1] = ""; }
+  if (want[0] === "flows") want[1] = "";
+  let saved = store.get("view"); if (HIDDEN_VIEWS.includes(saved)) saved = "space";   // a returning user of a hidden tab: the first tab
+  if (!isMaint) show("sync", ["receive","jobs"].includes(want[1]) ? want[1] : "receive");
+  else show(VIEWS.includes(want[0]) ? want[0] : VIEWS.includes(saved) ? saved : "space", want[1] || store.get("sub") || "receive");
+  loadJobs();
+  // Only what the first screen shows loads now; the rest waits (2026-11-09: GET /sync/local and /home/review on the
+  // full prod data took 25-50 s and held up every other request while the page opened). The Give tab loads its
+  // project list when opened; the Review badge counts once the page is up.
+  if (isMaint) { loadKeys(); loadAccounts(); loadEmbedding(); setTimeout(reviewCount, 2500); }
+}
 
-  // ---- lessons + learn back ----
-  function loadLessonsTab() {
-    api("GET", "/home/projects").then(function (d) {
-      $("lproject").innerHTML = d.projects.filter(function (p) { return !p.personal; }).map(function (p) {
-        return "<option>" + esc(p.id) + "</option>"; }).join("");
-      api("GET", "/home/learnback").then(function (lb) { renderLearnback(lb, d.projects); });
-    }).catch(function (e) { msg(e.message); });
+// ── navigation: three tabs; Sync Knowledge holds receive / give / jobs / accounts ──
+const VIEWS = ["knowledge","lessons","review","embedding","space","flows","spacedata","audit","sync"], SUBS = ["receive","give","jobs","accounts"];
+const HIDDEN_VIEWS = ["knowledge","lessons"];   // still views (old code paths), no longer in the nav: a link to them opens Flow Config
+const HELP = {
+  knowledge: "<b>Knowledge</b>Click a part to see its rows newest first, delete a row or the whole part. ⓘ shows the project's people and their levels.",
+  lessons: "<b>Lesson learn</b>Lessons are distilled items of kind lesson. Learn back proposes new ones from worklogs and findings; approve them here.",
+  review: "<b>Review</b>Every item learn back proposed, in every project. The distiller picked shared or private; flip it where it is wrong, edit a word if needed, reject what is wrong, then Apply.",
+  embedding: "<b>Embedding</b>Add a model, let KH check it, compare it with the active one, then convert. KH is in maintenance while it converts; a finished switch can be rolled back.",
+  space: "<b>Space Config</b>A template is what a new space starts from: its scopes, where each scope keeps its rows, and who may read or write them. Drop a rule on the Access box for the whole space, or on one scope to customize it. A space already made keeps its own snapshot.",
+  flows: "<b>Flow Config</b>What KH runs for an agent, step by step, each step with the caller's own rights. Click a step to set it up; pull its ✓ or ✕ dot onto the step that runs next. The ⚡ Start node says what starts the flow (an event, a prompt, an agent calling it by name, or another flow).",
+  spacedata: "<b>Space Data</b>Read the rows of the spaces you can read, scope by scope. Nothing here writes.",
+  audit: "<b>Audit</b>Every change to rules, reviews, deletes and the embedding model, newest first. Export it for a compliance review.",
+  sync: "<b>How sync works</b>The GIVING KH makes a key. The RECEIVING KH pastes it, checks both use the same embedding model, then pulls the projects, parts and time range you tick. Rows are updated, never replaced or deleted."};
+document.querySelectorAll("#nav a").forEach(a => a.onclick = () => show(a.dataset.v));
+// A link typed or clicked while /home is open (#lessons, #space ...) changes only the hash: route it like a fresh load.
+window.addEventListener("hashchange", () => {
+  if ($("appView").classList.contains("hide")) return;
+  const w = location.hash.slice(1).split("/");
+  if (SUBS.includes(w[0])) return show("sync", w[0]);
+  if (HIDDEN_VIEWS.includes(w[0])) return show("flows");
+  if (VIEWS.includes(w[0])) show(w[0], w[1]);
+});
+document.querySelectorAll("#seg a").forEach(a => a.onclick = () => show("sync", a.dataset.s));
+// Style 22-1 "aura starry night" (designer vec_979498e4ce7b): every image slot is a generated night scene, seeded so
+// it is stable per slot. Here: the sidebar help card (one scene per tab) and the sign-in card.
+const SKY_TONE = {plum:['#2a1d44','#0b0a10','#ff6ec7','#a96bff'], rose:['#3a1a2e','#0c090d','#ff6ec7','#ff9bd6'],
+                  teal:['#16302e','#090c0d','#4fd1c5','#a96bff'], violet:['#231a3a','#08080c','#a96bff','#ff6ec7']};
+const SKY_TONES = ['plum','rose','teal','violet'];
+function skyRng(s){ return () => { s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function skyScene(i, tone, uid){
+  const [top, bot, a, b] = SKY_TONE[tone], r = skyRng(i * 97 + 7), id = 's' + i + (uid || ''), k = i % 3;
+  let stars = ''; for (let n = 0; n < 34; n++) stars += `<circle cx="${(r()*400).toFixed(1)}" cy="${(r()*170).toFixed(1)}" r="${(.5+r()*1.2).toFixed(2)}" fill="#fff" opacity="${(.2+r()*.6).toFixed(2)}"/>`;
+  let art = '';
+  if (k === 0) { const cx = 110 + r()*180, cy = 95 + r()*20;
+    art = `<circle cx="${cx}" cy="${cy}" r="70" fill="url(#o${id})"/><circle cx="${cx}" cy="${cy}" r="34" fill="none" stroke="#fff" stroke-opacity=".18"/>
+      <circle cx="${cx}" cy="${cy}" r="52" fill="none" stroke="#fff" stroke-opacity=".08"/><circle cx="${cx}" cy="${cy}" r="76" fill="none" stroke="#fff" stroke-opacity=".05"/>
+      <circle cx="${cx+52}" cy="${cy-6}" r="4" fill="${b}" filter="url(#f${id})"/><circle cx="${cx+52}" cy="${cy-6}" r="2" fill="#fff"/>`; }
+  else if (k === 1) { for (let w = 0; w < 4; w++) { let d = 'M0 ' + (130 + w*16);
+      for (let x = 0; x <= 400; x += 10) d += ` L${x} ${(130 + w*16 + (12 + w*5) * Math.sin(x / (34 + w*6) + i + w)).toFixed(1)}`;
+      art += `<path d="${d}" fill="none" stroke="url(#l${id})" stroke-width="${2.2 - w*.4}" opacity="${1 - w*.2}"/>`; }
+    art = `<g filter="url(#f${id})" opacity=".8">${art}</g>${art}`; }
+  else { const pts = []; for (let n = 0; n < 7; n++) pts.push([40 + n*50 + r()*24, 50 + r()*110]);
+    art = `<polyline points="${pts.map(p => p.join(',')).join(' ')}" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="1"/>` +
+      pts.map((p, n) => `<circle cx="${p[0]}" cy="${p[1]}" r="${n%3?5:8}" fill="${n%2?a:b}" filter="url(#f${id})"/><circle cx="${p[0]}" cy="${p[1]}" r="${n%3?1.8:2.6}" fill="#fff"/>`).join(''); }
+  return `<svg viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" role="img" aria-label="night scene">
+    <defs><linearGradient id="g${id}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${top}"/><stop offset="1" stop-color="${bot}"/></linearGradient>
+      <radialGradient id="o${id}"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".35" stop-color="${a}" stop-opacity=".35"/><stop offset="1" stop-color="${b}" stop-opacity="0"/></radialGradient>
+      <linearGradient id="l${id}" x1="0" x2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>
+      <filter id="f${id}" filterUnits="userSpaceOnUse" x="0" y="0" width="400" height="250"><feGaussianBlur stdDeviation="5"/></filter></defs>
+    <rect width="400" height="250" fill="url(#g${id})"/>${stars}${art}
+    <path d="M0 214C60 196 120 204 190 196S320 184 400 200V250H0Z" fill="#07070a" opacity=".92"/>
+    <path d="M0 214C60 196 120 204 190 196S320 184 400 200" fill="none" stroke="${a}" stroke-opacity=".35"/></svg>`;
+}
+// The frame's sky (behind the sidebar and the top bar; the sheet covers the rest): seeded stars, some twinkling,
+// a constellation along the top bar and a dark horizon with a pink rim at the foot of the sidebar. Redrawn on resize.
+function frameSky(){
+  const host = $("frameSky"); if (!host) return;
+  const W = innerWidth, H = innerHeight, r = skyRng(2026), side = Math.min(240, W), bar = 48;
+  let st = "";
+  for (let n = 0; n < Math.round((W + H) / 7); n++) {
+    // most stars in the frame (sidebar column or top bar row); a few anywhere (the sheet hides those)
+    const inSide = r() < .62, x = inSide ? r() * side : side + r() * (W - side), y = inSide ? r() * H : r() * (bar + 6);
+    const big = r() < .08, o = (.18 + r() * .6).toFixed(2), rad = (big ? 1.3 + r() * .7 : .4 + r() * .8).toFixed(2);
+    st += r() < .3 ? `<circle class="tw" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${rad}" fill="#fff" style="--o:${o};--d:${(2.5 + r() * 4).toFixed(1)}s;--l:-${(r() * 5).toFixed(1)}s"/>`
+                   : `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${rad}" fill="#fff" opacity="${o}"/>`;
+    if (big) st += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(+rad * 3).toFixed(1)}" fill="${r() < .5 ? "#ff6ec7" : "#a96bff"}" opacity=".18" filter="url(#fsBlur)"/>`;
   }
-  function renderLearnback(lb, projects) {
-    var box = $("lbbox");
-    if (!lb.enabled) { box.innerHTML = "<b>Learn back</b> <span class=muted>disabled: " + esc(lb.reason) + "</span>"; return; }
-    var ticks = projects.filter(function (p) { return !p.personal; }).map(function (p) {
-      return "<label><input type=checkbox class=lbp value='" + esc(p.id) + "'> " + esc(p.id) + "</label>"; }).join(" ") +
-      " <label><input type=checkbox class=lbp value='common'> common</label>";
-    box.innerHTML = "<b>Learn back</b> <span class=muted>" + esc(lb.llm) + " / " + esc(lb.model) + " / " + esc(lb.tz) + "</span><br>" + ticks +
-      "<br><button class=act id=lbnow>Start learn back now</button> <select id=lbkind><option>once</option><option>daily</option><option>weekly</option></select>" +
-      " <input id=lbat placeholder='2026-11-01T02:00 | 02:00 | fri 00:00'> <button id=lbsched>Schedule</button>" +
-      "<h4>Schedules</h4>" + lb.schedules.map(function (s) {
-        return "<div>" + esc(s.kind) + " " + esc(s.at) + " next " + esc(s.next_utc) + " " + esc(s.projects.join(", ")) +
-          (s.enabled ? "" : " (off)") + " <button data-sid='" + esc(s.id) + "'>delete</button></div>"; }).join("") +
-      "<h4>Runs</h4>" + (lb.running.length ? "<div>running: " + esc(lb.running[0].id) + "</div>" : "") +
-      lb.runs.map(function (r) { return "<div>" + esc(r.started) + " " + esc(r.state) + " " + esc(r.projects.join(", ")) + "</div>"; }).join("");
-    function picked() { return Array.prototype.map.call(box.querySelectorAll(".lbp:checked"), function (i) { return i.value; }); }
-    $("lbnow").onclick = function () { api("POST", "/home/learnback/run", {projects: picked()}).then(loadLessonsTab).catch(function (e) { msg(e.message); }); };
-    $("lbsched").onclick = function () { api("POST", "/home/learnback/schedules", {projects: picked(), kind: $("lbkind").value, at: $("lbat").value}).then(loadLessonsTab).catch(function (e) { msg(e.message); }); };
-    box.querySelectorAll("button[data-sid]").forEach(function (b) {
-      b.onclick = function () { api("POST", "/home/learnback/schedules/" + b.dataset.sid + "/delete").then(loadLessonsTab); };
-    });
-  }
-  function loadLessons() {
-    var p = $("lproject").value;
-    api("GET", "/home/lessons?project=" + encodeURIComponent(p)).then(function (d) {
-      $("llist").innerHTML = "<table>" + d.lessons.map(function (l) {
-        var act = (l.status === "proposed" || l.status === "contested") ?
-          " <button data-a=approve data-id='" + esc(l.id) + "'>approve</button> <button data-a=reject data-id='" + esc(l.id) + "'>reject</button>" : "";
-        return "<tr><td><b>" + esc(l.title) + "</b> <span class=muted>" + esc(l.status) + " " + esc(l.by || "") + "</span>" + act +
-          "<br>" + esc(l.text) + "</td></tr>"; }).join("") + "</table>";
-      $("llist").querySelectorAll("button[data-a]").forEach(function (b) {
-        b.onclick = function () {
-          api("POST", "/home/lessons/decide", {project: p, ids: [b.dataset.id], decision: b.dataset.a, reason: ""}).then(loadLessons);
-        };
-      });
-    }).catch(function (e) { msg(e.message); });
-  }
+  const pts = []; for (let n = 0; n < 6; n++) pts.push([side + 120 + n * Math.min(150, (W - side - 360) / 6) + r() * 40, 10 + r() * 30]);
+  const con = W - side > 600 ? `<polyline points="${pts.map(p => p.map(v => v.toFixed(1)).join(",")).join(" ")}" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width=".8"/>` +
+    pts.map((p, n) => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${n % 2 ? 3 : 4.5}" fill="${n % 2 ? "#ff6ec7" : "#a96bff"}" opacity=".55" filter="url(#fsBlur)"/><circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="1.3" fill="#fff"/>`).join("") : "";
+  const hy = H - 70, hill = `M0 ${hy + 18} C${side * .25} ${hy - 4} ${side * .55} ${hy + 10} ${side * .8} ${hy} S${side * 1.1} ${hy - 6} ${side + 40} ${hy + 8}`;
+  const svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><defs><filter id="fsBlur" filterUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><feGaussianBlur stdDeviation="3"/></filter>
+    <linearGradient id="fsHill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#0b0812"/><stop offset="1" stop-color="#050507"/></linearGradient></defs>
+    ${st}${con}<path d="${hill} V${H} H0Z" fill="url(#fsHill)" opacity=".95"/><path d="${hill}" fill="none" stroke="#ff6ec7" stroke-opacity=".4"/></svg>`;
+  host.querySelector("svg")?.remove(); host.insertAdjacentHTML("afterbegin", svg);
+}
+frameSky(); { let t; addEventListener("resize", () => { clearTimeout(t); t = setTimeout(frameSky, 150); }); }
+// Themes (Rowan 2026-11-09): one layout (art direction P02 Framed sheet), two paints. Kept per viewer in localStorage.
+const THEMES = [
+  {id:"kawaii", name:"Kawaii scrapbook", desc:"Warm cream paper, brown ink, peach and rose, washi tape and handwriting (style 02)."},
+  {id:"aura", name:"Aura starry night", desc:"Near-black glass, pink to violet glow and a night sky around the frame (style 22-1)."},
+  {id:"slate", name:"Dark slate soft UI", desc:"Indigo slate, softly raised cards with deep shadows, soft neon accents (style 14)."}];
+const theme = () => { const t = document.documentElement.dataset.theme; return THEMES.some(x => x.id === t) ? t : "kawaii"; };
+// style 02: no photos either; a seeded scrapbook scrap (gingham, a bear, hearts and sparkles) fills the image slots
+function kawaiiArt(i, uid){
+  const r = skyRng(i * 53 + 11), id = "k" + i + (uid || ""), tones = [["#f2c9b0", "#fbe1e1"], ["#f3d38a", "#fbeec7"], ["#e89a9a", "#f6dcc4"], ["#c9dcc3", "#eef5ea"]][i % 4];
+  let deco = ""; for (let n = 0; n < 7; n++) { const x = (20 + r() * 360).toFixed(0), y = (18 + r() * 120).toFixed(0);
+    deco += n % 2 ? `<text x="${x}" y="${y}" font-size="${(14 + r() * 10).toFixed(0)}" fill="#e89a9a" opacity=".8">♡</text>` : `<text x="${x}" y="${y}" font-size="${(12 + r() * 8).toFixed(0)}" fill="#d9a441" opacity=".85">✦</text>`; }
+  const bx = 150 + r() * 100;
+  return `<svg viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" role="img" aria-label="scrapbook scrap">
+    <defs><pattern id="p${id}" width="22" height="22" patternUnits="userSpaceOnUse"><rect width="22" height="22" fill="${tones[1]}"/>
+      <rect width="11" height="22" fill="${tones[0]}" opacity=".35"/><rect width="22" height="11" fill="${tones[0]}" opacity=".35"/></pattern></defs>
+    <rect width="400" height="250" fill="url(#p${id})"/>${deco}
+    <g transform="translate(${bx.toFixed(0)} 120) scale(1.35)"><circle cx="18" cy="20" r="11" fill="#8a5f45"/><circle cx="62" cy="20" r="11" fill="#8a5f45"/>
+      <circle cx="18" cy="20" r="5" fill="#c99a7c"/><circle cx="62" cy="20" r="5" fill="#c99a7c"/><ellipse cx="40" cy="44" rx="30" ry="27" fill="#9b6b4f"/>
+      <ellipse cx="40" cy="52" rx="13" ry="10" fill="#d9b394"/><circle cx="29" cy="42" r="3" fill="#2e211b"/><circle cx="51" cy="42" r="3" fill="#2e211b"/>
+      <ellipse cx="40" cy="49" rx="4" ry="3" fill="#2e211b"/><path d="M36 55q4 3 8 0" stroke="#2e211b" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+      <circle cx="22" cy="52" r="4" fill="#f0a3a0" opacity=".6"/><circle cx="58" cy="52" r="4" fill="#f0a3a0" opacity=".6"/></g></svg>`;
+}
+// style 14: its soft thumbnail gradient with raised discs
+function slateArt(i){ const r = skyRng(i * 17 + 3);
+  return `<svg viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" role="img" aria-label="soft shapes"><defs>
+    <linearGradient id="sl${i}" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#f6b6e0"/><stop offset=".5" stop-color="#a68bff"/><stop offset="1" stop-color="#6d5cf0"/></linearGradient></defs>
+    <rect width="400" height="250" fill="url(#sl${i})"/><circle cx="${(90 + r() * 60).toFixed(0)}" cy="90" r="46" fill="#fff" opacity=".25"/>
+    <circle cx="${(260 + r() * 60).toFixed(0)}" cy="160" r="70" fill="#fff" opacity=".16"/><rect x="40" y="190" width="320" height="10" rx="5" fill="#fff" opacity=".35"/>
+    <rect x="40" y="190" width="${(120 + r() * 160).toFixed(0)}" height="10" rx="5" fill="#5b6cff"/></svg>`; }
+const slotArt = (i, uid) => ({aura: () => skyScene(i, SKY_TONES[i % 4], uid), slate: () => slateArt(i)}[theme()] || (() => kawaiiArt(i, uid)))();
+function drawThemeMenu(){
+  $("themeName").textContent = THEMES.find(t => t.id === theme()).name;
+  $("themeMenu").innerHTML = THEMES.map(t => '<button data-theme-pick="' + t.id + '" class="' + (t.id === theme() ? "on" : "") + '"><span class="sw ' + t.id + '"></span><span><b>' + t.name +
+    (t.id === "kawaii" ? ' · default' : '') + '</b><small>' + t.desc + '</small></span></button>').join("");
+  $("themeMenu").querySelectorAll("[data-theme-pick]").forEach(b => b.onclick = () => setTheme(b.dataset.themePick));
+}
+function setTheme(id){
+  document.documentElement.dataset.theme = THEMES.some(x => x.id === id) ? id : "kawaii";
+  try { localStorage.setItem("kh_home_theme", theme()); } catch(e) {}
+  $("themeMenu").classList.add("hide"); drawThemeMenu();
+  const v = store.get("view"), vi = Math.max(0, VIEWS.indexOf(v)); $("sideSky").innerHTML = slotArt(vi, "side");
+  if ($("loginSky")) $("loginSky").innerHTML = slotArt(5, "login");
+  if (window.drawCanvas && document.getElementById("ffCv")) window.drawCanvas();   // canvas wires read the theme's colours
+}
+$("themeBtn").onclick = e => { e.stopPropagation(); drawThemeMenu(); $("themeMenu").classList.toggle("hide"); };
+document.addEventListener("click", e => { if (!e.target.closest(".themeBox")) $("themeMenu").classList.add("hide"); });
+drawThemeMenu();
+function show(v, sub){
+  if (!isMaint) { v = "sync"; if (!["receive","jobs"].includes(sub)) sub = "receive"; }
+  VIEWS.forEach(x => $("v-"+x).classList.toggle("hide", x !== v));
+  document.querySelectorAll("#nav a").forEach(a => a.classList.toggle("on", a.dataset.v === v));
+  $("sideHelp").innerHTML = HELP[v];
+  const vi = Math.max(0, VIEWS.indexOf(v)); $("sideSky").innerHTML = slotArt(vi, "side");
+  store.set("view", v);
+  if (v === "sync") {
+    sub = SUBS.includes(sub) ? sub : (store.get("sub") || "receive");
+    SUBS.forEach(x => $("v-"+x).classList.toggle("hide", x !== sub));
+    document.querySelectorAll("#seg a").forEach(a => a.classList.toggle("on", a.dataset.s === sub));
+    store.set("sub", sub); history.replaceState(null, "", "#sync/" + sub);
+    if (sub === "jobs") loadJobs();
+    if (sub === "give") { loadKeys(); loadGiven(); if (!localLoaded) loadLocal(); }
+    if (sub === "accounts") { loadAccounts(); loadGrants(); }
+  } else history.replaceState(null, "", "#" + v);
+  if (v === "knowledge" && !projectsCache) loadProjects();
+  if (v === "review") loadReview();
+  if (v === "embedding") loadEmbedding();
+  if (v === "audit") loadAudit(0);
+  if (v === "space" && window.loadFlows) loadFlows("space");
+  if (v === "flows" && window.loadFlows) loadFlows("flow");
+  if (v === "spacedata" && window.loadSpaceData) loadSpaceData();
+  document.body.classList.toggle("kc-wide", v === "space" || v === "flows" || v === "spacedata");
+  if (v === "lessons") { if (!projectsCache) loadProjects().then(renderLessonProjects); else renderLessonProjects(); loadLearnback(); }
+}
 
-  // ---- sync ----
-  function connect() {
-    var key = $("skey").value.trim();
-    api("POST", "/sync/connect", {key: key}).then(function (d) {
-      $("smanifest").innerHTML = "<p>Connected to " + esc(d.giver) + "</p>" + d.manifest.projects.map(function (p) {
-        return "<div><label><input type=checkbox class=sp value='" + esc(p.id) + "'> <b>" + esc(p.id) + "</b></label> " +
-          Object.keys(p.parts).map(function (k) { return k + " " + p.parts[k]; }).join(", ") + "</div>"; }).join("") +
-        "<br><button class=act id=spull>Pull selected</button>";
-      $("spull").onclick = function () {
-        var sel = Array.prototype.map.call(document.querySelectorAll(".sp:checked"), function (i) { return {project: i.value}; });
-        api("POST", "/sync/pull", {key: key, selection: sel}).then(function () { showSub("jobs"); }).catch(function (e) { msg(e.message); });
-      };
-    }).catch(function (e) { msg(e.message); });
-  }
-  function loadKeys() {
-    api("GET", "/sync/keys").then(function (d) {
-      $("klist").innerHTML = "<h4>Keys</h4>" + d.keys.map(function (k) {
-        return "<div>" + esc(k.label) + " <code>" + esc(k.kid) + "</code> until " + esc(k.expires_at) +
-          (k.revoked_at ? " (revoked)" : " <button data-kid='" + esc(k.kid) + "'>revoke</button>") + "</div>"; }).join("");
-      $("klist").querySelectorAll("button[data-kid]").forEach(function (b) {
-        b.onclick = function () { api("DELETE", "/sync/keys/" + b.dataset.kid).then(loadKeys); };
-      });
-    }).catch(function (e) { msg(e.message); });
-    api("GET", "/sync/given").then(function (d) {
-      $("kgiven").innerHTML = "<h4>Given</h4>" + d.given.map(function (g) {
-        return "<div>" + esc(g.job_id) + " " + esc(g.state) + " " + esc(g.updated) + "</div>"; }).join("");
-    }).catch(function () {});
-  }
-  function makeKey() {
-    var ps = $("kprojects").value.split(",").map(function (s) { return s.trim(); }).filter(Boolean);
-    api("POST", "/sync/keys", {label: $("klabel").value, days: +$("kdays").value || 7, projects: ps.length ? ps : null}).then(function (d) {
-      $("knew").innerHTML = "<p>Copy this key now; it is shown once:</p><code>" + esc(d.key) + "</code>";
-      loadKeys();
-    }).catch(function (e) { msg(e.message); });
-  }
-  function loadJobs() {
-    api("GET", "/sync/jobs").then(function (d) {
-      $("sub-jobs").innerHTML = d.jobs.length ? d.jobs.map(function (j) {
-        return "<div><code>" + esc(j.id) + "</code> " + esc(j.state) + " from " + esc(j.source) + " " + esc(j.started) +
-          ((j.state === "running" || j.state === "queued") ? " <button data-j='" + esc(j.id) + "'>cancel</button>" : "") +
-          "<br><span class=muted>" + esc(JSON.stringify(j.doc.projects || {})) + "</span></div>"; }).join("") : "<span class=muted>No jobs.</span>";
-      $("sub-jobs").querySelectorAll("button[data-j]").forEach(function (b) {
-        b.onclick = function () { api("POST", "/sync/jobs/" + b.dataset.j + "/cancel").then(loadJobs); };
-      });
-    }).catch(function (e) { msg(e.message); });
-  }
-  function loadAccounts() {
-    api("GET", "/sync/accounts").then(function (d) {
-      $("sub-accounts").innerHTML = d.accounts.length ? d.accounts.map(function (a) {
-        return "<div>" + esc(a.email) + " <code>" + esc(a.password || "") + "</code> <button data-e='" + esc(a.email) + "'>sent</button></div>"; }).join("")
-        : "<span class=muted>No new accounts.</span>";
-      $("sub-accounts").querySelectorAll("button[data-e]").forEach(function (b) {
-        b.onclick = function () { api("POST", "/sync/accounts/" + encodeURIComponent(b.dataset.e) + "/sent").then(loadAccounts); };
-      });
-    }).catch(function (e) { msg(e.message); });
-  }
+// ── receive ──
+async function connectKey(){
+  const key = $("keyIn").value.trim(); if (!key) return toast("Paste a key first.");
+  $("connectBtn").disabled = true; $("hs").innerHTML = '<span class="pill running">checking…</span>';
+  try {
+    conn = await api("POST","/sync/connect",{key});
+    const c = conn.handshake.checks;
+    $("hs").innerHTML = '<span class="pill ok">connected</span><span class="muted">' + esc(conn.source) + '</span>' +
+      ["protocol","emb_model","emb_dim","probe"].map(k => '<span class="pill ' + (c[k]?"ok":"bad") + '">' + k.replace("emb_","") + (k==="probe" ? " " + conn.handshake.cosine : k==="emb_model" ? " " + esc(conn.handshake.source.emb_model) : "") + '</span>').join("");
+    pick = {}; people = {}; conn.projects.forEach(p => { people[p.id] = (p.members||[]).length > 0 });
+    const L = conn.limits || {}, bits = [];
+    if ((L.parts||[]).length) bits.push("parts: " + L.parts.filter(x => x !== "hotlog").join(", "));
+    if (L.since || L.until) bits.push("rows " + (L.since||"…") + " → " + (L.until||"…"));
+    if (L.members === false) bits.push("no member lists");
+    $("limits").textContent = "The giver limited this key: " + (bits.join(" · ") || "nothing (everything is visible)") +
+      (conn.as === "reader" ? ". The giving KH verified this key (" + (conn.verified.label || conn.verified.kid) + "): you get read access here to the projects you pull; member lists are not applied." :
+       conn.members_here ? "" : ". This KH has sign-in off, so member lists are shown but not applied.");
+    $("limits").classList.remove("hide");
+    renderProjects(); $("pickBox").classList.remove("hide"); $("optBox").classList.remove("hide");
+  } catch(e){
+    conn = null; $("pickBox").classList.add("hide"); $("optBox").classList.add("hide");
+    const hs = e.data && e.data.detail && e.data.detail.handshake;
+    $("hs").innerHTML = '<span class="pill bad">' + (hs ? "embedding mismatch" : "refused") + '</span><span class="muted">' + esc(hs ? ("giver uses " + hs.source.emb_model + " (" + hs.source.emb_dim + "), this KH " + hs.local.emb_model + " (" + hs.local.emb_dim + "); probe cosine " + hs.cosine) : e.message) + '</span>';
+  } finally { $("connectBtn").disabled = false; }
+}
+function cnt(p, part){ const c = p.counts || {}; return part === "log" ? (c.log||0) + (c.hotlog||0) : (c[part]||0); }
+function renderProjects(){
+  $("projRows").innerHTML = conn.projects.map(p => {
+    const on = !!pick[p.id], parts = pick[p.id] || [];
+    if (p.blocked) return '<tr><td><span class="ck" style="opacity:.3;cursor:not-allowed" title="' + esc(p.blocked) + '"></span></td><td><b>' + esc(p.id) +
+      '</b><div class="muted" style="font-size:11px">' + esc(p.blocked) + '</div></td><td colspan="3"></td></tr>';
+    return '<tr><td><span class="ck' + (on?" on":"") + '" onclick="toggleProject(\'' + esc(p.id) + '\')"></span></td>' +
+      '<td><b>' + esc(p.id) + '</b><div class="muted" style="font-size:11px">' + esc((p.descriptor||"").slice(0,90)) + '</div></td>' +
+      '<td><span class="chip">' + (p.exists_here ? "exists · merge" : "new here") + '</span></td><td>' +
+      PARTS.map(part => { const n = cnt(p, part); return '<button class="part' + (on && parts.includes(part) ? " on" : "") + '"' + (n ? "" : " disabled") +
+        ' onclick="togglePart(\'' + esc(p.id) + '\',\'' + part + '\')">' + part + '<b>' + fmt(n) + '</b></button>'; }).join("") + '</td><td>' +
+      (conn.as === "reader" ? '<span class="muted" style="font-size:11px">not applied</span>' : (p.members||[]).length ? '<button class="part' + (people[p.id] ? " on" : "") + '" title="' + esc(p.members.map(m => m.email + " (" + m.level + ", " + (m.login||"sso") + ")").join("\n")) +
+        '" onclick="people[\'' + esc(p.id) + '\']=!people[\'' + esc(p.id) + '\'];renderProjects()">people<b>' + p.members.length + '</b></button>'
+        : '<span class="muted" style="font-size:11px">' + esc(p.members_note || "none") + '</span>') + '</td></tr>';
+  }).join("") || '<tr><td colspan="5" class="muted">The giving KH offers no projects with this key.</td></tr>';
+  const n = Object.keys(pick).length, rows = Object.entries(pick).reduce((s,[id,parts]) => { const p = conn.projects.find(x=>x.id===id); return s + parts.reduce((a,part)=>a+cnt(p,part),0) }, 0);
+  $("pickSum").textContent = n ? n + " project(s), up to " + fmt(rows) + " rows before the time filter" : "nothing ticked yet";
+}
+function toggleProject(id){ if (pick[id]) delete pick[id]; else { const p = conn.projects.find(x=>x.id===id); if (p.blocked) return; pick[id] = DEFAULT_ON.filter(part => cnt(p,part) > 0); } renderProjects(); }
+function togglePart(id, part){ const cur = pick[id] || []; pick[id] = cur.includes(part) ? cur.filter(x=>x!==part) : cur.concat(part); if (!pick[id].length) delete pick[id]; renderProjects(); }
+function tickAll(on){ pick = {}; if (on) conn.projects.filter(p => !p.blocked).forEach(p => { pick[p.id] = DEFAULT_ON.filter(part => cnt(p,part) > 0) }); renderProjects(); }
+async function startPull(){
+  const selection = Object.entries(pick).map(([project, parts]) => ({project, parts, members: !!people[project]}));
+  if (!selection.length) return toast("Tick at least one project.");
+  $("startBtn").disabled = true;
+  try {
+    const job = await api("POST","/sync/pull",{key: $("keyIn").value.trim(), selection, since: $("since").value, until: $("until").value,
+      include_undated: $("undated").checked, dry_run: $("dry").checked});
+    selJob = job.id; store.set("job", job.id); toast("Sync started: " + job.id); show("sync", "jobs");
+  } catch(e){ toast(e.message, 6000); } finally { $("startBtn").disabled = false; }
+}
 
-  // ---- boot ----
-  function boot() {
-    msg("");
-    api("GET", "/home/config").then(function (c) {
-      cfg = c; $("ver").textContent = c.kh_version + " / " + c.emb_model;
-      return api("GET", "/sync/me").then(function (m) {
-        me = m;
-        $("who").textContent = c.auth ? (m.email || "") + (m.maintainer ? " (maintainer)" : "") : "local maintainer (sign-in off)";
-        $("signin").classList.add("hidden");
-        $("signout").classList.toggle("hidden", !c.auth);
-        document.querySelectorAll(".maint").forEach(function (b) { b.classList.toggle("hidden", !m.maintainer); });
-        showTab(m.maintainer ? "knowledge" : "sync");
-      }).catch(function (e) {
-        if (e.status === 403) { msg("Not a registered KH user."); return; }
-        if (c.auth) { $("signin").classList.remove("hidden"); $("who").textContent = "not signed in"; return; }
-        msg(e.message);
-      });
-    }).catch(function (e) { msg(e.message); });
-  }
+// ── give ──
+let localLoaded = false;
+async function loadLocal(){
+  localLoaded = true;
+  $("kProjects").innerHTML = '<span class="muted">Loading the projects…</span>';
+  try { const m = await api("GET","/sync/local");
+    $("kProjects").innerHTML = m.projects.map(p => '<button class="part" data-p="' + esc(p.id) + '" onclick="this.classList.toggle(\'on\')"' +
+      (p.personal ? ' title="personal project: given only when ticked"' : '') + '>' + esc(p.id) + (p.personal ? ' <span class="vis">personal</span>' : '') + '</button>').join("") || '<span class="muted">no projects</span>';
+  } catch(e){}
+}
+function tickAllLocal(on){ document.querySelectorAll("#kProjects .part").forEach(b => b.classList.toggle("on", on)); }
+$("kParts").innerHTML = PARTS.map(p => '<button class="part" data-p="' + p + '" onclick="this.classList.toggle(\'on\')">' + p + '</button>').join("");
+async function makeKey(){
+  const projects = [...document.querySelectorAll("#kProjects .part.on")].map(b => b.dataset.p);
+  const parts = [...document.querySelectorAll("#kParts .part.on")].map(b => b.dataset.p);
+  try { const k = await api("POST","/sync/keys",{label:$("kLabel").value, days:+$("kDays").value, public_url:$("kUrl").value, projects,
+      parts, since: $("kSince").value, until: $("kUntil").value, members: $("kMembers").checked});
+    $("newKeyText").textContent = k.key; $("newKey").classList.remove("hide"); loadKeys();
+  } catch(e){ toast(e.message, 6000); }
+}
+function copyKey(){ navigator.clipboard.writeText($("newKeyText").textContent).then(() => toast("Key copied.")); }
+async function loadKeys(){
+  try { const d = await api("GET","/sync/keys");
+    $("sKeys").textContent = d.keys.filter(k => k.state === "active").length;
+    $("keyRows").innerHTML = d.keys.map(k => '<tr><td><b>' + esc(k.label) + '</b></td><td class="mono">' + esc(k.kid) + '</td><td>' +
+      (k.projects.length ? k.projects.map(p => '<span class="chip">' + esc(p) + '</span> ').join("") : '<span class="muted">all</span>') + '</td><td style="font-size:11px">' +
+      ((k.parts||[]).filter(x => x !== "hotlog").join(", ") || "all parts") + (k.since || k.until ? "<br>" + esc((k.since||"…") + " → " + (k.until||"…")) : "") +
+      "<br>" + (k.members === false ? "no people" : "people" + (Object.keys(k.member_counts||{}).length ? " (" + Object.values(k.member_counts).reduce((a,b)=>a+b,0) + ")" : "")) + '</td><td>' + esc(k.created_by) +
+      '</td><td>' + when(k.expires_at) + '</td><td>' + when(k.last_used_at) + '</td><td><span class="pill ' + k.state + '">' + k.state + '</span></td><td>' +
+      (k.state === "active" ? '<button class="btn r s" onclick="revoke(\'' + esc(k.kid) + '\')">Revoke</button>' : "") + '</td></tr>').join("") ||
+      '<tr><td colspan="9" class="muted">No keys yet.</td></tr>';
+  } catch(e){}
+}
+async function revoke(kid){ if (!confirm("Revoke key " + kid + "? The receiving KH can no longer use it.")) return;
+  try { await api("DELETE","/sync/keys/" + kid); toast("Key revoked."); loadKeys(); } catch(e){ toast(e.message); } }
 
-  document.querySelectorAll("#tabs button").forEach(function (b) { b.onclick = function () { showTab(b.dataset.tab); }; });
-  document.querySelectorAll(".sub button").forEach(function (b) { b.onclick = function () { showSub(b.dataset.sub); }; });
-  $("pcards").onclick = function (ev) {
-    var a = ev.target.closest("a[data-part]"); if (!a) return; ev.preventDefault(); loadItems(a.dataset.p, a.dataset.part, 0);
-  };
-  $("pfilter").oninput = loadProjects; $("pshowpersonal").onchange = loadProjects;
-  $("lload").onclick = loadLessons;
-  $("ladd").onclick = function () {
-    api("POST", "/home/lessons", {project: $("lproject").value, title: $("ltitle").value, text: $("ltext").value}).then(function () {
-      $("ltitle").value = ""; $("ltext").value = ""; loadLessons(); }).catch(function (e) { msg(e.message); });
-  };
-  $("sconnect").onclick = connect; $("kmake").onclick = makeKey;
-  $("signin").onclick = startLogin;
-  $("signout").onclick = function () { store.removeItem("kh_access"); store.removeItem("kh_refresh"); location.reload(); };
-  boot();
+// ── pulls receivers run with this KH's keys (giver side) ──
+async function loadGiven(){
+  let d; try { d = await api("GET","/sync/given"); } catch(e){ return; }
+  const running = d.given.filter(g => g.state === "running" && !g.silent).length;
+  $("givenCnt").textContent = running; $("givenCnt").classList.toggle("hide", !running);
+  $("givenList").innerHTML = d.given.map(g => { const p = g.progress || {}, st = g.silent ? "interrupted" : g.state;
+    return '<div class="job" style="cursor:default"><div class="row"><b>' + esc(g.projects.join(", ") || "(nothing)") + '</b>' +
+      '<span class="pill ' + st + '" style="margin-left:auto">' + (g.silent ? "no news" : g.state) + (g.dry_run ? " · dry run" : "") + '</span></div>' +
+      bar({progress: p, state: st}) +
+      '<div class="row muted" style="font-size:11px"><span>' + (p.percent||0) + '% · ' + fmt(p.scanned) + ' / ' + fmt(p.total) + ' rows</span>' +
+      '<span style="margin-left:auto">key ' + esc(g.label) + ' (' + esc(g.kid) + ') · ' + esc(g.by || "?") + (g.receiver ? ' @ ' + esc(g.receiver) : '') +
+      ' · ' + when(g.started) + (g.finished ? ' → ' + when(g.finished) : ' · last news ' + when(g.updated)) + '</span></div>' +
+      (g.error ? '<div class="muted" style="font-size:11px;color:var(--rose-d)">' + esc(g.error) + '</div>' : '') + '</div>';
+  }).join("") || '<p class="muted">No receiver has pulled with a key from this KH yet (or it runs an older KH that does not report).</p>';
+  clearTimeout(givenTimer);
+  if (store.get("view") === "sync" && store.get("sub") === "give") givenTimer = setTimeout(loadGiven, running ? 1500 : 10000);
+}
+
+// ── read access members got from sync keys (receiver side) ──
+async function loadGrants(){
+  try { const d = await api("GET","/sync/grants");
+    $("grantRows").innerHTML = d.grants.map(g => '<tr><td><b>' + esc(g.email) + '</b></td><td><span class="chip">' + esc(g.project) + '</span></td><td style="font-size:11px">' +
+      esc(g.source) + '</td><td class="mono">' + esc(g.kid) + '</td><td class="mono">' + esc(g.job_id) + '</td><td>' + when(g.granted_at) +
+      '</td><td><button class="btn r s" data-e="' + esc(g.email) + '" data-p="' + esc(g.project) + '" onclick="removeGrant(this.dataset.e, this.dataset.p)">Remove</button></td></tr>').join("") ||
+      '<tr><td colspan="7" class="muted">No member has read access from a sync key.</td></tr>';
+  } catch(e){}
+}
+async function removeGrant(email, project){ if (!confirm("Take back read access of " + email + " on " + project + "?")) return;
+  try { await api("POST","/sync/grants/remove",{email, project}); toast("Read access removed."); loadGrants(); } catch(e){ toast(e.message); } }
+
+// ── accounts ──
+async function loadAccounts(){
+  try { const d = await api("GET","/sync/accounts");
+    const open = d.accounts.filter(a => !a.sent_at).length;
+    $("accCnt").textContent = open; $("accCnt").classList.toggle("hide", !open);
+    $("accRows").innerHTML = d.accounts.map(a => '<tr><td><b>' + esc(a.email) + '</b></td><td>' + a.projects.map(p => '<span class="chip">' + esc(p) + '</span> ').join("") +
+      '</td><td class="mono">' + (a.sent_at ? '<span class="muted">sent ' + when(a.sent_at) + '</span>' :
+        '<span class="pw" data-pw="' + esc(a.password) + '">••••••••</span> <button class="btn g s" onclick="const s=this.previousElementSibling;s.textContent=s.textContent.startsWith(\'•\')?s.dataset.pw:\'••••••••\'">show</button>' +
+        ' <button class="btn g s" onclick="navigator.clipboard.writeText(this.parentElement.querySelector(\'.pw\').dataset.pw).then(()=>toast(\'Copied.\'))">copy</button>') +
+      '</td><td>' + (a.applied ? '<span class="pill ok">set</span>' : '<span class="pill warn" title="' + esc(a.note) + '">not yet</span>') +
+      '</td><td style="font-size:11px">' + esc(a.source) + '</td><td>' + when(a.created_at) + '</td><td>' +
+      (a.sent_at ? '' : '<button class="btn s" onclick="markSent(\'' + esc(a.email) + '\')">Sent</button>') + '</td></tr>').join("") ||
+      '<tr><td colspan="7" class="muted">No account was created by a sync on this KH.</td></tr>';
+  } catch(e){}
+}
+async function markSent(email){ if (!confirm("Mark the password of " + email + " as sent? This KH will forget it.")) return;
+  try { await api("POST","/sync/accounts/" + encodeURIComponent(email) + "/sent", {forget:true}); toast("Marked as sent."); loadAccounts(); } catch(e){ toast(e.message); } }
+
+// ── jobs ──
+function bar(j, mini){ const p = (j.progress||{}).percent || 0, cls = j.state === "done" ? " fin" : ["failed","cancelled","interrupted"].includes(j.state) ? " err" : "";
+  return '<div class="prog' + (mini?" mini":"") + cls + '"><i style="width:' + p + '%"></i></div>'; }
+async function loadJobs(){
+  try { jobs = (await api("GET","/sync/jobs")).jobs; } catch(e){ return; }
+  const running = jobs.filter(j => j.state === "running").length;
+  $("sRun").textContent = running; $("runCnt").textContent = running; $("runCnt").classList.toggle("hide", !running);
+  $("syncCnt").textContent = running; $("syncCnt").classList.toggle("hide", !running);
+  if (!selJob) selJob = store.get("job") || (jobs[0] && jobs[0].id);
+  $("jobList").innerHTML = jobs.map(j => { const p = j.progress || {};
+    return '<div class="job' + (j.id===selJob?" sel":"") + '" onclick="pickJob(\'' + j.id + '\')"><div class="row"><b>' + esc(j.projects.join(", ") || "(nothing)") +
+      '</b><span class="pill ' + j.state + '" style="margin-left:auto">' + j.state + (j.dry_run ? " · dry run" : "") + '</span></div>' + bar(j) +
+      '<div class="row muted" style="font-size:11px"><span>' + (p.percent||0) + '% · ' + fmt(p.scanned) + ' / ' + fmt(p.total) + ' rows</span><span style="margin-left:auto">' + esc(j.source) + ' · ' + when(j.started) + '</span></div></div>';
+  }).join("") || '<p class="muted">No sync jobs yet. Start one under Receive.</p>';
+  if (selJob) loadJob(selJob);
+  clearTimeout(timer); timer = setTimeout(loadJobs, running ? 1500 : 10000);
+}
+function pickJob(id){ selJob = id; store.set("job", id); loadJobs(); }
+async function loadJob(id){
+  let j; try { j = await api("GET","/sync/jobs/" + id); } catch(e){ return; }
+  let created = 0;
+  const rows = j.plan.map(s => { const r = (j.report[s.project]||{})[s.part] || {}; created += (r.created||0) + (r.updated||0);
+    const pc = s.source_total ? Math.min(100, Math.round(100*s.scanned/s.source_total)) : 100;
+    return '<tr><td><b>' + esc(s.project) + '</b></td><td><span class="chip">' + (s.part === "hotlog" ? "log (recent)" : s.part) + '</span></td><td style="width:120px"><div class="prog mini' + (pc>=100?" fin":"") + '"><i style="width:' + pc + '%"></i></div><span class="muted" style="font-size:10px">' + fmt(s.scanned) + '/' + fmt(s.source_total) + '</span></td>' +
+      '<td>' + fmt(s.matched) + '</td><td>' + fmt(r.created) + '</td><td>' + fmt(r.updated) + '</td><td>' + fmt(r.unchanged) + '</td><td>' + fmt(r.skipped_newer) + '</td></tr>'; }).join("");
+  $("sRows").textContent = fmt(created);
+  const p = j.progress || {};
+  $("jobDetail").innerHTML = '<div class="row"><h2 style="margin:0">' + esc(j.id) + '</h2><span class="pill ' + j.state + '">' + j.state + '</span>' + (j.dry_run ? '<span class="pill warn">dry run</span>' : '') +
+    (j.state === "running" ? '<button class="btn r s" style="margin-left:auto" onclick="cancelJob(\'' + j.id + '\')">Stop</button>' : '') + '</div>' +
+    '<div class="row" style="margin-top:12px"><b style="font-size:26px">' + (p.percent||0) + '%</b><span class="muted">' + fmt(p.scanned) + ' of ' + fmt(p.total) + ' rows read on the giving KH</span></div>' + bar(j) +
+    '<p class="muted" style="margin:8px 0 12px">From <b>' + esc(j.source) + '</b> · by ' + esc(j.created_by) + ' · started ' + when(j.started) + (j.finished ? ' · finished ' + when(j.finished) : '') +
+    ' · range ' + (j.since || j.until ? esc((j.since||"…") + " → " + (j.until||"…")) + (j.include_undated ? " (+ undated)" : "") : "all time") + '</p>' +
+    (j.error ? '<div class="note e">' + esc(j.error) + '</div>' : '') +
+    ((j.reader_grants||[]).length ? '<div class="note i">Read access here (sync key, verified by the giver) for ' + esc(j.created_by) + ': ' + j.reader_grants.map(esc).join(", ") + '</div>' : '') +
+    '<div class="row" style="margin-bottom:10px">' + Object.entries(j.registry||{}).map(([id,st]) => '<span class="chip">' + esc(id) + ': ' + st + '</span>').join(" ") + '</div>' +
+    Object.entries(j.members||{}).map(([id,m]) => '<div class="muted" style="font-size:11px;margin-bottom:6px"><b>' + esc(id) + ' people:</b> ' +
+      [["added", (m.added||[]).length], ["kept (already here)", (m.kept||[]).length], ["new accounts", (m.new_accounts||[]).length],
+       ["no account", (m.no_account||[]).length], ["failed", (m.failed||[]).length], ["not applied", (m.skipped||[]).length]]
+        .filter(x => x[1]).map(x => x[0] + " " + x[1]).join(" · ") + (m.note ? " - " + esc(m.note) : "") + '</div>').join("") +
+    '<table><thead><tr><th>Project</th><th>Part</th><th>Read</th><th>In range</th><th>Created</th><th>Updated</th><th>Unchanged</th><th>Kept (newer here)</th></tr></thead><tbody>' +
+    (rows || '<tr><td colspan="8" class="muted">Nothing to copy: the ticked parts are empty on the giving KH.</td></tr>') + '</tbody></table>';
+}
+async function cancelJob(id){ try { await api("POST","/sync/jobs/" + id + "/cancel"); toast("Stopping after the current page…"); } catch(e){ toast(e.message); } }
+
+// ── knowledge ──
+let projectsCache = null, modalCtx = null;
+const PART_CLS = {knowledge:"k", log:"l", findings:"f", graph:"g"};
+const bytes = n => n == null ? "on HANA" : n < 1024 ? n + " B" : n < 1048576 ? (n/1024).toFixed(0) + " KB" : n < 1073741824 ? (n/1048576).toFixed(1) + " MB" : (n/1073741824).toFixed(2) + " GB";
+async function loadProjects(){
+  try { projectsCache = (await api("GET","/home/projects")).projects; } catch(e){ $("pgrid").innerHTML = '<div class="note e">' + esc(e.message) + '</div>'; return; }
+  renderCards();
+}
+function renderCards(){
+  if (!projectsCache) return;
+  const f = $("kFilter").value.trim().toLowerCase(), withPersonal = $("kPersonal").checked;
+  const list = projectsCache.filter(p => (withPersonal || !p.personal) && (!f || p.id.includes(f) || (p.descriptor||"").toLowerCase().includes(f)));
+  $("pgrid").innerHTML = list.map(p => {
+    const chips = Object.entries(p.counts).filter(([,n]) => n > 0).map(([part,n]) =>
+      '<button class="schip ' + (PART_CLS[part]||"") + '" onclick="openPart(\'' + esc(p.id) + '\',\'' + part + '\')">' + part + '<b>' + fmt(n) + '</b></button>').join("") +
+      (p.graph.exists && p.graph.bytes !== 0 ? '<button class="schip g" onclick="openGraph(\'' + esc(p.id) + '\')">graph<b>' + bytes(p.graph.bytes) + '</b></button>' : "");
+    return '<div class="card pcard"><h3>' + esc(p.id) + ' <span class="vis ' + esc(p.visibility) + '">' + esc(p.visibility) + '</span>' +
+      (p.personal ? '<span class="vis">personal</span>' : '') + '<button class="ibtn" title="People and levels" onclick="openMembers(\'' + esc(p.id) + '\')">i</button></h3>' +
+      '<div class="desc">' + esc(p.descriptor || "No description.") + '</div><div>' + (chips || '<span class="muted">empty</span>') + '</div></div>';
+  }).join("") || '<p class="muted">No project matches.</p>';
+}
+function openModal(title, sub){ $("mTitle").textContent = title; $("mSub").textContent = sub || ""; $("mBody").innerHTML = '<p class="muted">Loading…</p>'; $("mFoot").innerHTML = ""; $("modal").classList.remove("hide"); }
+function closeModal(){ $("modal").classList.add("hide"); modalCtx = null; }
+async function openPart(project, part){
+  modalCtx = {project, part, rows: [], total: 0};
+  openModal(project + " · " + part);
+  await morePart(10);
+}
+async function morePart(n){
+  const c = modalCtx; if (!c) return;
+  try {
+    const d = await api("GET", "/home/items?project=" + encodeURIComponent(c.project) + "&part=" + c.part + "&offset=" + c.rows.length + "&limit=" + (n || 0));
+    c.rows = c.rows.concat(d.rows); c.total = d.total; c.sorted = d.sorted;
+  } catch(e){ $("mBody").innerHTML = '<div class="note e">' + esc(e.message) + '</div>'; return; }
+  renderPart();
+}
+function renderPart(){
+  const c = modalCtx;
+  $("mSub").textContent = fmt(c.total) + " rows" + (c.sorted ? ", newest first" : ", store order (too many to sort)");
+  $("mBody").innerHTML = c.rows.map((r, n) => '<div class="irow"><div class="t">' + esc(when(r.time)) + '<br>' +
+    Object.entries(r.meta).filter(([k]) => ["kind","topic","status","author","category"].includes(k)).map(([k,v]) => '<span class="chip" title="' + k + '">' + esc(String(v).slice(0,40)) + '</span>').join(" ") +
+    '</div><div class="tx" onclick="this.classList.toggle(\'open\')" title="click to expand">' + esc(r.text) + (r.length > r.text.length ? " …" : "") +
+    '<div class="muted mono" style="font-size:10px;margin-top:4px">' + esc(r.id) + '</div></div><button class="del" title="Delete this row" onclick="deleteRow(' + n + ')">✕</button></div>').join("") ||
+    '<p class="muted">No rows.</p>';
+  const left = c.total - c.rows.length;
+  $("mFoot").innerHTML = (left > 0 ? '<button class="btn g s" onclick="morePart(20)">More (20)</button><button class="btn g s" onclick="morePart(0)">Show all (' + fmt(left) + ' more)</button>' : '<span class="muted">All ' + fmt(c.total) + ' rows shown.</span>') +
+    '<button class="btn r s" style="margin-left:auto" onclick="deletePart()">Delete the whole ' + esc(c.part) + ' part</button>';
+}
+async function deleteRow(n){
+  const c = modalCtx, r = c.rows[n];
+  if (!confirm("Delete this row of " + c.project + " / " + c.part + "?\n\n" + r.text.slice(0, 200))) return;
+  try { await api("POST","/home/items/delete",{project:c.project, part:c.part, ids:[r.id]}); c.rows.splice(n,1); c.total--; renderPart(); toast("Row deleted."); bumpCount(c.project, c.part, -1); }
+  catch(e){ toast(e.message, 6000); }
+}
+async function deletePart(){
+  const c = modalCtx;
+  const typed = prompt("This deletes ALL " + fmt(c.total) + " rows of " + c.project + " / " + c.part + ". It cannot be undone.\nType the project id to confirm:");
+  if (typed === null) return;
+  try { const d = await api("POST","/home/parts/delete",{project:c.project, part:c.part, confirm:typed}); toast("Deleted " + fmt(d.removed) + " rows."); closeModal(); loadProjects(); }
+  catch(e){ toast(e.message, 6000); }
+}
+function bumpCount(project, part, by){ const p = (projectsCache||[]).find(x => x.id === project); if (p) { p.counts[part] = Math.max(0, (p.counts[part]||0) + by); renderCards(); } }
+function openGraph(project){
+  const p = projectsCache.find(x => x.id === project);
+  openModal(project + " · graph", p.graph.where === "hana" ? "kept in HANA" : bytes(p.graph.bytes) + " on disk");
+  $("mBody").innerHTML = '<p>The project graph holds the entities and relations extracted from its knowledge (and code graphs imported into it). Rows are not listed here.</p>' +
+    '<p class="muted">Deleting it frees its disk space; the knowledge rows stay, and the graph is rebuilt only by new writes or a new import.</p>';
+  modalCtx = {project, part:"graph", total:0, rows:[]};
+  $("mFoot").innerHTML = '<button class="btn r s" style="margin-left:auto" onclick="deleteGraph()">Delete this graph</button>';
+}
+async function deleteGraph(){
+  const c = modalCtx;
+  const typed = prompt("Delete the whole graph of " + c.project + "? Type the project id to confirm:");
+  if (typed === null) return;
+  try { const d = await api("POST","/home/parts/delete",{project:c.project, part:"graph", confirm:typed}); toast(d.dropped ? "Graph deleted." : "Nothing to delete."); closeModal(); loadProjects(); }
+  catch(e){ toast(e.message, 6000); }
+}
+
+// ── people ──
+const LEVELS = ["owner","editable","readonly"];
+async function openMembers(project){
+  modalCtx = {project, part:"people"};
+  openModal(project + " · people");
+  let d; try { d = await api("GET","/home/members?project=" + encodeURIComponent(project)); } catch(e){ $("mBody").innerHTML = '<div class="note e">' + esc(e.message) + '</div>'; return; }
+  const ms = d.members || [];
+  $("mSub").textContent = ms.length + " people";
+  $("mBody").innerHTML = (d.note ? '<div class="note i">' + esc(d.note) + '</div>' : '') +
+    '<table><thead><tr><th>E-mail</th><th>Name</th><th>Level</th><th>Granted by</th><th></th></tr></thead><tbody>' +
+    ms.map(m => '<tr><td><b>' + esc(m.email) + '</b>' + (m.status && m.status !== "active" ? ' <span class="pill warn">' + esc(m.status) + '</span>' : '') + '</td><td>' +
+      esc([m.firstName, m.lastName].filter(Boolean).join(" ") || m.name || "") + '</td><td><select onchange="setLevel(\'' + esc(m.email) + '\', this.value)">' +
+      LEVELS.map(l => '<option' + (l === m.level ? ' selected' : '') + '>' + l + '</option>').join("") + '</select></td><td class="muted" style="font-size:11px">' +
+      esc(m.grantedBy || "") + '</td><td><button class="btn r s" onclick="removeMember(\'' + esc(m.email) + '\')">Remove</button></td></tr>').join("") +
+    '</tbody></table>' + (ms.length ? '' : '<p class="muted">Nobody is granted on this project' + (d.note ? '' : ' (a semi-public or public project is still read by everyone holding the shared roles)') + '.</p>');
+  $("mFoot").innerHTML = '<input type="email" id="mEmail" placeholder="name@company.com" style="width:260px"><select id="mLevel">' + LEVELS.map(l => '<option' + (l === "readonly" ? ' selected' : '') + '>' + l + '</option>').join("") +
+    '</select><button class="btn s" onclick="addMember()">Add</button><span class="muted" style="margin-left:auto;font-size:11px">Changes reach a person at their next sign-in token (a few minutes).</span>';
+}
+async function setLevel(email, level){ try { await api("PUT","/home/members",{project:modalCtx.project, email, level}); toast(email + " is now " + level + "."); } catch(e){ toast(e.message, 6000); openMembers(modalCtx.project); } }
+async function removeMember(email){ if (!confirm("Take " + email + " off " + modalCtx.project + "?")) return;
+  try { await api("POST","/home/members/remove",{project:modalCtx.project, email}); toast("Removed."); openMembers(modalCtx.project); } catch(e){ toast(e.message, 6000); } }
+async function addMember(){ const email = $("mEmail").value.trim(); if (!email) return toast("Type an e-mail.");
+  try { const r = await api("PUT","/home/members",{project:modalCtx.project, email, level:$("mLevel").value}); toast(r && r.created_user ? "Account created and added." : "Added."); openMembers(modalCtx.project); } catch(e){ toast(e.message, 8000); } }
+
+// ── lessons ──
+let lessonProject = null, lbState = null;
+function renderLessonProjects(){
+  const list = (projectsCache || []).filter(p => !p.personal);
+  $("lpList").innerHTML = '<div class="muted" style="margin:0 0 6px 6px;font-size:11px">PROJECTS</div>' + list.map(p => '<a class="' + (p.id === lessonProject ? 'on' : '') + '" onclick="openLessons(\'' + esc(p.id) + '\')">' + esc(p.id) + '</a>').join("");
+  $("lbProjects").innerHTML = list.map(p => '<button class="part" data-p="' + esc(p.id) + '" onclick="this.classList.toggle(\'on\')">' + esc(p.id) + '</button>').join("");
+  if (!lessonProject && list.length) openLessons(list.find(p => p.id === "lesson-learned") ? "lesson-learned" : list[0].id);
+}
+async function openLessons(project){
+  lessonProject = project; $("lpTitle").textContent = project; $("lpAdd").disabled = false;
+  document.querySelectorAll("#lpList a").forEach(a => a.classList.toggle("on", a.textContent === project));
+  $("lpRows").innerHTML = '<p class="muted">Loading…</p>';
+  let d; try { d = await api("GET","/home/lessons?project=" + encodeURIComponent(project)); } catch(e){ $("lpRows").innerHTML = '<div class="note e">' + esc(e.message) + '</div>'; return; }
+  $("lpRows").innerHTML = d.lessons.map(l => '<div class="lesson"><h4>' + esc(l.title) + ' <span class="pill ' + (l.status === "active" ? "ok" : l.status === "proposed" ? "pending" : "warn") + '">' + esc(l.status) + '</span>' +
+    (l.category && l.category !== "-" ? '<span class="chip">' + esc(l.category) + '</span>' : '') + '<span class="muted" style="margin-left:auto;font-size:11px;font-weight:400">' + esc(when(l.time)) + (l.by ? ' · ' + esc(l.by) : '') + '</span></h4>' +
+    '<p>' + esc(l.text) + '</p>' + (l.status === "proposed" || l.status === "contested" ? '<div class="row" style="margin-top:8px"><button class="btn s" onclick="decideLesson(\'' + esc(l.id) + '\',\'approve\')">Approve</button><button class="btn r s" onclick="decideLesson(\'' + esc(l.id) + '\',\'reject\')">Reject</button></div>' : '') + '</div>').join("") ||
+    '<p class="muted">No lesson in this project yet. Add one, or run learn back on it.</p>';
+}
+async function decideLesson(id, decision){
+  try { await api("POST","/home/lessons/decide",{project:lessonProject, ids:[id], decision}); toast(decision === "approve" ? "Approved." : "Rejected."); openLessons(lessonProject); } catch(e){ toast(e.message, 6000); }
+}
+function addLessonDialog(){
+  openModal("Add a lesson to " + lessonProject, "active at once");
+  $("mBody").innerHTML = '<label class="f"><span>Title</span><input type="text" id="lTitle" placeholder="e.g. Deploy the identity service before the app that reads its new column"></label>' +
+    '<label class="f"><span>Lesson (symptom, cause, fix)</span><textarea id="lText" style="min-height:160px;font-family:inherit;font-size:13px"></textarea></label>';
+  $("mFoot").innerHTML = '<button class="btn" onclick="saveLesson()">Save lesson</button><span class="muted">Written in English like every KH row.</span>';
+}
+async function saveLesson(){
+  try { await api("POST","/home/lessons",{project:lessonProject, title:$("lTitle").value, text:$("lText").value}); closeModal(); toast("Lesson saved."); openLessons(lessonProject); } catch(e){ toast(e.message, 6000); }
+}
+
+// ── learn back ──
+function lbKindChanged(){
+  const k = $("lbKind").value;
+  $("lbAt").classList.toggle("hide", k !== "once"); $("lbTime").classList.toggle("hide", k === "once"); $("lbDay").classList.toggle("hide", k !== "weekly");
+}
+async function loadLearnback(){
+  try { lbState = await api("GET","/home/learnback"); } catch(e){ $("lbState").textContent = e.message; return; }
+  const on = lbState.enabled;
+  $("lbState").innerHTML = on ? 'On: model <b>' + esc(lbState.llm) + '</b> (' + esc(lbState.model) + '), times in ' + esc(lbState.tz) + '. New lessons land as <i>proposed</i>.' + (lbState.running.length ? ' <span class="pill running">running</span>' : '')
+    : '<span class="pill warn">off on this KH</span> ' + esc(lbState.reason);
+  ["lbNow","lbAdd","lbKind","lbAt","lbDay","lbTime"].forEach(id => $(id).disabled = !on || (id === "lbNow" && lbState.running.length > 0));
+  $("lbSched").innerHTML = lbState.schedules.map(s => '<tr><td>' + esc(s.kind) + ' ' + esc(s.at) + '</td><td style="font-size:11px">' + esc(s.projects.join(", ")) + '</td><td class="muted" style="font-size:11px">next ' + when(s.next_utc) + ' UTC</td><td>' +
+    (s.enabled ? '' : '<span class="pill warn">done</span>') + '</td><td><button class="btn r s" onclick="lbDelete(\'' + esc(s.id) + '\')">Remove</button></td></tr>').join("") || '<tr><td class="muted">No schedule.</td></tr>';
+  $("lbRuns").innerHTML = lbState.runs.map(r => { const sm = r.summary || {};
+    return '<tr><td><span class="pill ' + esc(r.state) + '">' + esc(r.state) + '</span></td><td style="font-size:11px">' + esc(r.projects.join(", ")) + '</td><td class="muted" style="font-size:11px">' + when(r.started) + '</td><td style="font-size:11px">' +
+      (sm.error ? '<span class="pill bad" title="' + esc(sm.error) + '">error</span>' : (sm.items != null ? fmt(sm.items) + ' items from ' + fmt(sm.batches) + ' batches' : '')) + '</td></tr>'; }).join("") || '<tr><td class="muted">No run yet.</td></tr>';
+  if (lbState.running.length) setTimeout(() => { if (!$("v-lessons").classList.contains("hide")) loadLearnback(); }, 5000);
+}
+function lbPicked(){ return [...document.querySelectorAll("#lbProjects .part.on")].map(b => b.dataset.p); }
+async function lbRunNow(){
+  const projects = lbPicked(); if (!projects.length) return toast("Tick at least one project.");
+  try { await api("POST","/home/learnback/run",{projects}); toast("Learn back started."); loadLearnback(); } catch(e){ toast(e.message, 6000); }
+}
+async function lbSchedule(){
+  const projects = lbPicked(); if (!projects.length) return toast("Tick at least one project.");
+  const kind = $("lbKind").value;
+  const at = kind === "once" ? $("lbAt").value : kind === "daily" ? $("lbTime").value : $("lbDay").value + " " + $("lbTime").value;
+  if (!at || at === " ") return toast("Pick a time.");
+  try { await api("POST","/home/learnback/schedules",{projects, kind, at}); toast("Scheduled."); loadLearnback(); } catch(e){ toast(e.message, 6000); }
+}
+async function lbDelete(id){ try { await api("POST","/home/learnback/schedules/" + id + "/delete"); loadLearnback(); } catch(e){ toast(e.message); } }
+
+// ── review: pending distilled items of every project, the distiller's share choice as default ──
+let rv = null;   // {shared_project, projects:[{project, items:[...]}]} plus per item: decision, share, title, text, editing
+async function reviewCount(){
+  try { const d = await api("GET","/home/review"); $("revCnt").textContent = d.count; $("revCnt").classList.toggle("hide", !d.count); } catch(e){}
+}
+async function loadReview(){
+  $("rvList").innerHTML = '<p class="muted">Loading…</p>';
+  try { rv = await api("GET","/home/review"); } catch(e){ $("rvList").innerHTML = '<div class="note e">' + esc(e.message) + '</div>'; return; }
+  $("rvShared").textContent = rv.shared_project || "the shared project";
+  rv.projects.forEach(p => p.items.forEach(it => Object.assign(it, {decision: it.contradicted_by ? "skip" : "approve", choice: it.share, title0: it.title, text0: it.text, editing:false})));
+  $("revCnt").textContent = rv.count; $("revCnt").classList.toggle("hide", !rv.count);
+  renderReview();
+}
+function rvItems(){ return rv ? rv.projects.flatMap(p => p.items.map(it => ({p: p.project, it}))) : []; }
+function rvFind(project, id){ const p = rv.projects.find(x => x.project === project); return p && p.items.find(x => x.id === id); }
+function renderReview(){
+  const all = rvItems();
+  const ap = all.filter(x => x.it.decision === "approve"), sh = ap.filter(x => x.it.choice && x.it.can_share).length, rj = all.filter(x => x.it.decision === "reject").length;
+  $("rvSum").textContent = all.length ? all.length + " pending · apply: " + ap.length + " approve (" + sh + " shared, " + (ap.length - sh) + " private), " + rj + " reject, " + (all.length - ap.length - rj) + " later" : "Nothing waits for review.";
+  $("rvApply").disabled = !all.length || (ap.length + rj === 0);
+  $("rvList").innerHTML = rv.projects.map(p => '<section class="card box"><h2>' + esc(p.project) + ' <span class="chip">' + p.items.length + '</span></h2>' + p.items.map(it => {
+    const k = "'" + esc(p.project) + "','" + esc(it.id) + "'";
+    const changed = it.title !== it.title0 || it.text !== it.text0;
+    return '<div class="ritem' + (it.decision === "reject" ? " rej" : "") + '"><div>' +
+      '<h4>' + esc(it.title) + ' <span class="chip">' + esc(it.kind) + '</span>' + (it.status === "contested" ? '<span class="pill warn">contested</span>' : '') +
+      (changed ? '<span class="pill pending">edited</span>' : '') + '</h4>' +
+      (it.editing ? '<input type="text" value="' + esc(it.title) + '" oninput="rvFind(' + k + ').title=this.value" maxlength="120">' +
+        '<textarea style="min-height:90px;font-family:inherit;font-size:12px" maxlength="600" oninput="rvFind(' + k + ').text=this.value">' + esc(it.text) + '</textarea>'
+        : '<p>' + esc(it.text) + '</p>') +
+      (it.contradicts ? '<div class="sugg" style="margin-top:6px">Contradicts <b>' + esc(it.contradicts_title || it.contradicts) + '</b>: approving this one retires it.</div>' : '') +
+      (it.contradicted_by ? '<div class="sugg" style="margin-top:6px">Contradicted by <b>' + esc(it.contradicted_by_title || it.contradicted_by) + '</b>: approving that one retires this one, so it waits here.</div>' : '') +
+      (it.target ? '<div class="sugg" style="margin-top:6px">Policy proposal for step <b>' + esc(it.target) + '</b>: approving rewrites that rule.</div>' : '') +
+      '<div class="sugg" style="margin-top:6px">' + esc([[it.action, it.context].filter(x => x && x !== "-").join(" / "), it.sources + " source log(s)", it.distilled_by, when(it.distilled_at)].filter(Boolean).join(" · ")) + '</div></div>' +
+      '<div class="rside"><div class="tgl"><button class="' + (it.decision === "approve" ? "on" : "") + '" onclick="rvSet(' + k + ',\'decision\',\'approve\')">Approve</button>' +
+        '<button class="' + (it.decision === "skip" ? "on" : "") + '" onclick="rvSet(' + k + ',\'decision\',\'skip\')">Later</button>' +
+        '<button class="r' + (it.decision === "reject" ? " on" : "") + '" onclick="rvSet(' + k + ',\'decision\',\'reject\')">Reject</button></div>' +
+      '<div class="tgl"><button class="sh' + (it.choice && it.can_share ? " on" : "") + '"' + (it.can_share ? "" : " disabled") + ' onclick="rvSet(' + k + ',\'choice\',true)">Shared</button>' +
+        '<button class="' + (!it.choice || !it.can_share ? "on" : "") + '"' + (it.can_share ? "" : " disabled") + ' onclick="rvSet(' + k + ',\'choice\',false)">Private</button></div>' +
+      '<span class="sugg">' + (it.can_share ? "distiller: " + (it.suggested === "1" ? "shared" : it.suggested === "0" ? "private" : "no choice") : "stays in " + esc(p.project)) + '</span>' +
+      '<button class="btn g s" onclick="rvSet(' + k + ',\'editing\',' + (!it.editing) + ')">' + (it.editing ? "Done editing" : "Edit") + '</button></div></div>';
+  }).join("") + '</section>').join("") || '<p class="muted">Nothing waits for review. Learn back adds items here after its next run.</p>';
+}
+function rvSet(project, id, key, val){ const it = rvFind(project, id); if (!it) return; it[key] = val; renderReview(); }
+function rvAll(decision){ rvItems().forEach(x => x.it.decision = x.it.contradicted_by && decision === "approve" ? "skip" : decision); renderReview(); }
+function rvShareAll(on){ rvItems().forEach(x => x.it.choice = on && x.it.can_share); renderReview(); }
+function rvReset(){ rvItems().forEach(x => Object.assign(x.it, {decision: x.it.contradicted_by ? "skip" : "approve", choice:x.it.share, title:x.it.title0, text:x.it.text0, editing:false})); renderReview(); }
+async function applyReview(){
+  const all = rvItems(), decisions = all.filter(x => x.it.decision !== "skip").map(x => {
+    const d = {project: x.p, id: x.it.id, decision: x.it.decision, share: !!(x.it.choice && x.it.can_share)};
+    if (x.it.title !== x.it.title0) d.title = x.it.title;
+    if (x.it.text !== x.it.text0) d.text = x.it.text;
+    return d; });
+  if (!decisions.length) return toast("Nothing to apply.");
+  const sh = decisions.filter(d => d.decision === "approve" && d.share).length;
+  if (!confirm("Apply " + decisions.length + " decision(s)? " + sh + " item(s) will be copied to " + (rv.shared_project || "the shared project") + " and read by everyone.")) return;
+  $("rvApply").disabled = true;
+  try {
+    const r = await api("POST","/home/review/apply",{decisions});
+    const bad = r.results.filter(x => ["refused","unknown"].includes(x.result) || String(x.shared||"").startsWith("refused"));
+    toast("Applied " + r.results.length + " decision(s)" + (bad.length ? "; " + bad.length + " need a look: " + bad.map(x => x.id + " " + (x.reason || x.shared || x.result)).join("; ") : "."), bad.length ? 12000 : 4000);
+    loadReview();
+  } catch(e){ toast(e.message, 8000); $("rvApply").disabled = false; }
+}
+
+// ── embedding ──
+let emTimer = null;
+const STATE_CLS = {checking:"running", ready:"ok", active:"done", failed:"bad", retired:"warn", running:"running", done:"done", rolled_back:"warn", stuck:"bad"};
+async function loadEmbedding(){
+  let d; try { d = await api("GET","/home/embedding"); } catch(e){ if ($("v-embedding").classList.contains("hide")) return; $("emModels").innerHTML = '<tr><td colspan="7"><div class="note e">' + esc(e.message) + '</div></td></tr>'; return; }
+  const run = d.jobs.find(j => j.state === "running" || (j.state === "stuck" && j.id === d.maintenance));
+  $("embCnt").textContent = run ? run.percent + "%" : ""; $("embCnt").classList.toggle("hide", !run);
+  $("emMaint").classList.toggle("hide", !d.maintenance);
+  if (run) $("emMaint").innerHTML = '<b>KH is in maintenance.</b> ' + esc(run.kind === "rollback" ? "Rolling back to " : "Converting every vector to ") + '<b>' + esc(run.to_model) + '</b>: ' +
+    fmt(run.done) + ' of ' + fmt(run.total) + ' rows (' + run.percent + '%)' + (run.current ? ', now ' + esc(run.current) : '') + '.' + bar({progress:{percent:run.percent}, state:"running"}) +
+    '<span style="font-size:11px">Every API call answers: ' + esc(d.notice) + '</span>';
+  $("emActive").innerHTML = [["Active model", d.active], ["Vectors stored in", d.backend], ["Computed", d.embedder === "local" ? "in KH (local)" : d.embedder + " (switch it on the embed service)"],
+    ["Backups", d.backup_path]].map(([k,v]) => '<div><small>' + k + '</small><b>' + esc(v) + '</b></div>').join("");
+  const pct = r => r ? Math.round(r * 100) + "%" : "–";
+  $("emModels").innerHTML = d.models.map(m => { const b = m.bench, c = b && b.candidate, cur = b && b.current;
+    return '<tr><td><b>' + esc(m.name) + '</b><div class="muted" style="font-size:11px">' + esc(m.source) + (m.query_instruction ? ' · query "' + esc(m.query_instruction) + '"' : '') + '</div>' +
+      (m.error ? '<div style="font-size:11px;color:var(--rose-d)">' + esc(m.error.slice(0,300)) + '</div>' : '') + '</td>' +
+      '<td><span class="pill ' + (STATE_CLS[m.state]||"") + '">' + esc(m.state === "ready" ? "ready (waiting)" : m.state) + '</span></td><td>' + (m.dim || "–") + '</td><td>' + (m.size_bytes ? bytes(m.size_bytes) : "–") + '</td><td>' + (m.load_s ? m.load_s + " s" : "–") + '</td>' +
+      '<td style="font-size:11px">' + (b ? '<b>' + esc(m.name) + '</b> ' + (c.own ? pct(c.own.top1) + ' / ' + pct(c.own.top5) : "–") + ' · ' + pct(c.vi_en.top1) +
+        '<br><span class="muted">' + esc(cur.model) + ' ' + (cur.own ? pct(cur.own.top1) + ' / ' + pct(cur.own.top5) : "–") + ' · ' + pct(cur.vi_en.top1) + ' · ' + b.sample + ' rows · ' + when(b.at) + '</span>' : '<span class="muted">not compared yet</span>') + '</td><td style="white-space:nowrap">' +
+      (["ready","retired"].includes(m.state) ? '<button class="btn g s" onclick="emBench(\'' + m.id + '\', this)">Compare</button> ' : '') +
+      (m.state === "ready" && d.can_switch && !d.maintenance ? '<button class="btn s" onclick="emConvert(\'' + m.id + '\',\'' + esc(m.name) + '\',' + (m.dim||0) + ')">Start convert</button> ' : '') +
+      (m.state === "failed" ? '<button class="btn g s" onclick="emCheck(\'' + m.id + '\')">Check again</button> ' : '') +
+      (m.state !== "active" ? '<button class="btn r s" onclick="emDelete(\'' + m.id + '\')">✕</button>' : '') + '</td></tr>'; }).join("") ||
+    '<tr><td colspan="7" class="muted">No candidate model yet. The active model ' + esc(d.active) + ' needs no row here.</td></tr>';
+  $("emJobs").innerHTML = d.jobs.map(j => '<div class="job" style="cursor:default"><div class="row"><b>' + esc(j.kind) + ': ' + esc(j.from_model) + ' → ' + esc(j.to_model) + '</b>' +
+    (j.to_dim ? '<span class="chip">dim ' + j.to_dim + '</span>' : '') + '<span class="pill ' + (STATE_CLS[j.state]||"") + '" style="margin-left:auto">' + esc(j.state) + '</span></div>' +
+    bar({progress:{percent:j.percent}, state:j.state}) + '<div class="row muted" style="font-size:11px"><span>' + j.percent + '% · ' + fmt(j.done) + ' / ' + fmt(j.total) + ' rows' + (j.skipped ? ' · ' + fmt(j.skipped) + ' without text kept out' : '') + '</span>' +
+    '<span style="margin-left:auto">' + esc(j.created_by) + ' · ' + when(j.started) + (j.finished ? ' → ' + when(j.finished) : '') + '</span></div>' +
+    (j.error ? '<div style="font-size:11px;color:var(--rose-d)">' + esc(j.error) + '</div>' : '') +
+    (j.state === "stuck" ? '<div class="row" style="margin-top:6px"><button class="btn s" onclick="emRetry(\'' + j.id + '\')">Retry</button><button class="btn r s" onclick="emForceOpen()">Open KH anyway</button><span class="muted" style="font-size:11px">KH stays in maintenance until one of these.</span></div>' : '') +
+    (j.kind === "convert" && j.state === "done" && j.backup_exists && j.to_model === d.active && !d.maintenance ? '<div class="row" style="margin-top:6px"><button class="btn r s" onclick="emRollback(\'' + j.id + '\',\'' + esc(j.from_model) + '\')">Roll back to ' + esc(j.from_model) + '</button></div>' : '') + '</div>').join("") ||
+    '<p class="muted">No convert yet.</p>';
+  clearTimeout(emTimer);
+  if (run || d.models.some(m => m.state === "checking")) emTimer = setTimeout(loadEmbedding, 1500);
+}
+async function emAdd(){
+  const source = $("emSource").value.trim(); if (!source) return toast("Give a model id, folder or link.");
+  try { await api("POST","/home/embedding/models",{source, name:$("emName").value.trim(), query_instruction:$("emQi").value}); toast("Added: KH is checking it."); $("emSource").value = ""; $("emName").value = ""; loadEmbedding(); } catch(e){ toast(e.message, 8000); }
+}
+async function emUpload(){
+  const f = $("emFile").files[0]; if (!f) return toast("Pick a .zip first.");
+  const name = $("emName").value.trim() || f.name.replace(/\.zip$/i, "");
+  const fd = new FormData(); fd.append("name", name); fd.append("query_instruction", $("emQi").value); fd.append("file", f);
+  const h = {}; const tok = store.get("access"); if (cfg.auth && tok) h["Authorization"] = "Bearer " + tok;
+  toast("Uploading " + f.name + "…", 60000);
+  try { const r = await fetch("/home/embedding/upload", {method:"POST", headers:h, body:fd}); const t = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(t.detail || r.statusText); toast("Uploaded: KH is checking it."); $("emFile").value = ""; loadEmbedding(); } catch(e){ toast(e.message, 8000); }
+}
+async function emCheck(id){ try { await api("POST","/home/embedding/models/" + id + "/check"); loadEmbedding(); } catch(e){ toast(e.message, 6000); } }
+async function emBench(id, btn){
+  btn.disabled = true; btn.textContent = "Comparing…";
+  try { await api("POST","/home/embedding/models/" + id + "/bench"); toast("Compared."); } catch(e){ toast(e.message, 8000); }
+  loadEmbedding();
+}
+async function emDelete(id){ if (!confirm("Forget this model? Its files stay on disk.")) return; try { await api("POST","/home/embedding/models/" + id + "/delete"); loadEmbedding(); } catch(e){ toast(e.message, 6000); } }
+async function emConvert(id, name, dim){
+  if (!confirm("Convert every vector to " + name + " (dim " + dim + ")?\n\nKH goes into maintenance: every agent call gets a maintenance notice until all rows are done. Old vectors are backed up for a rollback.")) return;
+  try { await api("POST","/home/embedding/convert",{model_id:id}); toast("Convert started: KH is in maintenance."); loadEmbedding(); } catch(e){ toast(e.message, 8000); }
+}
+async function emRetry(jid){ try { await api("POST","/home/embedding/retry",{job_id:jid}); toast("Retrying."); loadEmbedding(); } catch(e){ toast(e.message, 8000); } }
+async function emForceOpen(){
+  if (!confirm("Open KH again although its vectors are mixed between two models? Search quality will be poor until a convert or rollback finishes.")) return;
+  try { await api("POST","/home/embedding/maintenance/off"); toast("KH is open again."); loadEmbedding(); } catch(e){ toast(e.message, 8000); }
+}
+async function emRollback(jid, to){
+  if (!confirm("Roll back to " + to + "? KH goes into maintenance again until every row has its old vector back.")) return;
+  try { await api("POST","/home/embedding/rollback",{job_id:jid}); toast("Rollback started."); loadEmbedding(); } catch(e){ toast(e.message, 8000); }
+}
+
+// ── audit ──
+let auRowsCache = [];
+function auQuery(){ return "action=" + encodeURIComponent($("auAction").value) + "&project=" + encodeURIComponent($("auProject").value.trim()) +
+  "&since=" + encodeURIComponent($("auSince").value) + "&until=" + encodeURIComponent($("auUntil").value); }
+async function loadAudit(offset){
+  let d; try { d = await api("GET","/home/audit?" + auQuery() + "&limit=100&offset=" + offset); } catch(e){ $("auRows").innerHTML = '<tr><td colspan="6"><div class="note e">' + esc(e.message) + '</div></td></tr>'; return; }
+  auRowsCache = offset ? auRowsCache.concat(d.rows) : d.rows;
+  $("auRows").innerHTML = auRowsCache.map((r, n) => { const det = r.detail || {};
+    const short = det.before !== undefined ? (r.action.startsWith("rule.") ? (det.before == null ? "added" : det.after == null ? "deleted" : "changed") + " · click for history" : "before: " + JSON.stringify(det.before) + " → after: " + JSON.stringify(det.after)) :
+      Object.entries(det).filter(([k,v]) => v !== null && v !== "" && !(Array.isArray(v) && !v.length)).map(([k,v]) => k + ": " + (typeof v === "object" ? JSON.stringify(v) : v)).join(" · ");
+    return '<tr' + (r.action.startsWith("rule.") ? ' style="cursor:pointer" onclick="ruleHistory(' + n + ')"' : '') + '><td class="mono" style="font-size:11px">' + when(r.ts) + '</td><td>' + esc(r.actor) + '</td><td><span class="chip">' + esc(r.action) + '</span></td><td>' + esc(r.project) +
+      '</td><td class="mono" style="font-size:11px">' + esc(r.target) + '</td><td style="font-size:11px">' + esc(short.slice(0, 220)) + '</td></tr>'; }).join("") || '<tr><td colspan="6" class="muted">No change recorded for this filter.</td></tr>';
+  $("auMore").innerHTML = '<span class="muted">' + fmt(auRowsCache.length) + ' of ' + fmt(d.total) + '</span>' + (auRowsCache.length < d.total ? '<button class="btn g s" onclick="loadAudit(' + auRowsCache.length + ')">More</button>' : '');
+}
+async function ruleHistory(n){
+  const r = auRowsCache[n], kind = r.action.split(".")[1];
+  openModal("History of " + r.target, kind + " rule");
+  let d; try { d = await api("GET","/home/rules/history?kind=" + kind + "&key=" + encodeURIComponent(r.target)); } catch(e){ $("mBody").innerHTML = '<div class="note e">' + esc(e.message) + '</div>'; return; }
+  $("mSub").textContent = d.changes.length + " change(s), newest first";
+  $("mBody").innerHTML = d.changes.map(c => '<div class="lesson"><h4>' + when(c.ts) + ' <span class="chip">' + esc(c.action.split(".").pop()) + '</span><span class="muted" style="font-weight:400">' + esc(c.actor) + '</span></h4>' +
+    '<div class="grid2"><div><small class="muted">before</small><p>' + esc(c.detail.before == null ? "(none)" : c.detail.before) + '</p></div><div><small class="muted">after</small><p>' + esc(c.detail.after == null ? "(deleted)" : c.detail.after) + '</p></div></div></div>').join("");
+}
+async function exportAudit(fmtName){
+  const h = {}; const tok = store.get("access"); if (cfg.auth && tok) h["Authorization"] = "Bearer " + tok;
+  try { const r = await fetch("/home/audit/export?fmt=" + fmtName + "&" + auQuery(), {headers:h}); if (!r.ok) throw new Error(r.statusText);
+    const blob = await r.blob(), a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+    a.download = (r.headers.get("Content-Disposition") || "").split('filename="')[1]?.replace('"', '') || "kh-audit." + fmtName; a.click(); URL.revokeObjectURL(a.href);
+  } catch(e){ toast(e.message, 6000); }
+}
+async function retention(dry){
+  const days = +$("rtDays").value;
+  if (!dry && !confirm("Delete every work log older than " + days + " days, in every project? This cannot be undone.")) return;
+  try { const d = await api("POST","/home/retention/logs",{days, dry_run: dry});
+    $("rtOut").innerHTML = '<div class="note ' + (dry ? "i" : "") + '">' + (dry ? "Would delete " : "Deleted ") + fmt(d.total) + ' log row(s) older than ' + esc(d.cut || "") + (d.projects.length ? ': ' + d.projects.map(p => esc(p.project) + " " + fmt(p.rows)).join(", ") : '') + '</div>';
+    if (!dry) loadAudit(0);
+  } catch(e){ toast(e.message, 6000); }
+}
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+
+// ── start ──
+(async () => {
+  try { cfg = await (await fetch("/home/config")).json(); } catch(e){ document.body.textContent = "KH is not reachable."; return; }
+  if (cfg.auth && !store.get("access") && !store.get("refresh")) return showLogin();
+  enter();
 })();
 </script>
+<script src="/home/flows.js"></script>
 </body>
 </html>

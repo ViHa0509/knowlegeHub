@@ -1,0 +1,304 @@
+/* /home themes (Rowan 2026-11-09). Layout for every theme: art direction P02 "Framed sheet" (designer vec_18ee08a94c70: one tinted L-shaped frame
+   holds the sidebar and a 48px top bar with no rule between them; every tab's work sits on ONE sheet inset 8px from the
+   window's right and bottom edges, 1px edge, 16px corners, no shadow). Paint, chosen per viewer on the top bar
+   (<html data-theme>, kept in localStorage): "kawaii" = style 02 kawaii scrapbook (designer vec_e18ed64e8a28: warm
+   cream paper, brown ink, peach / rose / butter, washi tape, handwriting; the DEFAULT) and "aura" = style 22-1 aura
+   starry night (designer vec_979498e4ce7b: near-black, pink #ff6ec7 > violet #a96bff, generated night-sky scenes).
+   Loaded after flows.css: it sets the tokens every rule of home.html and flows.css reads (recolored to variables) and the
+   shell. Fonts are served by KH itself (/home/fonts), never a CDN. */
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:100 900;src:url(/home/fonts/inter-vietnamese.woff2) format('woff2');
+  unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:100 900;src:url(/home/fonts/inter-latin-ext.woff2) format('woff2');
+  unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:100 900;src:url(/home/fonts/inter-latin.woff2) format('woff2');
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+
+@font-face{font-family:'Delius';font-style:normal;font-display:swap;font-weight:400;src:url(/home/fonts/delius-latin.woff2) format('woff2');
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Patrick Hand';font-style:normal;font-display:swap;font-weight:400;src:url(/home/fonts/patrick-hand-vietnamese.woff2) format('woff2');
+  unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}
+@font-face{font-family:'Patrick Hand';font-style:normal;font-display:swap;font-weight:400;src:url(/home/fonts/patrick-hand-latin-ext.woff2) format('woff2');
+  unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Patrick Hand';font-style:normal;font-display:swap;font-weight:400;src:url(/home/fonts/patrick-hand-latin.woff2) format('woff2');
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Dancing Script';font-style:normal;font-display:swap;font-weight:700;src:url(/home/fonts/dancing-script-vietnamese.woff2) format('woff2');
+  unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}
+@font-face{font-family:'Dancing Script';font-style:normal;font-display:swap;font-weight:700;src:url(/home/fonts/dancing-script-latin-ext.woff2) format('woff2');
+  unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Dancing Script';font-style:normal;font-display:swap;font-weight:700;src:url(/home/fonts/dancing-script-latin.woff2) format('woff2');
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+
+/* shape and size of the frame: the same for every theme (art direction P02) */
+:root{--r-sheet:16px; --r-card:8px; --r-ctl:6px; --inset:8px; --side:228px; --bar:48px; --pad:24px;
+  --ease:cubic-bezier(.22,1,.36,1); --spring:cubic-bezier(.34,1.56,.64,1)}
+
+/* THEME kawaii scrapbook (style 02, the default): warm cream paper, brown ink, peach / rose / butter, 1.5px kraft lines */
+:root,:root[data-theme="kawaii"]{
+  color-scheme:light;
+  --bg:#fbf3e6; --ink:#5a4033; --ink-2:#6f5444; --muted:#9a7f6c; --pink:#e89a9a; --teal:#7fae9a;
+  --grad:linear-gradient(90deg,#f2c9b0,#e89a9a); --on-accent:#4a3226;
+  --frame:#f1e2cc; --sheet:#fbf3e6; --surface:#fffaf2; --raised:#f7ebdb; --well:#fffdf8; --control:#d9c4ad;
+  --edge:#e6d3bd; --edge-2:#d9c4ad; --bw:1.5px;
+  --edge-vio:#e8c3b0; --edge-rose:#efbcbc; --edge-butter:#ecd49a; --edge-mint:#bcd8c6;
+  --bg1:var(--frame); --bg2:var(--frame); --page:var(--frame); --card:var(--surface); --border:var(--edge); --navy:#5a4033;
+  --vio:#c27a5f; --vio2:#e89a9a; --vio-l:#f6dcc4;
+  --mint:#e5f1e6; --mint-d:#4f8a5f; --butter:#fbeec7; --butter-d:#9c7417;
+  --rose:#fbe1e1; --rose-d:#c0605f; --lav:#f3e9dc; --sky:#f6dcc4; --sky-d:#8a5f45; --cyan:#7fae9a;
+  --sh:none; --glow:3px 4px 0 rgba(90,64,51,.08); --sel:rgba(232,154,154,.35); --ph:#b9a493; --scrim:rgba(90,64,51,.28);
+  --sb-thumb:#f2c9b0; --sb-edge:#d9c4ad;
+  --edge-ok:#9a7f6c; --edge-fail:#c0605f; --edge-yes:#4f8a5f; --edge-no:#b8862a; --edge-tmp:#c27a5f;
+  --font:'Delius','Patrick Hand','Segoe UI',system-ui,sans-serif; --font-title:'Dancing Script','Segoe Script',cursive;
+}
+/* THEME aura starry night (style 22-1) */
+:root[data-theme="aura"]{
+  color-scheme:dark;
+  /* aura starry night (style 22 tokens) */
+  --bg:#050507; --ink:#f5f3fa; --muted:#8d8a99; --pink:#ff6ec7; --teal:#4fd1c5;
+  --grad:linear-gradient(90deg,#ff6ec7,#a96bff);
+  /* framed sheet: frame (one low-chroma step of the plum hue), sheet, then cards and controls on it */
+  --frame:#09080d; --sheet:#0e0d13; --surface:#15141b; --raised:#1c1b23; --well:#0b0a10; --control:#3a3846;
+  --edge:rgba(255,255,255,.08); --edge-2:rgba(255,255,255,.13);
+  --edge-vio:rgba(169,107,255,.34); --edge-rose:rgba(255,110,199,.34); --edge-butter:rgba(255,196,94,.34); --edge-mint:rgba(79,209,197,.34);
+  /* the names home.html and flows.css already use */
+  --bg1:var(--frame); --bg2:var(--frame); --page:var(--frame); --card:var(--surface); --border:var(--edge); --navy:var(--bg);
+  --vio:#a96bff; --vio2:#ff6ec7; --vio-l:rgba(169,107,255,.15);
+  --mint:rgba(79,209,197,.13); --mint-d:#4fd1c5; --butter:rgba(255,196,94,.12); --butter-d:#ffc45e;
+  --rose:rgba(255,110,199,.13); --rose-d:#ff7fcf; --lav:rgba(255,255,255,.05); --sky:rgba(169,107,255,.15); --sky-d:#c9a7ff; --cyan:#4fd1c5;
+  --sh:none; --on-accent:#fff; --ink-2:#c9c6d4; --bw:1px;
+  --glow:0 8px 22px -8px rgba(255,110,199,.65); --sel:rgba(255,110,199,.35); --ph:#6d6a78; --scrim:rgba(3,3,6,.66);
+  --sb-thumb:#a96bff; --sb-edge:transparent;
+  --edge-ok:#a7a3b8; --edge-fail:#ff6ec7; --edge-yes:#4fd1c5; --edge-no:#ffc45e; --edge-tmp:#a96bff;
+  --font:'Inter','Segoe UI',system-ui,sans-serif; --font-title:'Inter','Segoe UI',system-ui,sans-serif;
+}
+html{background:var(--frame)}
+body{background:var(--frame)!important;color:var(--ink);font:13.5px/1.5 var(--font);-webkit-font-smoothing:antialiased}
+::selection{background:var(--sel)}
+a{color:var(--sky-d)}
+
+/* ── shell: one frame (sidebar + top bar, no rule between them) around one sheet; every tab uses the whole sheet ── */
+.app,body.kc-wide .app{display:grid;grid-template-columns:var(--side) minmax(0,1fr);grid-template-rows:var(--bar) minmax(0,1fr);
+  gap:0;max-width:none;margin:0;padding:0;height:100vh}
+aside.side,aside.card.side{grid-row:1 / 3;grid-column:1;height:100vh;position:sticky;top:0;background:transparent;border:0;border-radius:0;
+  box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;padding:12px 12px 12px 14px;overflow:auto}
+.topbar{grid-row:1;grid-column:2;display:flex;align-items:center;gap:14px;height:var(--bar);padding:0 calc(var(--inset) + 12px) 0 6px;min-width:0}
+.topbar .top{margin:0;flex:1;min-width:0}
+main{grid-row:2;grid-column:2;min-width:0;min-height:0;overflow:auto;background:var(--sheet);border:var(--bw) solid var(--edge);
+  border-radius:var(--r-sheet);margin:0 var(--inset) var(--inset) 0;padding:var(--pad)}
+
+/* sidebar: the brand shrinks to the logo; items grey, the active one a raised row with a 2px gradient mark */
+.logo{color:var(--ink);font-weight:700;font-size:16px;letter-spacing:-.01em;margin:4px 6px 18px}
+.logo i,.g3d{background:var(--raised)!important;color:var(--ink);box-shadow:inset 0 0 0 1px var(--edge-2)!important;border-radius:9px}
+.logo i{background:var(--grad)!important;color:var(--on-accent);box-shadow:var(--glow)!important}
+.side a{color:var(--muted);border-radius:var(--r-ctl);padding:8px 10px;position:relative}
+.side a:hover{color:var(--ink);background:var(--lav)}
+.side a.on{background:var(--raised);color:var(--ink)}
+.side a.on::before{content:"";position:absolute;left:-14px;top:9px;bottom:9px;width:2px;border-radius:2px;background:var(--grad)}
+.side a.on .g3d{background:var(--grad)!important;color:var(--on-accent);box-shadow:var(--glow)!important}
+.side .nl b{font-weight:600;color:inherit}
+.side .cnt,#ffNavBadge{background:var(--grad);color:var(--on-accent)}
+
+/* the sidebar's help card wears a generated night-sky scene (style 22-1: image slots are night scenes, never photos) */
+.up{background:var(--surface);border:1px solid var(--edge);border-radius:var(--r-card);padding:0;overflow:hidden;color:var(--muted)}
+.up .sky{display:block;height:84px;border-bottom:1px solid var(--edge)}
+.up .sky svg{display:block;width:100%;height:100%}
+.up .uptx{display:block;padding:12px 14px}
+.up b{color:var(--ink)}
+
+/* top bar: who / where, quiet */
+.top .muted,#hereInfo{color:var(--muted);font-size:12px}
+#hereInfo b{color:var(--ink);font-weight:600}
+.user b{font-weight:600}
+#avatar{background:var(--grad)!important;color:var(--on-accent);box-shadow:none!important}
+
+/* ── components on the sheet ── */
+.card{background:var(--surface);border:var(--bw) solid var(--edge);border-radius:var(--r-card);box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+.box{padding:18px 20px}
+.box h2,.greet h1,.kc-col > h3{color:var(--ink);font-weight:600;letter-spacing:-.01em}
+.greet h1{font-size:22px}
+.box h2{font-size:16px}
+.sub,.muted,small{color:var(--muted)}
+.stat{background:var(--surface);border:1px solid var(--edge)}
+.stat b{font-weight:400;font-size:28px;letter-spacing:-.02em}
+.tile{box-shadow:none!important;background:var(--raised)!important;color:var(--ink)}
+.btn{background:var(--grad);color:var(--on-accent);border-radius:999px;box-shadow:var(--glow);font-weight:600;transition:transform .25s var(--spring)}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn.g,.btn.r{background:var(--raised);color:var(--ink);border:1px solid var(--edge-2);box-shadow:none}
+.btn.r{color:var(--rose-d)}
+.step{background:var(--grad)}
+textarea,input[type=text],input[type=number],input[type=date],input[type=url],input[type=email],input[type=search],
+input[type=datetime-local],input[type=time],input[type=password],select{background:var(--well)!important;color:var(--ink);border:1px solid var(--edge-2);border-radius:var(--r-ctl)}
+textarea:focus,input:focus,select:focus{border-color:var(--vio)!important;box-shadow:0 0 0 3px var(--vio-l)!important;outline:none}
+select option{background:var(--surface);color:var(--ink)}
+::placeholder{color:var(--ph)}
+th{color:var(--muted);border-bottom:1px solid var(--edge)}
+td{border-bottom:1px solid var(--edge)}
+.seg,.kc-seg,.tgl{background:var(--well);border:1px solid var(--edge)}
+.seg a.on,.kc-seg a.on{background:var(--raised);color:var(--ink);box-shadow:inset 0 -2px 0 var(--vio)}
+.tgl button{background:transparent;color:var(--muted)}
+.tgl button.on{background:var(--grad);color:var(--on-accent)}
+.part,.schip,.ibtn,.job,.lesson,.ritem,.kv div{background:var(--surface);border-color:var(--edge)}
+.part.on{background:var(--vio-l);border-color:var(--edge-vio);color:var(--ink)}
+.job:hover{border-color:var(--edge-vio)}.job.sel{border-color:var(--vio);box-shadow:0 0 0 3px var(--vio-l)}
+.prog{background:var(--well)}.prog i{background:var(--grad)}
+.keybox{background:var(--well);border-color:var(--edge-vio);color:var(--ink)}
+.note{background:var(--butter);color:var(--butter-d)}.note.i{background:var(--sky);color:var(--sky-d)}.note.e{background:var(--rose);color:var(--rose-d)}
+.banner{background:var(--butter);color:var(--butter-d)}
+.lesson p,.ritem p{color:var(--ink-2)}
+.chip,.vis{background:var(--lav);color:var(--muted)}
+.ck{border-color:var(--control)}.ck.on{background:var(--vio);border-color:var(--vio)}
+.toast{background:var(--raised);color:var(--ink);border:1px solid var(--edge-2)}
+.modal{background:var(--scrim);backdrop-filter:blur(3px)}
+.modal .card{background:var(--surface);border:var(--bw) solid var(--edge-2);border-radius:14px;box-shadow:var(--glow)}
+[data-theme="aura"] .modal .card{box-shadow:0 0 0 1px rgba(255,110,199,.06),0 30px 80px -20px rgba(169,107,255,.35)}
+.modal header,.modal footer,.irow{border-color:var(--edge)}
+.login{background:var(--surface);border:1px solid var(--edge-2);border-radius:var(--r-sheet);overflow:hidden;padding:0 30px 30px}
+.login .sky{display:block;height:130px;margin:0 -30px 18px;border-bottom:1px solid var(--edge)}
+.login .sky svg{display:block;width:100%;height:100%}
+.login .code{color:var(--pink)}
+#loginView{position:relative;z-index:1}
+
+/* Flow Config canvas on the sheet */
+.kc-node{background:var(--surface);border-color:var(--edge-2);color:var(--ink)}
+.kc-node.sel{box-shadow:0 0 0 2px var(--vio),var(--glow)}
+.kc-edge.off{opacity:.25}
+
+/* scrollbars in the style's pink > violet */
+*{scrollbar-width:thin;scrollbar-color:var(--sb-thumb) transparent}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--sb-thumb);border:3px solid transparent;border-radius:999px;background-clip:padding-box;box-shadow:inset 0 0 0 1px var(--sb-edge)}
+[data-theme="aura"] ::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#ff6ec7,#a96bff);background-clip:padding-box}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* phone: the frame folds the nav into a row above the sheet */
+@media (max-width:1000px){
+  .app,body.kc-wide .app{grid-template-columns:1fr;grid-template-rows:auto auto 1fr;height:auto;min-height:100vh}
+  aside.side,aside.card.side{grid-row:1;height:auto!important;position:static!important;flex-direction:row;flex-wrap:wrap;padding:10px}
+  .side a.on::before{display:none}
+  .topbar{grid-row:2;grid-column:1;padding:0 16px}
+  main{grid-row:3;grid-column:1;margin:0 8px 8px;padding:16px}
+}
+
+/* ── the frame's night sky (Rowan 2026-11-09): stars, a nebula, a constellation along the top bar, a horizon at the
+   foot of the sidebar and a rare shooting star live BEHIND the L-shaped frame only; the sheet stays solid on top. ── */
+.frame-sky{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;display:none}
+[data-theme="aura"] .frame-sky{display:block}
+.frame-sky svg{position:absolute;inset:0;width:100%;height:100%}
+.frame-sky .neb{position:absolute;border-radius:50%;filter:blur(70px);opacity:.55}
+.frame-sky .neb.a{left:-120px;top:-140px;width:420px;height:320px;background:radial-gradient(closest-side,#5a2a7a,transparent)}
+.frame-sky .neb.b{left:-60px;bottom:-120px;width:360px;height:260px;background:radial-gradient(closest-side,#6e2457,transparent);opacity:.4}
+.frame-sky .neb.c{right:8%;top:-120px;width:520px;height:170px;background:radial-gradient(closest-side,#3a1f6e,transparent);opacity:.45}
+.frame-sky .tw{animation:twinkle var(--d,4s) ease-in-out infinite alternate;animation-delay:var(--l,0s)}
+@keyframes twinkle{from{opacity:var(--o,.6)}to{opacity:.08}}
+.frame-sky .meteor{position:absolute;top:14px;left:30%;width:140px;height:1.5px;border-radius:2px;opacity:0;
+  background:linear-gradient(90deg,rgba(255,255,255,0),#fff 70%,#ffd1f0);transform:rotate(-12deg);
+  filter:drop-shadow(0 0 6px rgba(255,110,199,.9));animation:meteor 14s 3s linear infinite}
+@keyframes meteor{0%,86%{opacity:0;transform:translate(0,0) rotate(-12deg)}88%{opacity:1}96%{opacity:0;transform:translate(420px,-88px) rotate(-12deg)}100%{opacity:0}}
+#appView,#loginView{position:relative;z-index:1}
+aside.side{background:transparent}
+[data-theme="aura"] .side a:hover{background:rgba(255,255,255,.04)}
+[data-theme="aura"] .side a.on{background:rgba(28,27,35,.82);backdrop-filter:blur(2px)}
+[data-theme="aura"] .logo{text-shadow:0 0 18px rgba(169,107,255,.45)}
+@media (prefers-reduced-motion:reduce){.frame-sky .meteor{display:none}}
+
+/* ── kawaii scrapbook dressing (style 02): dotted kraft frame, washi tape on the sheet's corners, script titles on a
+   highlighter band, paper-sticker shadows, the help card as a tilted sticky note with a paper clip, a bear. ── */
+:root[data-theme="kawaii"],:root:not([data-theme]){--r-card:12px}
+[data-theme="kawaii"] body,:root:not([data-theme]) body{background:var(--frame) radial-gradient(rgba(154,127,108,.20) 1px,transparent 1.3px) 0 0/16px 16px!important}
+[data-theme="kawaii"] .logo{font-family:var(--font-title);font-size:27px;font-weight:700;color:var(--ink);letter-spacing:0}
+[data-theme="kawaii"] .greet h1,[data-theme="kawaii"] .kc-title,[data-theme="kawaii"] #v-space h1,[data-theme="kawaii"] #v-flows h1,
+[data-theme="kawaii"] #v-spacedata h1{font-family:var(--font-title);font-size:34px;font-weight:700;letter-spacing:0;line-height:1.1}
+[data-theme="kawaii"] .box h2{display:inline-flex;padding:2px 12px;margin-left:-4px;letter-spacing:.04em;
+  background:linear-gradient(transparent 22%,var(--vio-l) 22%,var(--vio-l) 86%,transparent 86%)}
+[data-theme="kawaii"] .card,[data-theme="kawaii"] .kc-node{box-shadow:var(--glow)}
+[data-theme="kawaii"] .side a.on{background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--edge-2),var(--glow)}
+[data-theme="kawaii"] .btn{border:1.5px solid rgba(90,64,51,.25)}
+[data-theme="kawaii"] .app{position:relative}
+[data-theme="kawaii"] .app::before,[data-theme="kawaii"] .app::after{content:"";position:absolute;z-index:3;pointer-events:none;width:104px;height:26px;
+  background:rgba(240,190,170,.62);background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.45) 0 6px,transparent 6px 12px),
+  repeating-linear-gradient(0deg,rgba(255,255,255,.45) 0 6px,transparent 6px 12px)}
+[data-theme="kawaii"] .app::before{top:calc(var(--bar) - 12px);left:calc(var(--side) + 26px);transform:rotate(-8deg)}
+[data-theme="kawaii"] .app::after{top:calc(var(--bar) - 10px);right:30px;transform:rotate(9deg);background-color:rgba(243,211,138,.62)}
+[data-theme="kawaii"] .up{background:#fbe8b8;border:0;transform:rotate(-1.6deg);box-shadow:0 6px 14px rgba(90,64,51,.15);overflow:visible;margin:auto 4px 6px}
+[data-theme="kawaii"] .up::before{content:"";position:absolute;top:-14px;left:50%;width:16px;height:36px;border:3px solid #b0a49a;border-radius:10px;transform:translateX(-50%);z-index:2}
+[data-theme="kawaii"] .up{position:relative}
+[data-theme="kawaii"] .up .sky{border-bottom:1.5px dashed rgba(90,64,51,.25);height:78px}
+[data-theme="kawaii"] .up b{font-family:var(--font-title);font-size:20px}
+[data-theme="kawaii"] .login .sky{border-bottom:1.5px dashed var(--edge-2)}
+[data-theme="kawaii"] .login .code{color:var(--rose-d)}
+
+/* the theme picker on the top bar: each choice says what it looks like (UI rule: title + one line) */
+.themeBox{position:relative}
+.themeBtn{font:inherit;font-size:12px;display:inline-flex;align-items:center;gap:7px;cursor:pointer;color:var(--ink);background:var(--surface);
+  border:var(--bw) solid var(--edge-2);border-radius:999px;padding:5px 12px}
+.themeBtn i{width:12px;height:12px;border-radius:50%;background:var(--grad);display:inline-block}
+.themeMenu{position:absolute;right:0;top:calc(100% + 6px);z-index:20;width:330px;background:var(--surface);border:var(--bw) solid var(--edge-2);
+  border-radius:12px;padding:6px;box-shadow:var(--glow)}
+[data-theme="aura"] .themeMenu{box-shadow:0 20px 60px -20px rgba(169,107,255,.5)}
+.themeMenu button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:44px 1fr;gap:10px;align-items:center;width:100%;padding:8px;border-radius:8px;cursor:pointer}
+.themeMenu button:hover,.themeMenu button.on{background:var(--raised)}
+.themeMenu b{display:block;color:var(--ink);font-size:13px}.themeMenu small{display:block;color:var(--muted);font-size:11px;line-height:1.35}
+.themeMenu .sw{width:44px;height:32px;border-radius:7px;border:1px solid var(--edge-2)}
+.themeMenu .sw.kawaii{background:radial-gradient(#d9c4ad 1px,transparent 1.3px) 0 0/7px 7px,linear-gradient(135deg,#fbf3e6 55%,#f2c9b0 55% 75%,#e89a9a 75%)}
+.themeMenu .sw.aura{background:radial-gradient(circle at 30% 30%,#fff 0 1px,transparent 1.5px),radial-gradient(circle at 70% 60%,#fff 0 1px,transparent 1.5px),linear-gradient(135deg,#050507 50%,#ff6ec7 50% 72%,#a96bff 72%)}
+
+/* the private template in Space Config: aura keeps its plum night sky (flows.css); kawaii uses the style's lavender page */
+[data-theme="kawaii"] .kc-tpl.v-private{background-color:#ece3f7;border-color:#cdbfe6}
+[data-theme="kawaii"] .kc-tpl.v-private::before{background:radial-gradient(rgba(141,128,179,.22) 1px,transparent 1.3px) 0 0/14px 14px,linear-gradient(180deg,#efe6f9,#e6dbf4)}
+
+/* aura (style 22): the travelling border light, a conic gradient masked to a 1.5px ring plus a blurred copy as glow,
+   orbiting every modal and the sidebar's scene card (Rowan 2026-11-09: it was missing). @property makes the angle
+   animatable; prefers-reduced-motion stops it (rule at the top of this file). */
+@property --a{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes orbit{to{--a:360deg}}
+[data-theme="aura"] .kc-modal,[data-theme="aura"] .modal .card,[data-theme="aura"] .up{position:relative;isolation:isolate}
+[data-theme="aura"] .kc-modal::before,[data-theme="aura"] .kc-modal::after,
+[data-theme="aura"] .modal .card::before,[data-theme="aura"] .modal .card::after,
+[data-theme="aura"] .up::before,[data-theme="aura"] .up::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;pointer-events:none;z-index:5;
+  background:conic-gradient(from var(--a),transparent 0 62%,rgba(255,110,199,0) 66%,#ff6ec7 76%,#d7a4ff 80%,#a96bff 84%,transparent 92%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;
+  animation:orbit var(--t,6s) linear infinite;animation-delay:var(--d,0s)}
+[data-theme="aura"] .kc-modal::after,[data-theme="aura"] .modal .card::after,[data-theme="aura"] .up::after{filter:blur(8px);padding:3px;opacity:.7}
+[data-theme="aura"] .up{--t:7s;--d:-2s}
+[data-theme="aura"] .kc-modal,[data-theme="aura"] .modal .card{animation:breathe 4s ease-in-out infinite}
+@keyframes breathe{0%,100%{box-shadow:0 30px 80px -20px rgba(255,110,199,.35)}50%{box-shadow:0 30px 80px -20px rgba(169,107,255,.45)}}
+
+/* ── fonts of the dark slate theme (Poppins; Vietnamese marks fall back to Inter) ── */
+@font-face{font-family:'Poppins';font-display:swap;font-weight:400;src:url(/home/fonts/poppins-latin-ext-400.woff2) format('woff2');unicode-range:U+0100-02AF,U+1E00-1E9F,U+1EF2-1EFF,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Poppins';font-display:swap;font-weight:400;src:url(/home/fonts/poppins-latin-400.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F,U+20AC,U+2122,U+2212}
+@font-face{font-family:'Poppins';font-display:swap;font-weight:500;src:url(/home/fonts/poppins-latin-ext-500.woff2) format('woff2');unicode-range:U+0100-02AF,U+1E00-1E9F,U+1EF2-1EFF,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Poppins';font-display:swap;font-weight:500;src:url(/home/fonts/poppins-latin-500.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F,U+20AC,U+2122,U+2212}
+@font-face{font-family:'Poppins';font-display:swap;font-weight:600 700;src:url(/home/fonts/poppins-latin-ext-600.woff2) format('woff2');unicode-range:U+0100-02AF,U+1E00-1E9F,U+1EF2-1EFF,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Poppins';font-display:swap;font-weight:600 700;src:url(/home/fonts/poppins-latin-600.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F,U+20AC,U+2122,U+2212}
+
+/* THEME dark slate soft UI (style 14, designer vec_e455e4b55af1): indigo gradient page, softly raised gradient cards
+   with deep shadows, light grey-blue type, indigo / pink / mint / cyan accents with fixed roles, Poppins */
+:root[data-theme="slate"]{
+  color-scheme:dark;
+  --bg:#2a2e48; --ink:#c9cdf0; --ink-2:#c9cdf0; --muted:#7f86b5; --pink:#ff5c9a; --teal:#3fc8ff;
+  --grad:linear-gradient(90deg,#6f7cff,#4a5af0); --on-accent:#fff;
+  --frame:#2a2e48; --sheet:#33385c; --surface:#3a4066; --raised:#434a75; --well:rgba(0,0,0,.15); --control:#59608f;
+  --edge:rgba(255,255,255,.06); --edge-2:rgba(255,255,255,.10); --bw:1px;
+  --edge-vio:rgba(91,108,255,.55); --edge-rose:rgba(255,92,154,.5); --edge-butter:rgba(255,200,97,.5); --edge-mint:rgba(76,217,154,.5);
+  --bg1:var(--frame); --bg2:var(--frame); --page:var(--frame); --card:var(--surface); --border:var(--edge); --navy:#2a2e48;
+  --vio:#8f9bff; --vio2:#ff5c9a; --vio-l:rgba(91,108,255,.22);
+  --mint:rgba(76,217,154,.14); --mint-d:#4cd99a; --butter:rgba(255,200,97,.14); --butter-d:#ffc861;
+  --rose:rgba(255,92,154,.15); --rose-d:#ff5c9a; --lav:rgba(255,255,255,.05); --sky:rgba(63,200,255,.14); --sky-d:#3fc8ff; --cyan:#3fc8ff;
+  --sh:none; --glow:0 10px 20px rgba(91,108,255,.45); --sel:rgba(91,108,255,.4); --ph:#6b7299; --scrim:rgba(14,16,34,.6);
+  --sb-thumb:#59608f; --sb-edge:transparent;
+  --edge-ok:#9aa1cf; --edge-fail:#ff5c9a; --edge-yes:#4cd99a; --edge-no:#ffc861; --edge-tmp:#5b6cff;
+  --font:'Poppins','Inter','Segoe UI',system-ui,sans-serif; --font-title:'Poppins','Inter','Segoe UI',system-ui,sans-serif;
+  --r-card:18px;
+}
+[data-theme="slate"] body{background:radial-gradient(900px 500px at 100% 0,#4a5080,transparent 70%),linear-gradient(160deg,#2a2e48,#3b4066) fixed!important}
+[data-theme="slate"] main{background:linear-gradient(160deg,rgba(58,64,102,.6),rgba(47,52,86,.6));border-top-color:rgba(255,255,255,.09)}
+[data-theme="slate"] .card,[data-theme="slate"] .kc-node{background:linear-gradient(160deg,#3a4066,#353a5c);border-top:1px solid rgba(255,255,255,.08);
+  box-shadow:0 22px 44px rgba(10,12,30,.40),0 5px 10px rgba(10,12,30,.22)}
+[data-theme="slate"] .greet h1,[data-theme="slate"] .box h2{color:#e6e8ff;font-weight:600}
+[data-theme="slate"] .stat b{color:#fff;font-weight:600;font-size:26px}
+[data-theme="slate"] .side a.on{background:linear-gradient(160deg,#3a4066,#353a5c);box-shadow:0 12px 24px rgba(10,12,30,.35)}
+[data-theme="slate"] .btn{box-shadow:0 10px 20px rgba(91,108,255,.45)}
+[data-theme="slate"] .up{box-shadow:0 22px 44px rgba(10,12,30,.4);border-radius:18px}
+[data-theme="slate"] .kc-modal,[data-theme="slate"] .modal .card{background:linear-gradient(160deg,#3a4066,#33385c);box-shadow:0 30px 60px rgba(10,12,30,.55)}
+
+/* the picker's swatch of dark slate */
+.themeMenu .sw.slate{background:radial-gradient(circle at 80% 20%,#4a5080,transparent 60%),linear-gradient(160deg,#2a2e48,#3b4066);box-shadow:inset -10px -8px 0 -4px #5b6cff}

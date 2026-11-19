@@ -14,14 +14,24 @@ A rebuild of the production Knowledge Hub (KH) v6.5 from a written specification
 
 ## Commands
 
-All from the repo root, with the project venv (`.venv`, Python 3.12):
+All from the repo root, with the project venv (`.venv`, Python 3.12). Rows with `yes` in **Check?** are the checks the ai-sdlc-kit verifier and commit gates run (`.sdlc/gates.json`).
 
-- Install: `python -m venv .venv` then `.venv/Scripts/python -m pip install -r requirements.txt` and `.venv/Scripts/python -m pip install -e tools/kh-helper`
-- All tests: `.venv/Scripts/python -m pytest -q` (server + worker + kh-helper, about 2.5 min)
-- One area: `.venv/Scripts/python -m pytest -q tests/<area>` (areas: foundation, auth, context, learning, routes_extra, legacy, worker, caps) or `tools/kh-helper/tests`
-- One test: `.venv/Scripts/python -m pytest -q tests/caps/test_rules.py::test_bulk`
-- Route coverage against the spec: `.venv/Scripts/python tools/route_coverage.py`
-- Run the server locally: `.venv/Scripts/python -m uvicorn main:app --port 8000` (open mode, SQLite in `hooks.db`)
+| Purpose | Command | Check? |
+|---|---|---|
+| Install | `python -m venv .venv && .venv/Scripts/python -m pip install -r requirements.txt && .venv/Scripts/python -m pip install -e tools/kh-helper` | no |
+| All tests (server + worker + kh-helper, about 2.5 min) | `.venv/Scripts/python -m pytest -q` | yes |
+| Route coverage against the spec | `.venv/Scripts/python tools/route_coverage.py` | yes |
+| One area (foundation, auth, context, learning, routes_extra, legacy, worker, caps, spaces) | `.venv/Scripts/python -m pytest -q tests/<area>` | no |
+| One test | `.venv/Scripts/python -m pytest -q tests/caps/test_rules.py::test_bulk` | no |
+| Run the server locally (open mode, SQLite in `hooks.db`) | `.venv/Scripts/python -m uvicorn main:app --port 8000` | no |
+| Run it on synced prod data (bge-m3) | `KH_EMBEDDING_MODEL=bge-m3 KH_HOOKS_DB=./hooks-m3.db .venv/Scripts/python -m uvicorn main:app --port 8000` | no |
+
+## UI
+
+- App URL: http://127.0.0.1:8000/home
+- E2E command: (none yet)
+- Screenshot folder: (none yet)
+- Viewport: 1280x800
 
 Tests never touch the network: `tests/conftest.py` sets `KH_EMBEDDER=hash` (a deterministic 384-dim embedder), temp SQLite stores and crons off. LLM calls are always faked.
 

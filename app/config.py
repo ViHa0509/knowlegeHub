@@ -130,7 +130,7 @@ def _resolve_version() -> tuple[str, str]:
             return txt, "file:VERSION"
     except OSError:
         pass
-    return "v6.5", "default"
+    return "v7.1.0-dev", "default"
 
 
 KH_VERSION, KH_VERSION_SOURCE = _resolve_version()
